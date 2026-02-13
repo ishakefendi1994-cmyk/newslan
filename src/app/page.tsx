@@ -116,72 +116,79 @@ export default async function HomePage() {
         <BannerSlider banners={banners} />
       )}
 
-      {/* TechCrunch Hero Section */}
-      <section className="bg-white border-b border-black">
-        <div className="w-full">
-          {featuredNews ? (
-            <NewsCard
-              title={featuredNews.title}
-              slug={featuredNews.slug}
-              image={featuredNews.featured_image}
-              category={(featuredNews.categories as any)?.name || 'Featured'}
-              variant="techcrunch-hero"
-              author="Tim Fernholz"
-              date="8 hours ago"
-              isPremium={featuredNews.is_premium}
-            />
-          ) : (
-            <div className="h-[500px] bg-gray-100 animate-pulse" />
-          )}
+      {/* TechCrunch Top Section: Hero + Headlines */}
+      <section className="bg-white py-8 border-b border-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left: Hero (66%) */}
+            <div className="lg:col-span-8">
+              {featuredNews ? (
+                <NewsCard
+                  title={featuredNews.title}
+                  slug={featuredNews.slug}
+                  image={featuredNews.featured_image}
+                  category={(featuredNews.categories as any)?.name || 'Featured'}
+                  variant="techcrunch-hero"
+                  author="Tim Fernholz"
+                  date="8 hours ago"
+                  isPremium={featuredNews.is_premium}
+                />
+              ) : (
+                <div className="h-[500px] bg-gray-100 animate-pulse" />
+              )}
+            </div>
+
+            {/* Right: Top Headlines (33%) */}
+            <div className="lg:col-span-4 flex flex-col space-y-6">
+              <div className="border-b border-black pb-2">
+                <h2 className="text-xl font-bold text-white bg-black inline-block px-2 py-1 transform -skew-x-6">Top Headlines</h2>
+              </div>
+
+              <div className="flex flex-col space-y-6">
+                {trendingArticles.map((article, i) => (
+                  <div key={article.id} className="group flex flex-col space-y-1 pb-4 border-b border-gray-100 last:border-0">
+                    <Link href={`/news/${article.slug}`} className="block">
+                      <h3 className="text-lg font-bold leading-tight text-black group-hover:text-[#00D100] transition-colors">
+                        {article.title}
+                      </h3>
+                    </Link>
+                    <div className="text-xs text-gray-500 font-bold">
+                      <span className="text-[#00D100]">{(article.categories as any)?.name}</span>
+                      <span className="mx-2">•</span>
+                      <span>{i + 2} hours ago</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Main Content Area: Latest News + Sidebar */}
-      <section className="bg-white py-12">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+      {/* Secondary Content: In Brief & More News */}
+      <section className="bg-gray-50 py-12 border-b border-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Left Column: Latest News List */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="flex items-center justify-between mb-8 border-b border-black pb-4">
-                <h2 className="text-4xl font-bold tracking-tighter text-black">Latest News</h2>
-                <Link href="/news" className="text-sm font-bold text-[#00D100] hover:underline">See More ↗</Link>
+            {/* Left: In Brief (Horizontal/Grid or List) */}
+            <div className="lg:col-span-12">
+              <div className="flex items-center space-x-2 mb-6">
+                <h3 className="text-3xl font-bold tracking-tighter text-black">In Brief</h3>
+                <div className="h-1 flex-grow bg-[#00D100]"></div>
               </div>
 
-              <div className="flex flex-col">
-                {trendingArticles.map((article, i) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {sections[0]?.articles?.slice(0, 4).map((article: any, i: number) => (
                   <NewsCard
                     key={article.id}
                     title={article.title}
                     slug={article.slug}
                     image={article.featured_image}
-                    category={(article.categories as any)?.name}
-                    variant="techcrunch-list"
-                    author="Amanda Silberling"
-                    date={`${i + 2} hours ago`}
+                    category="In Brief"
+                    variant="in-brief"
+                    author="Newslan"
+                    date={`${i + 1}d ago`}
                   />
                 ))}
-              </div>
-            </div>
-
-            {/* Right Column: In Brief & Sidebar Ads */}
-            <div className="lg:col-span-4 space-y-12">
-              {/* In Brief Section */}
-              <div>
-                <h3 className="text-3xl font-bold tracking-tighter text-[#00D100] mb-6 border-b border-gray-200 pb-2">In Brief</h3>
-                <div className="flex flex-col">
-                  {sections[0]?.articles?.slice(0, 5).map((article: any, i: number) => (
-                    <NewsCard
-                      key={article.id}
-                      title={article.title}
-                      slug={article.slug}
-                      image={article.featured_image}
-                      category="In Brief"
-                      variant="in-brief"
-                      author="Rebecca Szkutak"
-                      date={`${i + 5} hours ago`}
-                    />
-                  ))}
-                </div>
               </div>
             </div>
           </div>
