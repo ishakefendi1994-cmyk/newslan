@@ -60,7 +60,7 @@
 
 body {
   color: #000;
-  background: #fff;
+  background: #f4f4f5;
   font-family: var(--font-sans);
 }
 
@@ -70,12 +70,13 @@ body {
 }
 
 .boxed-container {
-  max-width: 100%;
-  /* Full width for modern look */
+  max-width: 1280px;
+  /* Reduced from 100% to 1280px */
   margin-left: auto;
   margin-right: auto;
   background-color: white;
   min-height: 100vh;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
 }
 
 .line-clamp-2 {
