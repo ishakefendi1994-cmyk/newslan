@@ -7,14 +7,15 @@
 
 .article-content p {
   margin-bottom: 2rem !important;
-  line-height: 1.9;
+  line-height: 1.8;
   font-family: var(--font-serif), serif;
-  font-size: 1.15rem;
-  color: #1a1a1a;
+  font-size: 1.125rem;
+  color: #111;
 }
 
 .article-content img {
-  border-radius: 1rem;
+  border-radius: 0;
+  /* Sharp edges for images */
   margin: 2rem auto;
 }
 
@@ -25,52 +26,39 @@
 .article-content iframe {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 1rem;
+  border-radius: 0;
   margin: 2rem 0;
 }
 
 @theme {
-  --color-primary: #0B2D72;
-  /* Deep Blue */
-  --color-secondary: #1A3263;
-  /* Navy Blue */
-  --color-accent: #f8fafc;
+  --color-primary: #000000;
+  /* TechCrunch Green-ish or just Black for now */
+  --color-secondary: #0a0a0a;
+  --color-accent: #f4f4f4;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Merriweather', serif;
 }
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #f3f4f6;
-  /* gray-100 */
+  color: #000;
+  background: #fff;
+  font-family: var(--font-sans);
 }
 
 .boxed-container {
-  max-width: 72rem;
-  /* 1152px - Medium Box */
+  max-width: 100%;
+  /* Full width for modern look */
   margin-left: auto;
   margin-right: auto;
   background-color: white;
   min-height: 100vh;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
-}
-
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.125);
-}
-
-.dark-glass {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .line-clamp-2 {
@@ -80,13 +68,15 @@ body {
   overflow: hidden;
 }
 
+/* Sharp Cards, No Shadows for TechCrunch look */
 .news-card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
 .news-card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  /* No heavy shadow, maybe just opacity change */
+  opacity: 0.9;
 }
 
 @keyframes marquee {
