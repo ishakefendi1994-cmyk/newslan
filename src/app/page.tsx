@@ -212,7 +212,7 @@ export default async function HomePage() {
 
         return (
           <section key={section.id} className="py-16 transition-colors" style={{ backgroundColor: catColor }}>
-            <div className="w-full px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-12">
                 <div className="flex items-center space-x-3">
                   <div className={`w-1.5 h-10 ${isDark ? 'bg-white' : 'bg-red-600'}`} style={!isDark && catColor !== '#ffffff' && catColor !== '#f9fafb' ? { backgroundColor: 'white' } : {}} />
