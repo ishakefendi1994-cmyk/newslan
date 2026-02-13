@@ -1,10 +1,11 @@
 'use server'
 
 export async function migrateImageToImgBB(imageUrl: string) {
-    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 
-    if (!apiKey) {
-        throw new Error('ImgBB API Key missing')
+    if (!cloudName || !uploadPreset) {
+        throw new Error('Cloudinary credentials missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in .env.local.')
     }
 
     try {
@@ -15,15 +16,16 @@ export async function migrateImageToImgBB(imageUrl: string) {
         const arrayBuffer = await response.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
-        // 2. Prepare FormData for ImgBB
+        // 2. Prepare FormData for Cloudinary
         const formData = new FormData()
         // Convert buffer to Blob for FormData
         const blob = new Blob([buffer])
-        formData.append('image', blob)
+        formData.append('file', blob)
+        formData.append('upload_preset', uploadPreset)
 
-        // 3. Upload to ImgBB
+        // 3. Upload to Cloudinary
         const uploadResponse = await fetch(
-            `https://api.imgbb.com/1/upload?key=${apiKey}`,
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
             {
                 method: 'POST',
                 body: formData,
@@ -32,11 +34,11 @@ export async function migrateImageToImgBB(imageUrl: string) {
 
         const data = await uploadResponse.json()
 
-        if (!data.success) {
-            throw new Error(data.error?.message || 'Error uploading to ImgBB')
+        if (!uploadResponse.ok) {
+            throw new Error(data.error?.message || 'Error uploading to Cloudinary')
         }
 
-        return data.data.url
+        return data.secure_url
     } catch (error: any) {
         console.error('Server-side Image Migration Error:', error)
         throw error
