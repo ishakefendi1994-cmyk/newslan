@@ -193,68 +193,50 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
                     {/* Main Content (8 Columns) */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* Header */}
-                        <div className="space-y-6">
-                            <Badge className="bg-primary text-white border-none uppercase tracking-[0.2em] px-6 py-1.5 text-[10px] rounded-none shadow-lg shadow-primary/20">
-                                {(article.categories as any)?.name || 'News'}
-                            </Badge>
+                        {/* TechCrunch Article Hero */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px] mb-12 border border-black shadow-2xl">
+                            {/* Left: Image */}
+                            <div className="relative aspect-square md:aspect-auto md:h-full w-full bg-gray-100 border-b md:border-b-0 md:border-r border-black">
+                                <Image
+                                    src={article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
+                                    alt={article.title}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                    unoptimized
+                                />
+                            </div>
 
-                            <h1 className="text-3xl md:text-4xl font-extrabold leading-tight tracking-tight text-black">
-                                {article.title}
-                            </h1>
+                            {/* Right: Green Content Box */}
+                            <div className="bg-[#00D100] p-8 md:p-12 flex flex-col justify-between text-white relative">
+                                {/* Top Meta Actions */}
+                                <div className="flex items-center justify-between mb-8">
+                                    <span className="text-xs font-black uppercase tracking-[0.2em]">{article.categories?.name || 'News'}</span>
+                                    <SocialShare
+                                        url={currentUrl}
+                                        title={article.title}
+                                        description={article.excerpt || ''}
+                                        variant="minimal-white"
+                                    />
+                                </div>
 
-                            <div className="flex flex-wrap items-center gap-6 border-y border-gray-100 py-6">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border border-gray-100">
-                                        <Image
-                                            src="/cropped-WhatsApp-Image-2025-08-26-at-16.28.21-1.jpeg"
-                                            alt="Redaksi Newslan"
-                                            width={40}
-                                            height={40}
-                                            className="object-cover"
-                                            unoptimized
-                                        />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Penulis</span>
-                                        <span className="text-sm font-black italic uppercase">{(article.profiles as any)?.full_name || 'Redaksi Newslan'}</span>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Diterbitkan</span>
-                                    <span className="text-sm font-bold flex items-center">
-                                        <Calendar className="w-3 h-3 mr-2 text-primary" />
-                                        {new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                {/* Title */}
+                                <h1 className="text-3xl md:text-5xl font-black leading-none tracking-tighter mb-8">
+                                    {article.title}
+                                </h1>
+
+                                {/* Bottom Meta */}
+                                <div className="flex flex-col md:flex-row md:items-center text-xs md:text-sm font-bold border-t border-white/20 pt-6 mt-auto space-y-2 md:space-y-0 text-white/90">
+                                    <span className="uppercase">{article.profiles?.full_name || 'Redaksi Newslan'}</span>
+                                    <span className="hidden md:inline mx-3">•</span>
+                                    <span>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                    <span className="hidden md:inline mx-3">•</span>
+                                    <span className="flex items-center">
+                                        <Eye className="w-4 h-4 mr-1" />
+                                        {article.views_count || 0}
                                     </span>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Dilihat</span>
-                                    <span className="text-sm font-bold flex items-center">
-                                        <Eye className="w-3 h-3 mr-2 text-primary" />
-                                        {article.views_count || 0} Kali
-                                    </span>
-                                </div>
-                                <div className="ml-auto flex items-center space-x-3">
-                                    <button className="p-3 bg-gray-50 hover:bg-black hover:text-white transition-all rounded-none">
-                                        <Share2 className="w-5 h-5" />
-                                    </button>
-                                    <button className="p-3 bg-gray-50 hover:bg-black hover:text-white transition-all rounded-none">
-                                        <Bookmark className="w-5 h-5" />
-                                    </button>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Featured Image */}
-                        <div className="relative aspect-[16/9] w-full overflow-hidden border-[4px] border-black shadow-2xl">
-                            <Image
-                                src={article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
-                                alt={article.title}
-                                fill
-                                className="object-cover"
-                                priority
-                                unoptimized
-                            />
                         </div>
 
                         {/* Article Text */}

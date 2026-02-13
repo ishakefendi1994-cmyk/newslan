@@ -7,9 +7,10 @@ interface SocialShareProps {
     url: string
     title: string
     description?: string
+    variant?: 'default' | 'minimal-white'
 }
 
-export default function SocialShare({ url, title, description = '' }: SocialShareProps) {
+export default function SocialShare({ url, title, description = '', variant = 'default' }: SocialShareProps) {
     const [copied, setCopied] = useState(false)
 
     const encodedUrl = encodeURIComponent(url)
