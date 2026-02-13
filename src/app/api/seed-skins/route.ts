@@ -38,7 +38,7 @@ export async function GET() {
             .select('id')
             .eq('placement', ad.placement)
             .eq('title', ad.title)
-            .single()
+            .maybeSingle()
 
         if (!existing) {
             await supabase.from('advertisements').insert(ad)
