@@ -1,18 +1,20 @@
 import { createClient } from './supabase/client'
 
 export async function uploadImage(file: File) {
-    const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 
-    if (!apiKey) {
-        throw new Error('ImgBB API Key missing. Please set NEXT_PUBLIC_IMGBB_API_KEY in .env.local.')
+    if (!cloudName || !uploadPreset) {
+        throw new Error('Cloudinary credentials missing. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in .env.local.')
     }
 
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('file', file)
+    formData.append('upload_preset', uploadPreset)
 
     try {
         const response = await fetch(
-            `https://api.imgbb.com/1/upload?key=${apiKey}`,
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
             {
                 method: 'POST',
                 body: formData,
@@ -21,16 +23,18 @@ export async function uploadImage(file: File) {
 
         const data = await response.json()
 
-        if (!data.success) {
-            throw new Error(data.error.message || 'Error uploading to ImgBB')
+        if (!response.ok) {
+            throw new Error(data.error?.message || 'Error uploading to Cloudinary')
         }
 
-        return data.data.url
+        // Return the secure URL (HTTPS)
+        return data.secure_url
     } catch (error: any) {
-        console.error('ImgBB Upload Error:', error)
+        console.error('Cloudinary Upload Error:', error)
         throw error
     }
 }
+
 export async function uploadImageFromUrl(url: string) {
     try {
         const response = await fetch(url)
