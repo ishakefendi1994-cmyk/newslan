@@ -73,7 +73,7 @@ export default function SocialShare({ url, title, description = '', variant = 'd
                 onClick={copyToClipboard}
                 className="flex items-center space-x-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-none font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all border border-gray-200"
             >
-                {copied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-primary" /> : <LinkIcon className="w-4 h-4" />}
                 <span>{copied ? 'Copied!' : 'Copy Link'}</span>
             </button>
         </div>
