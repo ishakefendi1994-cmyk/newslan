@@ -41,7 +41,7 @@ export default function NewProductPage() {
         try {
             setUploading(true)
             const file = e.target.files[0]
-            const publicUrl = await uploadImage(file, 'product-images')
+            const publicUrl = await uploadImage(file)
             setImageUrl(publicUrl)
         } catch (error: any) {
             setStatus({ type: 'error', message: error.message || 'Error uploading image' })

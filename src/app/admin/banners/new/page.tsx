@@ -28,7 +28,7 @@ export default function NewBannerPage() {
         try {
             setUploading(true)
             const file = e.target.files[0]
-            const publicUrl = await uploadImage(file, 'banners')
+            const publicUrl = await uploadImage(file)
             setImageUrl(publicUrl)
             setStatus({ type: 'success', message: 'Image uploaded successfully!' })
         } catch (error: any) {
