@@ -116,73 +116,72 @@ export default async function HomePage() {
         <BannerSlider banners={banners} />
       )}
 
-      {/* Hero Section */}
-      <section className="bg-white py-8 border-b border-gray-100">
-        <div className="w-full px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8">
-              {featuredNews ? (
-                <Link href={`/news/${featuredNews.slug}`} className="group relative block aspect-[16/9] w-full overflow-hidden">
-                  <Image
-                    src={featuredNews.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
-                    alt={featuredNews.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    unoptimized
+      {/* TechCrunch Hero Section */}
+      <section className="bg-white border-b border-black">
+        <div className="w-full">
+          {featuredNews ? (
+            <NewsCard
+              title={featuredNews.title}
+              slug={featuredNews.slug}
+              image={featuredNews.featured_image}
+              category={(featuredNews.categories as any)?.name || 'Featured'}
+              variant="techcrunch-hero"
+              author="Tim Fernholz"
+              date="8 hours ago"
+              isPremium={featuredNews.is_premium}
+            />
+          ) : (
+            <div className="h-[500px] bg-gray-100 animate-pulse" />
+          )}
+        </div>
+      </section>
+
+      {/* Main Content Area: Latest News + Sidebar */}
+      <section className="bg-white py-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Left Column: Latest News List */}
+            <div className="lg:col-span-8 space-y-4">
+              <div className="flex items-center justify-between mb-8 border-b border-black pb-4">
+                <h2 className="text-4xl font-bold tracking-tighter text-black">Latest News</h2>
+                <Link href="/news" className="text-sm font-bold text-[#00D100] hover:underline">See More ↗</Link>
+              </div>
+
+              <div className="flex flex-col">
+                {trendingArticles.map((article, i) => (
+                  <NewsCard
+                    key={article.id}
+                    title={article.title}
+                    slug={article.slug}
+                    image={article.featured_image}
+                    category={(article.categories as any)?.name}
+                    variant="techcrunch-list"
+                    author="Amanda Silberling"
+                    date={`${i + 2} hours ago`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6 md:p-10 space-y-4">
-                    <div className="flex items-center space-x-2">
-                      {featuredNews.categories && (
-                        <span
-                          className="text-white text-[10px] font-black px-3 py-1 rounded-sm uppercase tracking-widest"
-                          style={{ backgroundColor: (featuredNews.categories as any).bg_color || '#E11D48', color: getContrastColor((featuredNews.categories as any).bg_color) }}
-                        >
-                          {(featuredNews.categories as any).name}
-                        </span>
-                      )}
-                    </div>
-                    <h2 className="text-3xl md:text-5xl font-black text-white leading-none tracking-tighter line-clamp-2">
-                      {featuredNews.title}
-                    </h2>
-                    <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed line-clamp-2 hidden md:block">
-                      {featuredNews.excerpt}
-                    </p>
-                  </div>
-                </Link>
-              ) : (
-                <div className="aspect-[16/9] bg-gray-100 animate-pulse flex items-center justify-center">
-                  <span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading Featured...</span>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
 
-            <div className="lg:col-span-4 flex flex-col space-y-6">
-              <div className="flex items-center space-x-2 border-l-4 border-red-600 pl-4 py-1">
-                <TrendingUp className="w-5 h-5 text-red-600" />
-                <h3 className="text-xl font-black uppercase tracking-tighter">Populer</h3>
-              </div>
-              <div className="space-y-6">
-                {trendingArticles.length > 0 ? trendingArticles.map((article, i) => (
-                  <div key={i} className="flex space-x-4 items-start group">
-                    <span className="text-4xl font-black text-red-600 transition-colors italic leading-none">0{i + 1}</span>
-                    <div className="flex flex-col space-y-1">
-                      <Link href={`/news/${article.slug}`}>
-                        <h4 className="font-bold text-sm leading-snug group-hover:text-red-600 transition-colors line-clamp-2">
-                          {article.title}
-                        </h4>
-                      </Link>
-                      <span
-                        className="text-[10px] font-bold uppercase tracking-widest"
-                        style={{ color: (article.categories as any)?.bg_color || '#9ca3af' }}
-                      >
-                        {(article.categories as any)?.name}
-                      </span>
-                    </div>
-                  </div>
-                )) : (
-                  <p className="text-gray-400 text-sm italic font-bold">No trending news yet.</p>
-                )}
+            {/* Right Column: In Brief & Sidebar Ads */}
+            <div className="lg:col-span-4 space-y-12">
+              {/* In Brief Section */}
+              <div>
+                <h3 className="text-3xl font-bold tracking-tighter text-[#00D100] mb-6 border-b border-gray-200 pb-2">In Brief</h3>
+                <div className="flex flex-col">
+                  {sections[0]?.articles?.slice(0, 5).map((article: any, i: number) => (
+                    <NewsCard
+                      key={article.id}
+                      title={article.title}
+                      slug={article.slug}
+                      image={article.featured_image}
+                      category="In Brief"
+                      variant="in-brief"
+                      author="Rebecca Szkutak"
+                      date={`${i + 5} hours ago`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
