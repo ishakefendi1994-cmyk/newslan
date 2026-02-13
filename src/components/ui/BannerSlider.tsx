@@ -11,8 +11,8 @@ export default function BannerSlider({ banners }: any) {
     )
 
     return (
-        <section className="relative w-full bg-white">
-            <div className="w-full">
+        <section className="relative w-full bg-white border-b border-black">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="relative aspect-[21/9] md:aspect-[3/1] w-full overflow-hidden bg-gray-100 flex items-center justify-center">
                     <Image
                         src={banners[0].image_url}
