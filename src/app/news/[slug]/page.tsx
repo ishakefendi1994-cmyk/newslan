@@ -318,6 +318,57 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                 </div>
                             </div>
                         )}
+
+                        {/* Related Articles Section (Moved Inside) */}
+                        {relatedArticles && relatedArticles.length > 0 && (
+                            <div className="mt-24 space-y-8 border-t-4 border-black pt-10">
+                                <div className="flex items-center justify-between pb-2">
+                                    <div className="flex items-center space-x-3">
+                                        <Sparkles className="w-5 h-5 text-primary" />
+                                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Berita Terkait</h2>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {relatedArticles.map((item) => (
+                                        <NewsCard
+                                            key={item.id}
+                                            title={item.title}
+                                            slug={item.slug}
+                                            image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
+                                            category={item.categories?.name || 'News'}
+                                            isPremium={item.is_premium}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Latest News Footer Section (Moved Inside) */}
+                        {latestArticlesSection && latestArticlesSection.length > 0 && (
+                            <div className="mt-24 space-y-8 border-t-4 border-black pt-10">
+                                <div className="flex items-center justify-between pb-2">
+                                    <div className="flex items-center space-x-3">
+                                        <Zap className="w-5 h-5 text-primary" />
+                                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Berita Terbaru</h2>
+                                    </div>
+                                    <Link href="/news" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">
+                                        Lihat Semua &rarr;
+                                    </Link>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {latestArticlesSection.map((item) => (
+                                        <NewsCard
+                                            key={item.id}
+                                            title={item.title}
+                                            slug={item.slug}
+                                            image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
+                                            category={item.categories?.name || 'News'}
+                                            isPremium={item.is_premium}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar (4 Columns) */}
@@ -326,62 +377,6 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                     </div>
 
                 </div>
-
-                {/* Related Articles Section */}
-                {relatedArticles && relatedArticles.length > 0 && (
-                    <div className="mt-32 space-y-10">
-                        <div className="flex items-center justify-between border-b-4 border-black pb-4">
-                            <div className="flex items-center space-x-3">
-                                <Sparkles className="w-6 h-6 text-primary" />
-                                <h2 className="text-3xl font-black uppercase tracking-tighter italic">Berita Terkait</h2>
-                            </div>
-                            <Badge className="bg-gray-100 text-gray-500 border-none px-4 py-1 text-xs">
-                                Kategori: {(article.categories as any)?.name}
-                            </Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {relatedArticles.map((item) => (
-                                <NewsCard
-                                    key={item.id}
-                                    title={item.title}
-                                    slug={item.slug}
-                                    image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
-                                    category={item.categories?.name || 'News'}
-                                    excerpt={item.excerpt}
-                                    isPremium={item.is_premium}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Latest News Footer Section */}
-                {latestArticlesSection && latestArticlesSection.length > 0 && (
-                    <div className="mt-32 space-y-10">
-                        <div className="flex items-center justify-between border-b-4 border-black pb-4">
-                            <div className="flex items-center space-x-3">
-                                <Zap className="w-6 h-6 text-primary" />
-                                <h2 className="text-3xl font-black uppercase tracking-tighter italic">Berita Terbaru</h2>
-                            </div>
-                            <Link href="/news" className="text-xs font-black uppercase tracking-widest hover:text-primary transition-colors">
-                                Lihat Semua Berita
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {latestArticlesSection.map((item) => (
-                                <NewsCard
-                                    key={item.id}
-                                    title={item.title}
-                                    slug={item.slug}
-                                    image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
-                                    category={item.categories?.name || 'News'}
-                                    excerpt={item.excerpt}
-                                    isPremium={item.is_premium}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     )
