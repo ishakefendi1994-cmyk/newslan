@@ -30,6 +30,18 @@
   margin: 2rem 0;
 }
 
+/* Drop Cap Effect */
+.article-content>p:first-of-type::first-letter {
+  float: left;
+  font-size: 4.5rem;
+  line-height: 0.8;
+  font-weight: 900;
+  margin-right: 1rem;
+  margin-top: 0.5rem;
+  color: var(--color-primary);
+  text-transform: uppercase;
+}
+
 @theme {
   --color-primary: #990000;
   /* Dark Red Theme */
