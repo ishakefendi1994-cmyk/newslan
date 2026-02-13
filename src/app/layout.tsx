@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat.",
 };
 
+import SkinAds from "@/components/layout/SkinAds";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} ${merriweather.variable} antialiased selection:bg-primary/20`}>
+        <SkinAds />
         <div className="boxed-container transition-all duration-300">
           <Navbar />
           <main className="min-h-screen pb-20 lg:pb-0">
