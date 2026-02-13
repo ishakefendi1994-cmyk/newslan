@@ -75,6 +75,7 @@ export default function VideoGalleryPage() {
                                     alt={featuredVideo.title}
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    unoptimized
                                 />
                                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                                     <div className="w-20 h-20 rounded-full bg-primary text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
@@ -137,6 +138,7 @@ export default function VideoGalleryPage() {
                                     alt={video.title}
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    unoptimized
                                 />
                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                     <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-lg">
@@ -158,7 +160,7 @@ export default function VideoGalleryPage() {
                                         <div className="flex -space-x-2">
                                             {video.short_products.slice(0, 3).map((sp: any, i: number) => (
                                                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 overflow-hidden relative">
-                                                    <Image src={sp.products.image_url} alt="P" fill className="object-cover" />
+                                                    <Image src={sp.products.image_url} alt="P" fill className="object-cover" unoptimized />
                                                 </div>
                                             ))}
                                         </div>
