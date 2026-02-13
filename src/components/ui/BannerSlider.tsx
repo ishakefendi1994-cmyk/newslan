@@ -11,9 +11,9 @@ export default function BannerSlider({ banners }: any) {
     )
 
     return (
-        <section className="relative w-full bg-white py-6">
-            <div className="w-full px-4 sm:px-6">
-                <div className="relative aspect-[21/9] md:aspect-[3/1] w-full rounded-[2rem] overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+        <section className="relative w-full bg-white">
+            <div className="w-full">
+                <div className="relative aspect-[21/9] md:aspect-[3/1] w-full overflow-hidden bg-gray-100 flex items-center justify-center">
                     <Image
                         src={banners[0].image_url}
                         alt="Banner"
@@ -21,9 +21,6 @@ export default function BannerSlider({ banners }: any) {
                         className="absolute inset-0 w-full h-full object-cover"
                         unoptimized
                     />
-                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold">
-                        DEBUG: {banners.length} banners | {banners[0].title}
-                    </div>
                 </div>
             </div>
         </section>
