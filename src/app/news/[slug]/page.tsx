@@ -234,46 +234,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
                     {/* Main Content (8 Columns) */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* TechCrunch Article Hero */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px] mb-12 border border-black shadow-2xl">
-                            {/* Left: Image */}
-                            <div className="relative aspect-square md:aspect-auto md:h-full w-full bg-gray-100 border-b md:border-b-0 md:border-r border-black">
-                                <Image
-                                    src={article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
-                                    alt={article.title}
-                                    fill
-                                    className="object-cover"
-                                    priority
-                                    unoptimized
-                                />
-                            </div>
 
-                            {/* Right: Dark Red Content Box */}
-                            <div className="bg-[#990000] p-8 md:p-12 flex flex-col justify-between text-white relative">
-                                {/* Top Meta Actions */}
-                                <div className="flex items-center justify-between mb-8">
-                                    <span className="text-xs font-black uppercase tracking-[0.2em]">{article.categories?.name || 'News'}</span>
-                                    {/* Share button removed as requested */}
-                                </div>
-
-                                {/* Title */}
-                                <h1 className="text-3xl md:text-5xl font-black leading-none tracking-tighter mb-8">
-                                    {article.title}
-                                </h1>
-
-                                {/* Bottom Meta */}
-                                <div className="flex flex-col md:flex-row md:items-center text-xs md:text-sm font-bold border-t border-white/20 pt-6 mt-auto space-y-2 md:space-y-0 text-white/90">
-                                    <span className="uppercase">{article.profiles?.full_name || 'Redaksi Newslan'}</span>
-                                    <span className="hidden md:inline mx-3">•</span>
-                                    <span>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                                    <span className="hidden md:inline mx-3">•</span>
-                                    <span className="flex items-center">
-                                        <Eye className="w-4 h-4 mr-1" />
-                                        {article.views_count || 0}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Article Text */}
                         <div className="max-w-none">
