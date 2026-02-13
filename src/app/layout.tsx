@@ -35,7 +35,7 @@ export default function RootLayout({
         </div>
 
         <footer className="bg-[#0f0f0f] text-white border-t border-white/5 py-20 mt-10">
-          <div className="max-w-[72rem] mx-auto px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
               <div className="space-y-6">
                 <Link href="/">
