@@ -81,7 +81,7 @@ export default function Navbar() {
                                     <Link
                                         key={cat.id}
                                         href={`/category/${cat.slug}`}
-                                        className="text-sm font-bold text-black hover:text-green-600 transition-colors"
+                                        className="text-sm font-bold text-black hover:text-primary transition-colors"
                                     >
                                         {cat.name}
                                     </Link>
@@ -92,13 +92,13 @@ export default function Navbar() {
 
                         {/* Right: Actions */}
                         <div className="flex items-center space-x-4">
-                            <button className="hidden sm:flex p-1 hover:text-green-600 transition-colors text-black">
+                            <button className="hidden sm:flex p-1 hover:text-primary transition-colors text-black">
                                 <Search className="w-5 h-5" />
                             </button>
 
                             <Link
                                 href="/auth/login"
-                                className="hidden sm:flex text-sm font-bold text-black hover:text-green-600 transition-colors"
+                                className="hidden sm:flex text-sm font-bold text-black hover:text-primary transition-colors"
                             >
                                 Login
                             </Link>
@@ -116,7 +116,7 @@ export default function Navbar() {
                                     <Link
                                         key={cat.id}
                                         href={`/category/${cat.slug}`}
-                                        className="block py-2 text-xl font-bold text-black hover:text-green-600 border-b border-gray-100"
+                                        className="block py-2 text-xl font-bold text-black hover:text-primary border-b border-gray-100"
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {cat.name}

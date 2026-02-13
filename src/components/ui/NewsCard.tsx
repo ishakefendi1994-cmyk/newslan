@@ -46,11 +46,11 @@ export function NewsCard({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
                 <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full max-w-4xl">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#00D100] mb-3 block">
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary mb-3 block">
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h2 className="text-4xl md:text-6xl font-bold text-white leading-[0.95] tracking-tighter hover:text-[#00D100] transition-colors mb-4">
+                        <h2 className="text-4xl md:text-6xl font-bold text-white leading-[0.95] tracking-tighter hover:text-primary transition-colors mb-4">
                             {title}
                         </h2>
                     </Link>
@@ -74,11 +74,11 @@ export function NewsCard({
         return (
             <div className="group flex flex-row justify-between items-start gap-6 py-6 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                 <div className="flex-1 flex flex-col space-y-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#00D100]">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-xl md:text-2xl font-bold leading-tight text-black group-hover:text-[#00D100] transition-colors">
+                        <h3 className="text-xl md:text-2xl font-bold leading-tight text-black group-hover:text-primary transition-colors">
                             {title}
                         </h3>
                     </Link>
@@ -108,12 +108,12 @@ export function NewsCard({
                 <div className="flex items-start space-x-3">
                     <div className="shrink-0 mt-1">
                         {/* TechCrunch green double diamond icon simulation */}
-                        <div className="w-4 h-4 bg-[#00D100] skew-x-[-10deg]" />
+                        <div className="w-4 h-4 bg-primary skew-x-[-10deg]" />
                     </div>
                     <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#00D100] block mb-1">In Brief</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary block mb-1">In Brief</span>
                         <Link href={`/news/${slug}`} className="block">
-                            <h4 className="text-base font-bold leading-tight text-black group-hover:text-[#00D100] transition-colors">
+                            <h4 className="text-base font-bold leading-tight text-black group-hover:text-primary transition-colors">
                                 {title}
                             </h4>
                         </Link>
@@ -148,11 +148,11 @@ export function NewsCard({
                 </div>
                 {/* Content - 4 cols */}
                 <div className="md:col-span-4 flex flex-col justify-center space-y-4 py-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-green-600">
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className={`text-2xl md:text-3xl font-bold leading-tight hover:text-green-600 transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                        <h3 className={`text-2xl md:text-3xl font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h3>
                     </Link>
@@ -170,11 +170,11 @@ export function NewsCard({
         return (
             <div className={`group flex flex-row items-start space-x-4 p-4 border-b border-gray-100 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`}>
                 <div className="flex-1 space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 block mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary block mb-1">
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className={`text-base font-bold leading-snug hover:text-green-600 transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                        <h4 className={`text-base font-bold leading-snug hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h4>
                     </Link>
@@ -206,11 +206,11 @@ export function NewsCard({
                 />
             </div>
             <div className="flex flex-col space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#00D100]">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
                     {category}
                 </span>
                 <Link href={`/news/${slug}`} className="block">
-                    <h3 className={`text-xl font-bold leading-tight hover:text-[#00D100] transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                    <h3 className={`text-xl font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                         {title}
                     </h3>
                 </Link>
