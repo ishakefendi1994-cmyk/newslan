@@ -14,7 +14,9 @@ const placements = [
     { id: 'article_after', label: 'After Article Content' },
     { id: 'sidebar', label: 'Sidebar (News Detail)' },
     { id: 'section_sidebar', label: 'Category Section Sidebar' },
-    { id: 'feed_between', label: 'Between Feed Items' }
+    { id: 'feed_between', label: 'Between Feed Items' },
+    { id: 'skin_left', label: 'Left Skin (Desktop)' },
+    { id: 'skin_right', label: 'Right Skin (Desktop)' }
 ]
 
 export default function EditAdPage() {

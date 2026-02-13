@@ -13,7 +13,9 @@ const placements = {
     article_after: 'After Article',
     sidebar: 'Sidebar (News Detail)',
     section_sidebar: 'Category Section Sidebar',
-    feed_between: 'Between Feed Items'
+    feed_between: 'Between Feed Items',
+    skin_left: 'Left Skin (Desktop)',
+    skin_right: 'Right Skin (Desktop)'
 }
 
 export default function AdminAdsPage() {
