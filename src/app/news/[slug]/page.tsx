@@ -24,27 +24,40 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
     if (!article) return { title: 'Not Found' }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://newslan.id'
-    const title = `${article.title} - Newslan.id`
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://newslan.vercel.app'
+    const title = article.title
     const description = article.excerpt || article.title
     const imageUrl = article.featured_image || `${siteUrl}/og-image.jpg`
 
     return {
-        title,
+        title: `${title} - Newslan.id`,
         description,
         openGraph: {
             title,
             description,
             url: `${siteUrl}/news/${slug}`,
             siteName: 'Newslan.id',
-            images: [{ url: imageUrl }],
+            locale: 'id_ID',
             type: 'article',
+            images: [
+                {
+                    url: imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: title,
+                }
+            ],
         },
         twitter: {
             card: 'summary_large_image',
             title,
             description,
             images: [imageUrl],
+        },
+        // Additional meta tags for better social sharing
+        other: {
+            'og:image:width': '1200',
+            'og:image:height': '630',
         }
     }
 }
