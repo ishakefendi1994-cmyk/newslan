@@ -130,36 +130,36 @@ export function NewsCard({
 
     if (variant === 'large') {
         return (
-            <div className={`group grid grid-cols-1 md:grid-cols-12 gap-6 overflow-hidden h-full ${isDark ? 'bg-transparent' : 'bg-white'}`}>
-                {/* Large Image - 8 cols */}
-                <div className="md:col-span-8 relative aspect-video md:aspect-auto h-[300px] md:h-full overflow-hidden">
+            <div className={`group flex flex-col md:flex-row gap-8 overflow-hidden h-full ${isDark ? 'bg-transparent' : 'bg-white'}`}>
+                {/* Large Image */}
+                <div className="md:w-3/5 relative aspect-video md:aspect-auto h-[250px] md:h-full overflow-hidden">
                     <Image
                         src={image}
                         alt={title}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                         unoptimized
                     />
                     {isPremium && (
-                        <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs font-bold px-3 py-1 uppercase tracking-widest">
+                        <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs font-black px-3 py-1 uppercase tracking-widest">
                             Premium
                         </div>
                     )}
                 </div>
-                {/* Content - 4 cols */}
-                <div className="md:col-span-4 flex flex-col justify-center space-y-4 py-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                {/* Content */}
+                <div className="md:w-2/5 flex flex-col justify-center py-2 pr-4 space-y-4">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-white/60' : 'text-primary'}`}>
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className={`text-2xl md:text-3xl font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                        <h3 className={`text-2xl md:text-3xl font-black leading-[1.1] tracking-tighter hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h3>
                     </Link>
-                    {excerpt && <p className={`${secondaryTextColor} text-sm leading-relaxed line-clamp-4`}>{excerpt}</p>}
-                    <div className="mt-auto pt-4 flex items-center text-xs font-bold text-gray-400">
-                        {/* Author or Time could go here */}
-                        <span>Read More &rarr;</span>
+                    {excerpt && <p className={`${secondaryTextColor} text-sm leading-relaxed line-clamp-3 font-medium`}>{excerpt}</p>}
+                    <div className="pt-4 flex items-center text-[10px] font-black uppercase tracking-widest text-[#990000]">
+                        <span>Read Full Story</span>
+                        <span className="ml-2 transition-transform group-hover:translate-x-1">&rarr;</span>
                     </div>
                 </div>
             </div>
@@ -168,24 +168,23 @@ export function NewsCard({
 
     if (variant === 'compact') {
         return (
-            <div className={`group flex flex-row items-start space-x-4 p-4 border-b border-gray-100 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`}>
+            <div className={`group flex flex-row items-center space-x-4 py-6 border-b border-black/5 last:border-0 ${isDark ? 'bg-transparent' : 'bg-white'}`}>
                 <div className="flex-1 space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary block mb-1">
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-white/60' : 'text-primary'}`}>
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className={`text-base font-bold leading-snug hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                        <h4 className={`text-base font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h4>
                     </Link>
-                    {/* Timestamp or Author */}
                 </div>
-                <div className="relative w-24 h-24 shrink-0 overflow-hidden bg-gray-100">
+                <div className="relative w-20 h-20 shrink-0 overflow-hidden bg-gray-100 border border-black/5">
                     <Image
                         src={image}
                         alt={title}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                         unoptimized
                     />
                 </div>

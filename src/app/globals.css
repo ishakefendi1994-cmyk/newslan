@@ -70,8 +70,8 @@ body {
 }
 
 .boxed-container {
-  max-width: 1280px;
-  /* Reduced from 100% to 1280px */
+  max-width: 1100px;
+  /* Reduced from 1280px to 1100px for a tighter look */
   margin-left: auto;
   margin-right: auto;
   background-color: white;
