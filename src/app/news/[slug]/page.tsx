@@ -233,7 +233,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                         </div>
 
                         {/* Featured Image */}
-                        <div className="relative aspect-[16/9] w-full overflow-hidden border-[12px] border-black shadow-2xl">
+                        <div className="relative aspect-[16/9] w-full overflow-hidden border-[4px] border-black shadow-2xl">
                             <Image
                                 src={article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
                                 alt={article.title}
