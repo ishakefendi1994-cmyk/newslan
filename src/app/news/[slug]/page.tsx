@@ -207,17 +207,12 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                 />
                             </div>
 
-                            {/* Right: Green Content Box */}
-                            <div className="bg-[#00D100] p-8 md:p-12 flex flex-col justify-between text-white relative">
+                            {/* Right: Dark Red Content Box */}
+                            <div className="bg-[#990000] p-8 md:p-12 flex flex-col justify-between text-white relative">
                                 {/* Top Meta Actions */}
                                 <div className="flex items-center justify-between mb-8">
                                     <span className="text-xs font-black uppercase tracking-[0.2em]">{article.categories?.name || 'News'}</span>
-                                    <SocialShare
-                                        url={currentUrl}
-                                        title={article.title}
-                                        description={article.excerpt || ''}
-                                        variant="minimal-white"
-                                    />
+                                    {/* Share button removed as requested */}
                                 </div>
 
                                 {/* Title */}
