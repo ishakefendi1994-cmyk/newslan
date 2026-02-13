@@ -14,7 +14,7 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSid
         <aside className="space-y-10">
             {/* Sidebar Ad Placements */}
             {sidebarAds.length > 0 ? (
-                <div className="flex flex-col space-y-10">
+                <div className="flex flex-col space-y-20">
                     {sidebarAds.map((ad, index) => (
                         <AdRenderer key={ad.id || index} ad={ad} isSidebar={true} />
                     ))}
