@@ -218,7 +218,7 @@ export default function RedaksiPage() {
                     <div className="pt-6 border-t border-red-200 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                         <div className="space-y-1">
                             <p className="text-xs font-black uppercase tracking-widest text-red-600">Hubungi Kami</p>
-                            <p className="text-sm font-bold text-red-900">0811-7248-008 / 0822-8708-2434</p>
+                            <p className="text-sm font-bold text-red-900">+62-822-7886-5775</p>
                         </div>
                     </div>
                 </section>
