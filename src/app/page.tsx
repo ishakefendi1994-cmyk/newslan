@@ -21,25 +21,17 @@ function getContrastColor(hexColor: string | null) {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // Fetch Banners
-  const { data: banners } = await supabase
-    .from('banners')
-    .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true })
-
-  // Fetch Articles for Hero
-  const { data: latestArticles } = await supabase
-    .from('articles')
-    .select('*, categories(name, bg_color)')
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  // Fetch Categories with limited articles for sections
-  const { data: categoriesWithNews } = await supabase
-    .from('categories')
-    .select(`
+  // Fetch all data in parallel
+  const [
+    { data: banners },
+    { data: latestArticles },
+    { data: categoriesWithNews },
+    { data: breakingNewsResult },
+    { data: feedAds }
+  ] = await Promise.all([
+    supabase.from('banners').select('*').eq('is_active', true).order('display_order', { ascending: true }),
+    supabase.from('articles').select('*, categories(name, bg_color)').eq('is_published', true).order('created_at', { ascending: false }).limit(10),
+    supabase.from('categories').select(`
       id,
       name,
       slug,
@@ -61,29 +53,12 @@ export default async function HomePage() {
         is_premium,
         created_at
       )
-    `)
-    .eq('show_on_home', true)
-    .order('display_order', { ascending: true })
-    .eq('articles.is_published', true)
-  // .order('created_at', { foreignTable: 'articles', ascending: false })
-  // .limit(5, { foreignTable: 'articles' })
+    `).eq('show_on_home', true).order('display_order', { ascending: true }).eq('articles.is_published', true),
+    supabase.from('articles').select('title').eq('is_published', true).eq('is_breaking', true).order('created_at', { ascending: false }).limit(5),
+    supabase.from('advertisements').select('*').eq('placement', 'feed_between').eq('is_active', true)
+  ])
 
-  // Manual sorting and limiting for cleaner data (Supabase JS client limitation with order/limit on relations)
-  const sections = categoriesWithNews?.map(cat => ({
-    ...cat,
-    articles: (cat.articles as any[] || [])
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 5)
-  })).filter(cat => cat.articles.length > 0) || []
-
-  // Fetch Breaking News
-  let { data: breakingNews } = await supabase
-    .from('articles')
-    .select('title')
-    .eq('is_published', true)
-    .eq('is_breaking', true)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  let breakingNews = breakingNewsResult
 
   // Fallback to latest 5 news if no breaking news
   if (!breakingNews || breakingNews.length === 0) {
@@ -96,12 +71,13 @@ export default async function HomePage() {
     breakingNews = latestForTicker
   }
 
-  // Fetch feed ads
-  const { data: feedAds } = await supabase
-    .from('advertisements')
-    .select('*')
-    .eq('placement', 'feed_between')
-    .eq('is_active', true)
+  // Manual sorting and limiting for cleaner data
+  const sections = categoriesWithNews?.map(cat => ({
+    ...cat,
+    articles: (cat.articles as any[] || [])
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5)
+  })).filter(cat => cat.articles.length > 0) || []
 
   const featuredNews = latestArticles && latestArticles.length > 0 ? latestArticles[0] : null
   const trendingArticles = latestArticles ? latestArticles.slice(1, 6) : []

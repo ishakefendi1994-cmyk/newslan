@@ -209,7 +209,7 @@ export function NewsCard({
                     {category}
                 </span>
                 <Link href={`/news/${slug}`} className="block">
-                    <h3 className={`text-xl font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                    <h3 className={`text-xl font-bold leading-tight hover:text-primary transition-colors line-clamp-5 ${isDark ? 'text-white' : 'text-black'}`}>
                         {title}
                     </h3>
                 </Link>

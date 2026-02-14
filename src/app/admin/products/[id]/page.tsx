@@ -1,25 +1,54 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Save, ChevronLeft, Plus, Trash2, ShoppingBag, Loader2, Check, AlertCircle, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { uploadImage } from '@/lib/storage'
 
-export default function NewProductPage() {
+export default function EditProductPage() {
     const router = useRouter()
+    const { id } = useParams()
     const supabase = createClient()
 
     const [name, setName] = useState('')
     const [description, setDescription] = useState('')
     const [priceRange, setPriceRange] = useState('')
     const [imageUrl, setImageUrl] = useState('')
-    const [links, setLinks] = useState([{ store_name: 'Shopee', url: '' }])
+    const [links, setLinks] = useState<any[]>([])
 
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+
+    useEffect(() => {
+        if (id) fetchProduct()
+    }, [id])
+
+    async function fetchProduct() {
+        try {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('products')
+                .select('*, affiliate_links(*)')
+                .eq('id', id)
+                .single()
+
+            if (error) throw error
+
+            setName(data.name)
+            setDescription(data.description || '')
+            setPriceRange(data.price_range || '')
+            setImageUrl(data.image_url || '')
+            setLinks(data.affiliate_links || [])
+        } catch (error: any) {
+            setStatus({ type: 'error', message: 'Gagal mengambil data produk: ' + error.message })
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const addLink = () => {
         setLinks([...links, { store_name: '', url: '' }])
@@ -50,39 +79,61 @@ export default function NewProductPage() {
         }
     }
 
-    async function handleSubmit() {
+    async function handleUpdate() {
         if (!name || links.some(l => !l.store_name || !l.url)) {
-            setStatus({ type: 'error', message: 'Name and all links are required.' })
+            setStatus({ type: 'error', message: 'Nama dan semua link wajib diisi.' })
             return
         }
 
         try {
-            setLoading(true)
+            setSaving(true)
             setStatus(null)
 
-            // 1. Create Product
-            const { data: product, error: pError } = await supabase
+            // 1. Update Product
+            const { error: pError } = await supabase
                 .from('products')
-                .insert({ name, description, image_url: imageUrl, price_range: priceRange })
-                .select()
-                .single()
+                .update({ name, description, image_url: imageUrl, price_range: priceRange })
+                .eq('id', id)
 
             if (pError) throw pError
 
-            // 2. Create Affiliate Links
+            // 2. Sync Affiliate Links
+            // Delete old ones
+            const { error: dError } = await supabase
+                .from('affiliate_links')
+                .delete()
+                .eq('product_id', id)
+
+            if (dError) throw dError
+
+            // Insert current ones (simplest sync strategy: delete and re-insert)
             const { error: lError } = await supabase
                 .from('affiliate_links')
-                .insert(links.map(l => ({ ...l, product_id: product.id })))
+                .insert(links.map(l => ({
+                    store_name: l.store_name,
+                    url: l.url,
+                    product_id: id,
+                    click_count: l.click_count || 0
+                })))
 
             if (lError) throw lError
 
-            setStatus({ type: 'success', message: 'Product created successfully!' })
-            setTimeout(() => router.push('/admin/products'), 2000)
+            setStatus({ type: 'success', message: 'Produk berhasil diperbarui!' })
+            setTimeout(() => router.push('/admin/products'), 1500)
         } catch (error: any) {
-            setStatus({ type: 'error', message: error.message || 'Error saving product' })
+            setStatus({ type: 'error', message: error.message || 'Gagal menyimpan perubahan' })
         } finally {
-            setLoading(false)
+            setSaving(false)
         }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="text-slate-500 font-medium">Memuat data produk...</p>
+            </div>
+        )
     }
 
     return (
@@ -93,17 +144,17 @@ export default function NewProductPage() {
                         <ChevronLeft className="w-5 h-5 text-slate-500" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Produk Baru</h1>
-                        <p className="text-slate-500 text-sm mt-1">Tambahkan produk baru ke jaringan afiliasi Anda.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit Produk</h1>
+                        <p className="text-slate-500 text-sm mt-1">Perbarui detail produk dan link afiliasi.</p>
                     </div>
                 </div>
                 <button
-                    onClick={handleSubmit}
-                    disabled={loading || uploading}
+                    onClick={handleUpdate}
+                    disabled={saving || uploading}
                     className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold flex items-center space-x-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 disabled:opacity-50"
                 >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                    <span>{loading ? 'Menyimpan...' : 'Simpan Produk'}</span>
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                    <span>{saving ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
                 </button>
             </div>
 
@@ -206,6 +257,11 @@ export default function NewProductPage() {
                                     />
                                 </div>
                             ))}
+                            {links.length === 0 && (
+                                <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl">
+                                    <p className="text-xs font-medium text-slate-400">Belum ada link afiliasi.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

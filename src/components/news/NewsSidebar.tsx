@@ -14,9 +14,18 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSid
         <aside className="space-y-10">
             {/* Sidebar Ad Placements */}
             {sidebarAds.length > 0 ? (
-                <div className="flex flex-col space-y-20">
+                <div className="flex flex-col space-y-12">
                     {sidebarAds.map((ad, index) => (
-                        <AdRenderer key={ad.id || index} ad={ad} isSidebar={true} />
+                        <div key={ad.id || index} className="space-y-2">
+                            <div className="flex items-center justify-center space-x-2">
+                                <div className="h-px bg-gray-100 flex-1" />
+                                <span className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Advertisement</span>
+                                <div className="h-px bg-gray-100 flex-1" />
+                            </div>
+                            <div className="py-1 flex justify-center">
+                                <AdRenderer ad={ad} isSidebar={true} />
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : (

@@ -1,7 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BarChart3, Users, FileText, MousePointer2, Loader2, TrendingUp, TrendingDown, Eye } from 'lucide-react'
+import {
+    BarChart3,
+    Users,
+    FileText,
+    MousePointer2,
+    Loader2,
+    TrendingUp,
+    Eye,
+    RefreshCcw,
+    ArrowUpRight,
+    Search,
+    Calendar,
+    ArrowRight,
+    TrendingDown,
+    Activity,
+    ShoppingBag
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/utils'
 import Image from 'next/image'
@@ -22,39 +38,41 @@ export default function AdminDashboard() {
         try {
             setLoading(true)
 
-            // 1. Fetch Basic Stats
-            const { data: articles } = await supabase.from('articles').select('views_count, created_at')
-            const { data: shorts } = await supabase.from('shorts').select('views_count')
-            const { count: subscriberCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'subscriber')
-            const { data: affiliateLinks } = await supabase.from('affiliate_links').select('click_count')
-            const { data: products } = await supabase.from('products').select('*')
+            const [
+                { data: articles },
+                { data: shorts },
+                { count: subscriberCount },
+                { data: affiliateLinks },
+                { data: products }
+            ] = await Promise.all([
+                supabase.from('articles').select('views_count, created_at'),
+                supabase.from('shorts').select('views_count'),
+                supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'subscriber'),
+                supabase.from('affiliate_links').select('click_count'),
+                supabase.from('products').select('*')
+            ])
 
             const totalViews = (articles?.reduce((acc, curr) => acc + (curr.views_count || 0), 0) || 0) +
                 (shorts?.reduce((acc, curr) => acc + (curr.views_count || 0), 0) || 0)
             const totalClicks = affiliateLinks?.reduce((acc, curr) => acc + (curr.click_count || 0), 0) || 0
 
             setStats([
-                { name: 'Total Views', value: totalViews.toLocaleString(), icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%' },
-                { name: 'Subscribers', value: (subscriberCount || 0).toLocaleString(), icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', trend: '+5%' },
-                { name: 'Total Articles', value: (articles?.length || 0).toLocaleString(), icon: FileText, color: 'text-green-600', bg: 'bg-green-50', trend: '+8%' },
-                { name: 'Affiliate Clicks', value: totalClicks.toLocaleString(), icon: MousePointer2, color: 'text-orange-600', bg: 'bg-orange-50', trend: '+15%' },
+                { name: 'Total Views', value: totalViews.toLocaleString(), icon: Eye, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12.5%', isPositive: true },
+                { name: 'Subscribers', value: (subscriberCount || 0).toLocaleString(), icon: Users, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+5.2%', isPositive: true },
+                { name: 'Total Articles', value: (articles?.length || 0).toLocaleString(), icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+8.1%', isPositive: true },
+                { name: 'Affiliate Clicks', value: totalClicks.toLocaleString(), icon: MousePointer2, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+15.4%', isPositive: true },
             ])
 
-            // 2. Fetch Recent Articles
-            const { data: recent } = await supabase
-                .from('articles')
-                .select('*, categories(name)')
-                .order('created_at', { ascending: false })
-                .limit(5)
+            const [
+                { data: recent },
+                { data: topAffiliateLinks }
+            ] = await Promise.all([
+                supabase.from('articles').select('*, categories(name)').order('created_at', { ascending: false }).limit(5),
+                supabase.from('affiliate_links').select('product_id, click_count').order('click_count', { ascending: false })
+            ])
+
             setRecentArticles(recent || [])
 
-            // 3. Fetch Top Performing Products (based on affiliate click counts)
-            const { data: topAffiliateLinks } = await supabase
-                .from('affiliate_links')
-                .select('product_id, click_count')
-                .order('click_count', { ascending: false })
-
-            // Group and aggregate clicks by product_id
             const productClickMap: Record<string, number> = {}
             topAffiliateLinks?.forEach(link => {
                 productClickMap[link.product_id] = (productClickMap[link.product_id] || 0) + link.click_count
@@ -76,130 +94,155 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-[400px] flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse">
-                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Menyatukan Data Newslan...</p>
+            <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="text-slate-500 font-medium animate-pulse text-sm">Menyiapkan Dashboard Anda...</p>
             </div>
         )
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-8 pb-10">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tighter">Dashboard Overview</h1>
-                    <p className="text-gray-500">Welcome back, Admin. Here's what's happening today.</p>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h1>
+                    <p className="text-slate-500 text-sm mt-1">Pantau performa konten Newslan secara real-time.</p>
                 </div>
-                <button
-                    onClick={fetchDashboardData}
-                    className="bg-gray-50 hover:bg-gray-100 p-3 rounded-2xl border border-gray-100 transition-all flex items-center space-x-2 text-xs font-bold"
-                >
-                    <Loader2 className="w-4 h-4" />
-                    <span>Refresh Stats</span>
-                </button>
+                <div className="flex items-center space-x-3">
+                    <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center space-x-2 text-slate-500 text-xs font-semibold">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+                    </div>
+                    <button
+                        onClick={fetchDashboardData}
+                        className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl border border-slate-200 transition-all flex items-center space-x-2 text-xs font-bold shadow-sm"
+                    >
+                        <RefreshCcw className="w-4 h-4" />
+                        <span>Refresh</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 {stats.map((stat) => (
-                    <div key={stat.name} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm group hover:shadow-xl hover:shadow-gray-200 transition-all duration-300 transform hover:-translate-y-1">
+                    <div key={stat.name} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
-                            <div className={`${stat.bg} p-3 rounded-2xl group-hover:scale-110 transition-transform`}>
+                            <div className={`${stat.bg} w-12 h-12 rounded-xl flex items-center justify-center`}>
                                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
                             </div>
-                            <div className="flex items-center space-x-1 text-green-600 bg-green-50 px-2 py-1 rounded-full text-[10px] font-black italic">
-                                <TrendingUp className="w-3 h-3" />
+                            <div className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] font-bold ${stat.isPositive ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}>
+                                {stat.isPositive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                                 <span>{stat.trend}</span>
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <span className="text-3xl font-black tracking-tighter">{stat.value}</span>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{stat.name}</p>
+                        <div>
+                            <p className="text-sm font-semibold text-slate-500 mb-1">{stat.name}</p>
+                            <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
-                <div className="lg:col-span-7 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
+            {/* Bottom Sections */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Recent Articles */}
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-6 sm:p-8 flex items-center justify-between border-b border-slate-100">
                         <div>
-                            <h3 className="text-xl font-black italic uppercase italic tracking-tighter">Berita Terbaru</h3>
-                            <p className="text-xs text-gray-400 font-medium">Monitoring performa artikel terkini.</p>
+                            <h3 className="text-lg font-bold text-slate-900">Artikel Terkini</h3>
+                            <p className="text-xs text-slate-500 mt-1">Monitoring performa konten terbaru Anda.</p>
                         </div>
-                        <Link href="/admin/articles" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Lihat Semua</Link>
+                        <Link href="/admin/articles" className="text-xs font-bold text-primary hover:bg-primary/5 px-4 py-2 rounded-lg transition-all flex items-center">
+                            <span>Manage</span>
+                            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                        </Link>
                     </div>
 
-                    <div className="space-y-3">
-                        {recentArticles.map((article) => (
-                            <Link
-                                href={`/admin/articles/${article.id}`}
-                                key={article.id}
-                                className="flex items-center space-x-4 p-3 rounded-2xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 group"
-                            >
-                                <div className="relative w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                                    {article.featured_image ? (
-                                        <Image src={article.featured_image} alt={article.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <FileText className="w-6 h-6 text-gray-200" />
+                    <div className="p-2 sm:p-4">
+                        <div className="space-y-1">
+                            {recentArticles.map((article) => (
+                                <Link
+                                    href={`/admin/articles/${article.id}`}
+                                    key={article.id}
+                                    className="flex items-center justify-between p-3 sm:p-4 rounded-2xl hover:bg-slate-50 transition-all group"
+                                >
+                                    <div className="flex items-center space-x-4 min-w-0">
+                                        <div className="relative w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
+                                            {article.featured_image ? (
+                                                <Image src={article.featured_image} alt={article.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <FileText className="w-5 h-5 text-slate-300" />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-bold truncate group-hover:text-primary transition-colors">{article.title}</h4>
-                                    <div className="flex items-center space-x-2 mt-1">
-                                        <span className="text-[9px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded italic uppercase tracking-widest">
-                                            {article.categories?.name}
-                                        </span>
-                                        <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                                            {new Date(article.created_at).toLocaleDateString()}
-                                        </span>
+                                        <div className="min-w-0">
+                                            <h4 className="text-sm font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{article.title}</h4>
+                                            <div className="flex items-center space-x-3 mt-1">
+                                                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
+                                                    {article.categories?.name}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 font-medium">
+                                                    {new Date(article.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center space-x-1 text-gray-500 px-3">
-                                    <Eye className="w-3 h-3" />
-                                    <span className="text-[10px] font-black">{article.views_count || 0}</span>
-                                </div>
-                            </Link>
-                        ))}
+                                    <div className="flex items-center space-x-1.5 text-slate-500 pl-4">
+                                        <Eye className="w-4 h-4 opacity-40" />
+                                        <span className="text-xs font-bold">{article.views_count || 0}</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                <div className="lg:col-span-5 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
+                {/* Top Products */}
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-6 sm:p-8 flex items-center justify-between border-b border-slate-100 font-sans">
                         <div>
-                            <h3 className="text-xl font-black italic uppercase italic tracking-tighter">Produk Andalan</h3>
-                            <p className="text-xs text-gray-400 font-medium">Berdasarkan klik affiliate terbanyak.</p>
+                            <h3 className="text-lg font-bold text-slate-900">Produk Terpopuler</h3>
+                            <p className="text-xs text-slate-500 mt-1">Berdasarkan klik affiliate tertinggi.</p>
+                        </div>
+                        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100">
+                            <Activity className="w-5 h-5 text-amber-600" />
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        {topProducts.map((product) => (
-                            <div key={product.id} className="flex items-center space-x-4 p-3 rounded-2xl bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
-                                <div className="relative w-12 h-12 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-100 p-1">
-                                    {product.image_url ? (
-                                        <Image src={product.image_url} alt={product.name} fill className="object-contain" unoptimized />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <MousePointer2 className="w-5 h-5 text-gray-100" />
+                    <div className="p-2 sm:p-4 font-sans">
+                        <div className="space-y-2">
+                            {topProducts.map((product, index) => (
+                                <div key={product.id} className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-[#F8FAFC] border border-slate-100 hover:border-indigo-200 transition-all group">
+                                    <div className="flex items-center space-x-4 min-w-0">
+                                        <div className="relative w-12 h-12 rounded-xl bg-white overflow-hidden shrink-0 border border-slate-200 p-1.5 shadow-sm">
+                                            {product.image_url ? (
+                                                <Image src={product.image_url} alt={product.name} fill className="object-contain" unoptimized />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <ShoppingBag className="w-5 h-5 text-slate-200" />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-sm font-bold truncate">{product.name}</h4>
-                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-                                        {product.total_clicks} Kunjungan Link
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-xs font-black text-black">{formatRupiah(product.price_range)}</span>
-                                    <div className="flex items-center justify-end space-x-1 text-green-600">
-                                        <TrendingUp className="w-3 h-3" />
-                                        <span className="text-[9px] font-black uppercase italic tracking-tighter">High ROI</span>
+                                        <div className="min-w-0">
+                                            <h4 className="text-sm font-bold text-slate-900 truncate">{product.name}</h4>
+                                            <div className="flex items-center space-x-2 mt-1">
+                                                <div className="flex items-center text-amber-500">
+                                                    <MousePointer2 className="w-3.5 h-3.5 mr-1" />
+                                                    <span className="text-xs font-bold">{product.total_clicks} <span className="text-[10px] text-slate-400 font-medium">Klik</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right pl-4">
+                                        <p className="text-sm font-bold text-slate-900">{formatRupiah(product.price_range)}</p>
+                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">Active Promo</span>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

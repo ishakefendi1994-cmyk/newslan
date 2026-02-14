@@ -27,28 +27,19 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // refreshing the auth token
-    const { data: { user } } = await supabase.auth.getUser()
+    // Only perform auth checks and session refreshing for admin routes
+    // This avoids the 22s getUser() delay on public pages
+    if (request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/auth')) {
+        // refreshing the auth token
+        const { data: { user } } = await supabase.auth.getUser()
 
-    // Protect admin routes
-    if (request.nextUrl.pathname.startsWith('/admin')) {
-        if (!user) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/auth/login'
-            return NextResponse.redirect(url)
-        }
-
-        // Check if user has admin role in profiles table
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-
-        if (!profile || profile.role !== 'admin') {
-            const url = request.nextUrl.clone()
-            url.pathname = '/'
-            return NextResponse.redirect(url)
+        // Protect admin routes
+        if (request.nextUrl.pathname.startsWith('/admin')) {
+            if (!user) {
+                const url = request.nextUrl.clone()
+                url.pathname = '/auth/login'
+                return NextResponse.redirect(url)
+            }
         }
     }
 
