@@ -29,31 +29,32 @@ export default function SkinAds() {
     if (!ads.left && !ads.right) return null
 
     // Base styles for skin ads
-    const skinStyles = "hidden xl:block fixed top-0 h-screen z-0 w-[calc((100vw-1280px)/2)] transition-opacity duration-500"
+    // We use 1100px as the layout width to calculate the available side space accurately
+    const skinStyles = "hidden xl:block fixed top-0 h-screen z-0 w-[calc((100vw-1100px)/2)] transition-opacity duration-500"
 
     return (
         <>
             {/* Left Skin */}
             {ads.left && (
-                <div className={`${skinStyles} left-0`}>
+                <div className={`${skinStyles} left-0 flex justify-end`}>
                     <a
                         href={ads.left.link_url || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full h-full relative"
+                        className="block w-full max-w-[250px] h-full relative"
                     >
                         {ads.left.type === 'image' && ads.left.image_url ? (
-                            <div className="absolute right-0 top-0 h-full w-full max-w-[200px] xl:max-w-[300px] 2xl:max-w-[400px]">
+                            <div className="absolute inset-0 w-full h-full">
                                 <Image
                                     src={ads.left.image_url}
                                     alt={ads.left.title || 'Advertisement'}
                                     fill
-                                    className="object-cover object-right-top"
+                                    className="object-cover object-center"
                                     unoptimized
                                 />
                             </div>
                         ) : (
-                            <div dangerouslySetInnerHTML={{ __html: ads.left.html_content || '' }} />
+                            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: ads.left.html_content || '' }} />
                         )}
                     </a>
                 </div>
@@ -61,25 +62,25 @@ export default function SkinAds() {
 
             {/* Right Skin */}
             {ads.right && (
-                <div className={`${skinStyles} right-0`}>
+                <div className={`${skinStyles} right-0 flex justify-start`}>
                     <a
                         href={ads.right.link_url || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full h-full relative"
+                        className="block w-full max-w-[250px] h-full relative"
                     >
                         {ads.right.type === 'image' && ads.right.image_url ? (
-                            <div className="absolute left-0 top-0 h-full w-full max-w-[200px] xl:max-w-[300px] 2xl:max-w-[400px]">
+                            <div className="absolute inset-0 w-full h-full">
                                 <Image
                                     src={ads.right.image_url}
                                     alt={ads.right.title || 'Advertisement'}
                                     fill
-                                    className="object-cover object-left-top"
+                                    className="object-cover object-center"
                                     unoptimized
                                 />
                             </div>
                         ) : (
-                            <div dangerouslySetInnerHTML={{ __html: ads.right.html_content || '' }} />
+                            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: ads.right.html_content || '' }} />
                         )}
                     </a>
                 </div>
