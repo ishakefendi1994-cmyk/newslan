@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Calendar } from 'lucide-react'
 
 interface NewsCardProps {
     title: string
@@ -10,7 +11,7 @@ interface NewsCardProps {
     excerpt?: string
     isPremium?: boolean
     isDark?: boolean
-    variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief'
+    variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief' | 'grid-standard' | 'horizontal-medium' | 'recent-list' | 'spotlight' | 'feature-block' | 'overlay-grid'
     author?: string
     date?: string
 }
@@ -130,9 +131,9 @@ export function NewsCard({
 
     if (variant === 'large') {
         return (
-            <div className={`group flex flex-col md:flex-row gap-8 overflow-hidden h-full ${isDark ? 'bg-transparent' : 'bg-white'}`}>
+            <div className={`group flex flex-col md:flex-row gap-8 overflow-hidden h-auto ${isDark ? 'bg-transparent' : 'bg-white'}`}>
                 {/* Large Image */}
-                <div className="md:w-3/5 relative aspect-video md:aspect-auto h-[250px] md:h-full overflow-hidden">
+                <div className="md:w-3/5 relative aspect-[2/1] h-[200px] md:h-auto overflow-hidden">
                     <Image
                         src={image}
                         alt={title}
@@ -166,20 +167,74 @@ export function NewsCard({
         )
     }
 
-    if (variant === 'compact') {
+    if (variant === 'spotlight') {
         return (
-            <div className={`group flex flex-row items-center space-x-4 py-6 border-b border-black/5 last:border-0 ${isDark ? 'bg-transparent' : 'bg-white'}`}>
-                <div className="flex-1 space-y-2">
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-white/60' : 'text-primary'}`}>
-                        {category}
-                    </span>
-                    <Link href={`/news/${slug}`} className="block">
-                        <h4 className={`text-base font-bold leading-tight hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
-                            {title}
-                        </h4>
-                    </Link>
+            <div className="group flex flex-col space-y-4 pb-6 border-b border-gray-100 last:border-0">
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 rounded-none border border-black/5">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        unoptimized
+                    />
+                    <div className="absolute bottom-4 left-4">
+                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000] shadow-xl">
+                            {category}
+                        </span>
+                    </div>
                 </div>
-                <div className="relative w-20 h-20 shrink-0 overflow-hidden bg-gray-100 border border-black/5">
+                <div className="space-y-2">
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className="text-base font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-3 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
+                            {title}
+                        </h3>
+                    </Link>
+                    <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <Calendar className="w-3 h-3 mr-1.5" />
+                        <span>{date}</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (variant === 'grid-standard') {
+        return (
+            <div className="group flex flex-col space-y-6">
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-black/10">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        unoptimized
+                    />
+                    <div className="absolute bottom-4 left-4">
+                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000]">
+                            {category}
+                        </span>
+                    </div>
+                </div>
+                <div className="space-y-3 px-2">
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className="text-2xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8">
+                            {title}
+                        </h3>
+                    </Link>
+                    <div className="flex items-center text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-t border-gray-100 pt-3">
+                        <Calendar className="w-3.5 h-3.5 mr-2 text-[#990000]/50" />
+                        <span>{date}</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (variant === 'horizontal-medium') {
+        return (
+            <div className="group flex flex-row items-start gap-5 py-6 border-b border-gray-100 last:border-0">
+                <div className="relative w-32 md:w-48 h-24 md:h-32 shrink-0 overflow-hidden border border-black/5">
                     <Image
                         src={image}
                         alt={title}
@@ -188,6 +243,100 @@ export function NewsCard({
                         unoptimized
                     />
                 </div>
+                <div className="flex-1 space-y-2">
+                    <Link href={`/news/${slug}`} className="block">
+                        <h4 className="text-base md:text-lg font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2">
+                            {title}
+                        </h4>
+                    </Link>
+                    <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <Calendar className="w-3 h-3 mr-1.5" />
+                        <span>{date}</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (variant === 'recent-list') {
+        return (
+            <div className="group flex flex-row items-center gap-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors px-2 rounded-xl">
+                <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-gray-50">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        unoptimized
+                    />
+                </div>
+                <div className="flex-1 space-y-1">
+                    <Link href={`/news/${slug}`} className="block">
+                        <h4 className="text-sm font-black leading-snug text-gray-800 group-hover:text-[#990000] transition-colors line-clamp-2">
+                            {title}
+                        </h4>
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    if (variant === 'feature-block') {
+        const isLightBg = categoryColor === 'white' || categoryColor === '#ffffff' || categoryColor === '#fff'
+        const blockBgColor = isLightBg || !categoryColor ? '#990000' : categoryColor
+
+        return (
+            <div className={`group flex flex-col h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
+                <div className="relative aspect-video w-full overflow-hidden">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        unoptimized
+                    />
+                </div>
+                <div className="flex-1 p-6 md:p-8 flex flex-col justify-between" style={{ backgroundColor: blockBgColor }}>
+                    <div className="space-y-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+                            {category}
+                        </span>
+                        <Link href={`/news/${slug}`} className="block">
+                            <h3 className="text-2xl md:text-3xl font-black leading-tight text-white tracking-tight group-hover:underline underline-offset-4 decoration-2">
+                                {title}
+                            </h3>
+                        </Link>
+                    </div>
+                    <div className="flex items-center text-[10px] font-bold text-white/60 uppercase tracking-widest mt-6">
+                        <Calendar className="w-3 h-3 mr-1.5" />
+                        <span>{date}</span>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (variant === 'overlay-grid') {
+        return (
+            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+                <Image
+                    src={image}
+                    alt={title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    unoptimized
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute bottom-0 left-0 p-5 w-full">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-[#990000] mb-2 block bg-white/10 backdrop-blur-sm w-fit px-2 py-0.5 rounded">
+                        {category}
+                    </span>
+                    <Link href={`/news/${slug}`} className="block">
+                        <h4 className="text-base font-bold leading-tight text-white group-hover:text-gray-200 transition-colors line-clamp-3 mb-1">
+                            {title}
+                        </h4>
+                    </Link>
+                </div>
             </div>
         )
     }
@@ -195,7 +344,7 @@ export function NewsCard({
     // Default Card (Vertical)
     return (
         <div className={`group flex flex-col space-y-4 pb-8 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`}>
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+            <div className="relative aspect-[2/1] w-full overflow-hidden bg-gray-100">
                 <Image
                     src={image}
                     alt={title}

@@ -30,7 +30,7 @@ export default async function HomePage() {
     { data: feedAds }
   ] = await Promise.all([
     supabase.from('banners').select('*').eq('is_active', true).order('display_order', { ascending: true }),
-    supabase.from('articles').select('*, categories(name, bg_color)').eq('is_published', true).order('created_at', { ascending: false }).limit(10),
+    supabase.from('articles').select('*, categories(name, bg_color)').eq('is_published', true).order('created_at', { ascending: false }).limit(20),
     supabase.from('categories').select(`
       id,
       name,
@@ -79,12 +79,14 @@ export default async function HomePage() {
       .slice(0, 5)
   })).filter(cat => cat.articles.length > 0) || []
 
-  const featuredNews = latestArticles && latestArticles.length > 0 ? latestArticles[0] : null
-  const trendingArticles = latestArticles ? latestArticles.slice(1, 6) : []
+  const spotlightArticles = latestArticles ? latestArticles.slice(0, 3) : []
+  const heroArticle = latestArticles && latestArticles.length > 3 ? latestArticles[3] : null
+  const middleHorizontalArticles = latestArticles ? latestArticles.slice(4, 6) : []
+  const recentNewsArticles = latestArticles ? latestArticles.slice(6, 12) : []
   const breakingTitles = breakingNews?.map(n => n.title) || []
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-[#F8F9FA]">
       <BreakingNewsTicker news={breakingTitles} />
 
       {/* Banner Slider */}
@@ -92,81 +94,78 @@ export default async function HomePage() {
         <BannerSlider banners={banners} />
       )}
 
-      {/* TechCrunch Top Section: Hero + Headlines */}
-      <section className="bg-white py-8 border-b border-black">
+      {/* Ultimate News Grid (Reference Style) */}
+      <section className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Hero (66%) */}
-            <div className="lg:col-span-8">
-              {featuredNews ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+            {/* LEFT COLUMN: Spotlight (3 Vertical Cards) */}
+            <div className="lg:col-span-2 space-y-8">
+              {spotlightArticles.map((article, idx) => (
                 <NewsCard
-                  title={featuredNews.title}
-                  slug={featuredNews.slug}
-                  image={featuredNews.featured_image}
-                  category={(featuredNews.categories as any)?.name || 'Featured'}
-                  variant="techcrunch-hero"
-                  author="Tim Fernholz"
-                  date="8 hours ago"
-                  isPremium={featuredNews.is_premium}
+                  key={article.id}
+                  variant="spotlight"
+                  title={article.title}
+                  slug={article.slug}
+                  image={article.featured_image}
+                  category={article.categories?.name || 'News'}
+                  date={new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                />
+              ))}
+            </div>
+
+            {/* MIDDLE COLUMN: Hero + Horizontal Pair */}
+            <div className="lg:col-span-6 space-y-10">
+              {heroArticle ? (
+                <NewsCard
+                  variant="grid-standard"
+                  title={heroArticle.title}
+                  slug={heroArticle.slug}
+                  image={heroArticle.featured_image}
+                  category={heroArticle.categories?.name || 'Top News'}
+                  date={new Date(heroArticle.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                 />
               ) : (
-                <div className="h-[500px] bg-gray-100 animate-pulse" />
+                <div className="h-[400px] bg-slate-100 animate-pulse" />
               )}
-            </div>
 
-            {/* Right: Top Headlines (33%) */}
-            <div className="lg:col-span-4 flex flex-col space-y-6">
-              <div className="border-b-4 border-black pb-2">
-                <h2 className="text-xl font-black text-black uppercase tracking-tighter italic">Top Headlines</h2>
-              </div>
-
-              <div className="flex flex-col space-y-6">
-                {trendingArticles.map((article, i) => (
-                  <div key={article.id} className="group flex flex-col space-y-1 pb-4 border-b border-black/5 last:border-0">
-                    <Link href={`/news/${article.slug}`} className="block">
-                      <h3 className="text-lg font-bold leading-tight text-black group-hover:text-primary transition-colors">
-                        {article.title}
-                      </h3>
-                    </Link>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-[#990000]">
-                      <span>{(article.categories as any)?.name}</span>
-                      <span className="mx-2 text-black/20">•</span>
-                      <span className="text-gray-400">{i + 2}h ago</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Secondary Content: In Brief & More News */}
-      <section className="bg-gray-50 py-16 border-y border-black/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Left: In Brief (Horizontal/Grid or List) */}
-            <div className="lg:col-span-12">
-              <div className="flex items-center justify-between mb-8 border-b-2 border-black/10 pb-4">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-black">In Brief</h3>
-                <Link href="/news" className="text-[10px] font-black uppercase tracking-widest text-primary">Explore All &rarr;</Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-                {sections[0]?.articles?.slice(0, 4).map((article: any, i: number) => (
+              {/* Horizontal Pair below hero */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                {middleHorizontalArticles.map((article) => (
                   <NewsCard
                     key={article.id}
+                    variant="horizontal-medium"
                     title={article.title}
                     slug={article.slug}
                     image={article.featured_image}
-                    category="In Brief"
-                    variant="in-brief"
-                    author="Newslan"
-                    date={`${i + 1}d ago`}
+                    category={article.categories?.name || 'Highlights'}
+                    date={new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                   />
                 ))}
               </div>
             </div>
+
+            {/* RIGHT COLUMN: Recent News + Ad */}
+            <div className="lg:col-span-4 space-y-10">
+              <div className="bg-white p-6 md:p-8 rounded-none border-l-4 border-[#990000] shadow-sm">
+                <h2 className="text-xl font-black text-black uppercase tracking-tighter mb-8 flex items-center">
+                  <span className="text-[#990000] mr-2">|</span> Recent News
+                </h2>
+                <div className="space-y-2">
+                  {recentNewsArticles.map((article) => (
+                    <NewsCard
+                      key={article.id}
+                      variant="recent-list"
+                      title={article.title}
+                      slug={article.slug}
+                      image={article.featured_image}
+                      category={article.categories?.name || 'Recent'}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -209,59 +208,65 @@ export default async function HomePage() {
                 {/* Main Content Area (8 Cols) */}
                 <div className={sidebarAds.length > 0 ? "lg:col-span-8" : "lg:col-span-12"}>
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
-                    {/* Hero Article (7 Cols) */}
-                    <div className={sidebarAds.length > 0 ? "md:col-span-12 xl:col-span-7" : "md:col-span-7"}>
+                    {/* Hero Feature Block (6 Cols) */}
+                    <div className={sidebarAds.length > 0 ? "md:col-span-12 xl:col-span-6" : "md:col-span-6"}>
                       {section.articles[0] && (
-                        <NewsCard
-                          title={section.articles[0].title}
-                          slug={section.articles[0].slug}
-                          image={section.articles[0].featured_image}
-                          category={section.name}
-                          categoryColor={isDark ? 'white' : section.bg_color}
-                          excerpt={section.articles[0].excerpt}
-                          isPremium={section.articles[0].is_premium}
-                          isDark={isDark}
-                          variant="large"
-                        />
+                        <div className="h-full">
+                          <NewsCard
+                            title={section.articles[0].title}
+                            slug={section.articles[0].slug}
+                            image={section.articles[0].featured_image}
+                            category={section.name}
+                            categoryColor={isDark ? 'white' : section.bg_color}
+                            excerpt={section.articles[0].excerpt}
+                            isPremium={section.articles[0].is_premium}
+                            isDark={isDark}
+                            variant="feature-block"
+                            date={new Date(section.articles[0].created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          />
+                        </div>
                       )}
                     </div>
 
-                    {/* Compact List (5 Cols) */}
-                    <div className={sidebarAds.length > 0 ? "md:col-span-12 xl:col-span-5 flex flex-col" : "md:col-span-5 flex flex-col"}>
-                      {section.articles.slice(1, sidebarAds.length > 0 ? 4 : 5).map((article: any) => (
-                        <NewsCard
-                          key={article.id}
-                          title={article.title}
-                          slug={article.slug}
-                          image={article.featured_image}
-                          category={section.name}
-                          categoryColor={isDark ? 'white' : section.bg_color}
-                          isPremium={article.is_premium}
-                          isDark={isDark}
-                          variant="compact"
-                        />
-                      ))}
-
-                      {/* Mobile View All Link */}
-                      <Link
-                        href={`/category/${section.slug}`}
-                        className="sm:hidden mt-6 flex items-center justify-center py-4 border-2 border-black/10 text-[10px] font-black uppercase tracking-widest hover:border-black transition-all"
-                      >
-                        View All {section.name}
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Feed Ad Injection */}
-                  {feedAds && feedAds[idx % feedAds.length] && !sidebarAds.length && (
-                    <div className="mt-16 pt-16 border-t border-black/5">
-                      <div className="max-w-4xl mx-auto">
-                        <AdRenderer ad={feedAds[idx % feedAds.length]} />
-                        <span className={`text-[8px] font-black uppercase tracking-[0.2em] text-center block mt-2 ${secondaryTextColor}`}>Sponsored Placement</span>
+                    {/* 2x2 Grid Overlay (6 Cols) */}
+                    <div className={sidebarAds.length > 0 ? "md:col-span-12 xl:col-span-6" : "md:col-span-6"}>
+                      <div className="grid grid-cols-2 gap-4 h-full content-start">
+                        {section.articles.slice(1, 5).map((article: any) => (
+                          <div key={article.id} className="min-h-[180px] sm:min-h-[220px]">
+                            <NewsCard
+                              title={article.title}
+                              slug={article.slug}
+                              image={article.featured_image}
+                              category={section.name}
+                              categoryColor={isDark ? 'white' : section.bg_color}
+                              isPremium={article.is_premium}
+                              isDark={isDark}
+                              variant="overlay-grid"
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
+
+                    {/* Mobile View All Link */}
+                    <Link
+                      href={`/category/${section.slug}`}
+                      className="sm:hidden mt-6 flex items-center justify-center py-4 border-2 border-black/10 text-[10px] font-black uppercase tracking-widest hover:border-black transition-all"
+                    >
+                      View All {section.name}
+                    </Link>
+                  </div>
                 </div>
+
+                {/* Feed Ad Injection */}
+                {feedAds && feedAds[idx % feedAds.length] && !sidebarAds.length && (
+                  <div className="mt-16 pt-16 border-t border-black/5">
+                    <div className="max-w-4xl mx-auto">
+                      <AdRenderer ad={feedAds[idx % feedAds.length]} />
+                      <span className={`text-[8px] font-black uppercase tracking-[0.2em] text-center block mt-2 ${secondaryTextColor}`}>Sponsored Placement</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Sidebar Ad Stack (4 Cols) */}
                 {sidebarAds.length > 0 && (
@@ -282,6 +287,6 @@ export default async function HomePage() {
           </section>
         )
       })}
-    </div>
+    </div >
   )
 }
