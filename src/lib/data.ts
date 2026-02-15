@@ -133,3 +133,15 @@ export const getTrendingNews = unstable_cache(
     ['trending-news'],
     { revalidate: REVALIDATE_TIME, tags: ['articles'] }
 )
+
+export const searchArticles = async (query: string) => {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+        .from('articles')
+        .select('*, categories(name, bg_color)')
+        .eq('is_published', true)
+        .ilike('title', `%${query}%`)
+        .order('created_at', { ascending: false })
+        .limit(20)
+    return data
+}

@@ -186,8 +186,23 @@ export function NewsCard({
                     </div>
                 </div>
                 <div className="space-y-2">
+// Variant: spotlight
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-sm font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-3 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
+                        <h3 className="text-sm font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
+                            {title}
+                        </h3>
+                    </Link>
+
+// Variant: grid-standard
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8 line-clamp-2">
+                            {title}
+                        </h3>
+                    </Link>
+
+// Default variant
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className={`text-lg font-bold leading-tight hover:text-primary transition-colors line-clamp-2 ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h3>
                     </Link>
@@ -219,7 +234,7 @@ export function NewsCard({
                 </div>
                 <div className="space-y-3 px-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8">
+                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8 line-clamp-2">
                             {title}
                         </h3>
                     </Link>
@@ -360,7 +375,7 @@ export function NewsCard({
                     {category}
                 </span>
                 <Link href={`/news/${slug}`} className="block">
-                    <h3 className={`text-lg font-bold leading-tight hover:text-primary transition-colors line-clamp-5 ${isDark ? 'text-white' : 'text-black'}`}>
+                    <h3 className={`text-lg font-bold leading-tight hover:text-primary transition-colors line-clamp-2 ${isDark ? 'text-white' : 'text-black'}`}>
                         {title}
                     </h3>
                 </Link>

@@ -80,10 +80,10 @@ export default async function HomePage({
       .slice(0, 5)
   })).filter(cat => cat.articles.length > 0) || []
 
-  const spotlightArticles = latestArticles ? latestArticles.slice(0, 3) : []
-  const heroArticle = latestArticles && latestArticles.length > 3 ? latestArticles[3] : null
-  const middleHorizontalArticles = latestArticles ? latestArticles.slice(4, 6) : []
-  const recentNewsArticles = latestArticles ? latestArticles.slice(6, 12) : []
+  const heroArticle = latestArticles ? latestArticles[0] : null
+  const spotlightArticles = latestArticles ? latestArticles.slice(1, 3) : [] // Items 2-3
+  const middleHorizontalArticles = latestArticles ? latestArticles.slice(3, 5) : [] // Items 4-5
+  const recentNewsArticles = latestArticles ? latestArticles.slice(5, 11) : [] // Items 6-11
   const breakingTitles = breakingNews?.map(n => n.title) || []
 
   const totalPages = totalLatestNews ? Math.ceil(totalLatestNews / itemsPerPage) : 0
@@ -105,23 +105,9 @@ export default async function HomePage({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-                {/* LEFT COLUMN: Spotlight (3 Vertical Cards) */}
-                <div className="lg:col-span-2 space-y-8">
-                  {spotlightArticles.map((article, idx) => (
-                    <NewsCard
-                      key={article.id}
-                      variant="spotlight"
-                      title={article.title}
-                      slug={article.slug}
-                      image={article.featured_image}
-                      category={article.categories?.name || 'News'}
-                      date={new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    />
-                  ))}
-                </div>
-
-                {/* MIDDLE COLUMN: Hero + Horizontal Pair */}
-                <div className="lg:col-span-6 space-y-10">
+                {/* MAIN CONTENT COLUMN (Hero + Sub-grid) */}
+                <div className="lg:col-span-8 space-y-10">
+                  {/* Hero Article */}
                   {heroArticle ? (
                     <NewsCard
                       variant="grid-standard"
@@ -135,12 +121,25 @@ export default async function HomePage({
                     <div className="h-[400px] bg-slate-100 animate-pulse" />
                   )}
 
-                  {/* Horizontal Pair below hero */}
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                  {/* Sub-Feature Grid (2 Columns) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-gray-200">
+                    {/* Items 1 & 2 (Previously Spotlight) */}
+                    {spotlightArticles.slice(0, 2).map((article) => (
+                      <NewsCard
+                        key={article.id}
+                        variant="default"
+                        title={article.title}
+                        slug={article.slug}
+                        image={article.featured_image}
+                        category={article.categories?.name || 'News'}
+                        date={new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      />
+                    ))}
+                    {/* Items 3 & 4 (Previously Horizontal Pair) */}
                     {middleHorizontalArticles.map((article) => (
                       <NewsCard
                         key={article.id}
-                        variant="horizontal-medium"
+                        variant="default"
                         title={article.title}
                         slug={article.slug}
                         image={article.featured_image}
@@ -151,13 +150,13 @@ export default async function HomePage({
                   </div>
                 </div>
 
-                {/* RIGHT COLUMN: Recent News + Ad */}
+                {/* RIGHT SIDEBAR COLUMN (Recent News) */}
                 <div className="lg:col-span-4 space-y-10">
-                  <div className="bg-white p-6 md:p-8 rounded-none border-l-4 border-[#990000] shadow-sm">
+                  <div className="bg-white p-6 md:p-8 rounded-none border-t-4 border-[#990000] shadow-sm sticky top-24">
                     <h2 className="text-xl font-black text-black uppercase tracking-tighter mb-8 flex items-center">
                       <span className="text-[#990000] mr-2">|</span> Recent News
                     </h2>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       {recentNewsArticles.map((article) => (
                         <NewsCard
                           key={article.id}

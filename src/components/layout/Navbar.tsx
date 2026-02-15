@@ -12,9 +12,13 @@ interface NavbarProps {
     headerAd: any
 }
 
+import { useRouter } from 'next/navigation'
+
 export default function Navbar({ categories = [], navLinks = [], headerAd }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
+    const [searchQuery, setSearchQuery] = useState('')
+    const router = useRouter()
 
     useEffect(() => {
         if (navLinks) {
@@ -27,71 +31,94 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
         }
     }, [navLinks])
 
+    const handleSearch = (e?: React.FormEvent) => {
+        e?.preventDefault()
+        if (searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+            setIsOpen(false)
+        }
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch()
+        }
+    }
+
     return (
         <>
             <header className="sticky top-0 z-50 w-full bg-black text-white border-b border-[#333]">
                 {/* Top Bar: Logo & Actions */}
-                <div className="w-full px-4 sm:px-6 lg:px-8 border-b border-[#333]">
-                    <div className="flex justify-between h-20 items-center">
-                        {/* Logo (Centered on Desktop, Left on Mobile) */}
-                        <div className="flex-1 flex justify-start lg:justify-center">
-                            <Link href="/" className="flex items-center shrink-0">
-                                <NextImage
-                                    src="/logo.png"
-                                    alt="NEWSLAN.ID Logo"
-                                    width={400}
-                                    height={100}
-                                    className="h-10 w-auto object-contain"
-                                    priority
-                                    quality={100}
-                                />
-                            </Link>
-                        </div>
+                <div className="w-full border-b border-[#333]">
+                    <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between h-20 items-center">
 
-                        {/* Right: Actions (Search, Subscribe, User) */}
-                        <div className="flex items-center space-x-4 absolute right-4 lg:static lg:flex-1 lg:justify-end">
-                            {/* Search Bar (Desktop) */}
-                            <div className="hidden lg:flex items-center bg-[#222] rounded px-3 py-1.5 w-64 border border-[#333]">
-                                <input
-                                    type="text"
-                                    placeholder="Cari tokoh, topik atau peristiwa"
-                                    className="bg-transparent border-none text-xs text-gray-300 placeholder-gray-500 w-full focus:outline-none focus:ring-0"
-                                />
-                                <Search className="w-4 h-4 text-gray-400" />
-                            </div>
 
-                            {/* Subscribe Button */}
-                            <Link
-                                href="/subscribe"
-                                className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
-                            >
-                                Langganan Newslan+
-                            </Link>
-
-                            {/* Icons */}
-                            <div className="flex items-center space-x-3 text-gray-400">
-                                <button className="hover:text-white transition-colors">
-                                    <Zap className="w-5 h-5" />
-                                </button>
-                                <Link href="/auth/login" className="hover:text-white transition-colors">
-                                    <User className="w-5 h-5" />
+                            {/* Logo (Centered on Desktop, Left on Mobile) */}
+                            <div className="flex-1 flex justify-start">
+                                <Link href="/" className="flex items-center shrink-0">
+                                    <NextImage
+                                        src="/logo.png"
+                                        alt="NEWSLAN.ID Logo"
+                                        width={400}
+                                        height={100}
+                                        className="h-10 w-auto object-contain"
+                                        priority
+                                        quality={100}
+                                    />
                                 </Link>
                             </div>
 
-                            {/* Mobile Menu Toggle */}
-                            <button
-                                onClick={() => setIsOpen(!isOpen)}
-                                className="lg:hidden p-1 text-white hover:bg-gray-800 focus:outline-none ml-2"
-                            >
-                                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                            </button>
+                            {/* Right: Actions (Search, Subscribe, User) */}
+                            <div className="flex items-center space-x-4 absolute right-4 lg:static lg:flex-1 lg:justify-end">
+                                {/* Search Bar (Desktop) */}
+                                <div className="hidden lg:flex items-center bg-[#222] rounded px-3 py-1.5 w-64 border border-[#333]">
+                                    <input
+                                        type="text"
+                                        placeholder="Cari tokoh, topik atau peristiwa"
+                                        className="bg-transparent border-none text-xs text-gray-300 placeholder-gray-500 w-full focus:outline-none focus:ring-0"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                    />
+                                    <button onClick={handleSearch} className="hover:text-white transition-colors">
+                                        <Search className="w-4 h-4 text-gray-400" />
+                                    </button>
+                                </div>
+
+                                {/* Subscribe Button */}
+                                <Link
+                                    href="/subscribe"
+                                    className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
+                                >
+                                    Newslan+
+                                </Link>
+
+                                {/* Icons */}
+                                <div className="flex items-center space-x-3 text-gray-400">
+                                    <button className="hover:text-white transition-colors">
+                                        <Zap className="w-5 h-5" />
+                                    </button>
+                                    <Link href="/auth/login" className="hover:text-white transition-colors">
+                                        <User className="w-5 h-5" />
+                                    </Link>
+                                </div>
+
+                                {/* Mobile Menu Toggle */}
+                                <button
+                                    onClick={() => setIsOpen(!isOpen)}
+                                    className="lg:hidden p-1 text-white hover:bg-gray-800 focus:outline-none ml-2"
+                                >
+                                    {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Navigation Bar (Categories) */}
                 <div className="hidden lg:block bg-black w-full border-b border-[#333]">
-                    <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
                             <Link href="/" className="text-[11px] font-bold uppercase tracking-widest text-white hover:text-primary transition-colors whitespace-nowrap">
                                 Home
