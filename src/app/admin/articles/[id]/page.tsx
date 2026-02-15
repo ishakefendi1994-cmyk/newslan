@@ -169,7 +169,7 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Editor Main */}
                 <div className="lg:col-span-8 space-y-6">
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                    <div className="bg-white p-5 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div className="space-y-2">
                             <label className="text-xs font-black uppercase tracking-widest text-gray-400">Article Title</label>
                             <input
@@ -177,7 +177,7 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Enter a catchy title..."
-                                className="w-full text-2xl font-black tracking-tight border-none focus:ring-0 placeholder:text-gray-200 p-0"
+                                className="w-full text-2xl font-black tracking-tight border-none focus:ring-0 placeholder:text-gray-400 p-0"
                             />
                             <div className="flex items-center space-x-2 mt-1">
                                 <span className="text-[10px] uppercase font-bold text-gray-300">Slug:</span>
@@ -197,7 +197,7 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
                                 onChange={(e) => setExcerpt(e.target.value)}
                                 placeholder="Short summary for the preview card..."
                                 rows={2}
-                                className="w-full text-lg border-none focus:ring-0 placeholder:text-gray-200 p-0 resize-none"
+                                className="w-full text-lg border-none focus:ring-0 placeholder:text-gray-400 p-0 resize-none"
                             />
                         </div>
 

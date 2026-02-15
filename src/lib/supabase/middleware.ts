@@ -41,6 +41,8 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.redirect(url)
             }
         }
+
+
     }
 
     return supabaseResponse

@@ -4,47 +4,28 @@ import Link from 'next/link'
 import NextImage from 'next/image'
 import { useState, useEffect } from 'react'
 import { Menu, X, Search, User, ShoppingBag, Zap, ChevronDown } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import AdRenderer from '../news/AdRenderer'
 
-export default function Navbar() {
+interface NavbarProps {
+    categories: any[]
+    navLinks: any[]
+    headerAd: any
+}
+
+export default function Navbar({ categories = [], navLinks = [], headerAd }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [categories, setCategories] = useState<any[]>([])
-    const [headerAd, setHeaderAd] = useState<any>(null)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
-    const supabase = createClient()
 
     useEffect(() => {
-        const fetchData = async () => {
-            const { data: cats } = await supabase.from('categories').select('*').order('display_order')
-            if (cats) setCategories(cats)
-
-            const { data: navLinks } = await supabase
-                .from('navigation_links')
-                .select('*')
-                .eq('is_active', true)
-                .order('display_order')
-
-            if (navLinks) {
-                const grouped = navLinks.reduce((acc: any, link: any) => {
-                    if (!acc[link.location]) acc[link.location] = []
-                    acc[link.location].push(link)
-                    return acc
-                }, {})
-                setMenus(grouped)
-            }
-
-            const { data: ads } = await supabase
-                .from('advertisements')
-                .select('*')
-                .eq('placement', 'header_bottom')
-                .eq('is_active', true)
-                .limit(1)
-
-            if (ads && ads.length > 0) setHeaderAd(ads[0])
+        if (navLinks) {
+            const grouped = navLinks.reduce((acc: any, link: any) => {
+                if (!acc[link.location]) acc[link.location] = []
+                acc[link.location].push(link)
+                return acc
+            }, {})
+            setMenus(grouped)
         }
-        fetchData()
-    }, [])
+    }, [navLinks])
 
     return (
         <>
@@ -71,7 +52,6 @@ export default function Navbar() {
                                     className="h-8 w-auto object-contain"
                                     priority
                                     quality={100}
-                                    unoptimized
                                 />
                             </Link>
 

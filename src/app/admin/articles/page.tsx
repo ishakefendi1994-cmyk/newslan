@@ -132,7 +132,8 @@ export default function AdminArticlesPage() {
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50">
@@ -240,6 +241,89 @@ export default function AdminArticlesPage() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden">
+                    {loading ? (
+                        <div className="p-8 text-center text-gray-400">
+                            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                            <span className="text-sm font-bold">Loading articles...</span>
+                        </div>
+                    ) : filteredArticles.length === 0 ? (
+                        <div className="p-8 text-center text-gray-400">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                            <span className="text-sm font-bold">No articles found.</span>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-50">
+                            {filteredArticles.map((article) => (
+                                <div key={article.id} className="p-4 space-y-4">
+                                    <div className="flex items-start space-x-4">
+                                        <div className="relative w-20 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                                            {article.featured_image ? (
+                                                <Image
+                                                    src={article.featured_image}
+                                                    alt={article.title}
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <FileText className="w-6 h-6 text-gray-300" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            <div className="flex items-start justify-between">
+                                                <span className="font-bold text-gray-900 leading-snug line-clamp-2">{article.title}</span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(article.id)}
+                                                    onChange={() => toggleSelect(article.id)}
+                                                    className="ml-2 rounded border-gray-300 text-black focus:ring-black cursor-pointer shrink-0"
+                                                />
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge className="bg-primary/5 text-primary border-none text-[10px] font-black">{article.categories?.name || 'Uncategorized'}</Badge>
+                                                {article.is_premium && (
+                                                    <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 text-[9px] px-1.5 py-0">PREMIUM</Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-2">
+                                        <div className="flex items-center space-x-3">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${article.is_published ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                {article.is_published ? 'Published' : 'Draft'}
+                                            </span>
+                                            <div className="flex items-center space-x-1 text-gray-400">
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span className="text-[10px] font-bold">{article.views_count || 0}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-1">
+                                            <Link
+                                                href={`/admin/articles/${article.id}`}
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition-all text-gray-400 hover:text-black"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDelete(article.id, article.title)}
+                                                className="p-2 hover:bg-red-50 rounded-lg transition-all text-gray-400 hover:text-red-500"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

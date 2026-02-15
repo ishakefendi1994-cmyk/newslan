@@ -69,7 +69,7 @@ export default function Editor({ value, onChange, placeholder }: EditorProps) {
           padding: 1.5rem;
         }
         .prose-editor .ql-editor.ql-blank::before {
-          color: #d1d5db;
+          color: #9ca3af;
           font-style: normal;
         }
       `}</style>

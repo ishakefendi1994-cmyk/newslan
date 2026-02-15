@@ -46,7 +46,6 @@ export default function BannerSlider({ banners }: any) {
                                 alt={`Banner ${index + 1}`}
                                 fill
                                 className="object-cover"
-                                unoptimized
                                 priority={index === 0}
                             />
                         </div>

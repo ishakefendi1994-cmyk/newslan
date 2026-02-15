@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { fetchWPPosts, extractWPMedia, extractWPCategory, WPPost } from '@/lib/wordpress'
 import { migrateImageToImgBB } from '@/app/actions/wordpress-import'
+import { grantAdminAccess } from '@/app/actions/auth'
 
 export default function WPImporterPage() {
     const supabase = createClient()
@@ -254,9 +255,33 @@ export default function WPImporterPage() {
                 </div>
 
                 {status && (
-                    <div className={`p-4 rounded-2xl flex items-center space-x-3 ${status.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                        {status.type === 'success' ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span className="text-sm font-bold">{status.message}</span>
+                    <div className={`p-4 rounded-2xl flex flex-col space-y-2 ${status.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        <div className="flex items-center space-x-3">
+                            {status.type === 'success' ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                            <span className="text-sm font-bold">{status.message}</span>
+                        </div>
+                        {status.type === 'error' && (
+                            <div className="pl-8">
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const res = await grantAdminAccess()
+                                            if (res.success) {
+                                                alert(res.message)
+                                                window.location.reload()
+                                            } else {
+                                                alert('Failed: ' + res.message)
+                                            }
+                                        } catch (e: any) {
+                                            alert('Error: ' + e.message)
+                                        }
+                                    }}
+                                    className="text-xs underline font-bold hover:text-red-800"
+                                >
+                                    Fix Permissions (Grant Admin)
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

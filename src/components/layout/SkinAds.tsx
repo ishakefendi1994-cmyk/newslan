@@ -1,30 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
-export default function SkinAds() {
-    const [ads, setAds] = useState<{ left: any, right: any }>({ left: null, right: null })
-    const supabase = createClient()
+interface SkinAdsProps {
+    skinAds: { left: any, right: any }
+}
 
-    useEffect(() => {
-        const fetchSkinAds = async () => {
-            const { data } = await supabase
-                .from('advertisements')
-                .select('*')
-                .in('placement', ['skin_left', 'skin_right'])
-                .eq('is_active', true)
-
-            if (data) {
-                setAds({
-                    left: data.find(ad => ad.placement === 'skin_left') || null,
-                    right: data.find(ad => ad.placement === 'skin_right') || null
-                })
-            }
-        }
-        fetchSkinAds()
-    }, [])
+export default function SkinAds({ skinAds = { left: null, right: null } }: SkinAdsProps) {
+    const ads = skinAds
 
     if (!ads.left && !ads.right) return null
 

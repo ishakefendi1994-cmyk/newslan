@@ -7,8 +7,17 @@ import SkinAds from "./SkinAds"
 import Link from "next/link"
 import NextImage from "next/image"
 
-export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
+interface LayoutWrapperProps {
+    children: React.ReactNode
+    categories: any[]
+    navLinks: any[]
+    headerAd: any
+    skinAds: { left: any, right: any }
+}
+
+export default function LayoutWrapper({ children, categories, navLinks, headerAd, skinAds }: LayoutWrapperProps) {
     const pathname = usePathname()
+    // Admin routes check
     const isAdmin = pathname?.startsWith('/admin')
 
     if (isAdmin) {
@@ -17,9 +26,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
     return (
         <>
-            <SkinAds />
+            <SkinAds skinAds={skinAds} />
             <div className="boxed-container transition-all duration-300">
-                <Navbar />
+                <Navbar categories={categories} navLinks={navLinks} headerAd={headerAd} />
                 <main className="min-h-screen pb-20 lg:pb-0">
                     {children}
                 </main>
@@ -36,7 +45,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                                         height={140}
                                         className="h-12 w-auto object-contain"
                                         quality={100}
-                                        unoptimized
                                     />
                                 </Link>
                                 <p className="text-sm text-gray-400 leading-relaxed font-medium">
@@ -48,6 +56,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                                 <h4 className="text-xs font-black uppercase tracking-widest text-primary">Informasi</h4>
                                 <ul className="space-y-3 text-sm font-bold">
                                     <li><Link href="/redaksi" className="text-gray-300 hover:text-white transition-colors">Redaksi</Link></li>
+                                    <li><Link href="/company-profile" className="text-gray-300 hover:text-white transition-colors">Company Profile</Link></li>
                                     <li><Link href="/pedoman-media-siber" className="text-gray-300 hover:text-white transition-colors">Pedoman Media Siber</Link></li>
                                     <li><Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Kebijakan Privasi</Link></li>
                                 </ul>

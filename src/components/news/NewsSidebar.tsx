@@ -100,6 +100,31 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSid
                     Klik Di Sini
                 </Link>
             </div>
-        </aside>
+
+            {/* Sticky Floating Ad */}
+            <div className="sticky top-24 pt-4">
+                <div className="relative w-full aspect-[300/400] bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-gray-800 flex flex-col items-center justify-center text-center p-8 group cursor-pointer shadow-xl">
+                    <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-widest text-black bg-white/90 px-3 py-1 rounded-full shadow-sm">Available</span>
+
+                    <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 backdrop-blur-sm">
+                        <TrendingUp className="w-10 h-10 text-white" />
+                    </div>
+
+                    <h4 className="text-lg font-black text-gray-800 leading-tight mb-2">
+                        Floating Space
+                    </h4>
+                    <p className="text-xs text-gray-500 mb-6 max-w-[200px]">
+                        Iklan ini akan tetap terlihat saat user melakukan scroll ke bawah.
+                    </p>
+
+                    <button className="px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full group-hover:bg-primary transition-colors">
+                        Learn More
+                    </button>
+
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]" />
+                </div>
+            </div>
+        </aside >
     )
 }

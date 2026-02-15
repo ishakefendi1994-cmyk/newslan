@@ -51,7 +51,7 @@ export function NewsCard({
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h2 className="text-4xl md:text-6xl font-bold text-white leading-[0.95] tracking-tighter hover:text-primary transition-colors mb-4">
+                        <h2 className="text-3xl md:text-5xl font-bold text-white leading-[0.95] tracking-tighter hover:text-primary transition-colors mb-4">
                             {title}
                         </h2>
                     </Link>
@@ -79,7 +79,7 @@ export function NewsCard({
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-xl md:text-2xl font-bold leading-tight text-black group-hover:text-primary transition-colors">
+                        <h3 className="text-lg md:text-xl font-bold leading-tight text-black group-hover:text-primary transition-colors">
                             {title}
                         </h3>
                     </Link>
@@ -95,7 +95,6 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover"
-                        unoptimized
                     />
                 </div>
             </div>
@@ -114,7 +113,7 @@ export function NewsCard({
                     <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-primary block mb-1">In Brief</span>
                         <Link href={`/news/${slug}`} className="block">
-                            <h4 className="text-base font-bold leading-tight text-black group-hover:text-primary transition-colors">
+                            <h4 className="text-sm font-bold leading-tight text-black group-hover:text-primary transition-colors">
                                 {title}
                             </h4>
                         </Link>
@@ -139,7 +138,6 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        unoptimized
                     />
                     {isPremium && (
                         <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs font-black px-3 py-1 uppercase tracking-widest">
@@ -153,7 +151,7 @@ export function NewsCard({
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className={`text-2xl md:text-3xl font-black leading-[1.1] tracking-tighter hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
+                        <h3 className={`text-xl md:text-2xl font-black leading-[1.1] tracking-tighter hover:text-primary transition-colors ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h3>
                     </Link>
@@ -176,7 +174,6 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        unoptimized
                     />
                     <div className="absolute bottom-4 left-4">
                         <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000] shadow-xl">
@@ -186,7 +183,7 @@ export function NewsCard({
                 </div>
                 <div className="space-y-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-base font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-3 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
+                        <h3 className="text-sm font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-3 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
                             {title}
                         </h3>
                     </Link>
@@ -208,7 +205,6 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        unoptimized
                     />
                     <div className="absolute bottom-4 left-4">
                         <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000]">
@@ -218,7 +214,7 @@ export function NewsCard({
                 </div>
                 <div className="space-y-3 px-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-2xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8">
+                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8">
                             {title}
                         </h3>
                     </Link>
@@ -240,12 +236,11 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        unoptimized
                     />
                 </div>
                 <div className="flex-1 space-y-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-base md:text-lg font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2">
+                        <h4 className="text-sm md:text-base font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2">
                             {title}
                         </h4>
                     </Link>
@@ -267,12 +262,11 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        unoptimized
                     />
                 </div>
                 <div className="flex-1 space-y-1">
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-sm font-black leading-snug text-gray-800 group-hover:text-[#990000] transition-colors line-clamp-2">
+                        <h4 className="text-xs font-black leading-snug text-gray-800 group-hover:text-[#990000] transition-colors line-clamp-2">
                             {title}
                         </h4>
                     </Link>
@@ -286,14 +280,13 @@ export function NewsCard({
         const blockBgColor = isLightBg || !categoryColor ? '#990000' : categoryColor
 
         return (
-            <div className={`group flex flex-col h-full rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
+            <div className={`group flex flex-col h-full rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
                 <div className="relative aspect-video w-full overflow-hidden">
                     <Image
                         src={image}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        unoptimized
                     />
                 </div>
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-between" style={{ backgroundColor: blockBgColor }}>
@@ -302,7 +295,7 @@ export function NewsCard({
                             {category}
                         </span>
                         <Link href={`/news/${slug}`} className="block">
-                            <h3 className="text-2xl md:text-3xl font-black leading-tight text-white tracking-tight group-hover:underline underline-offset-4 decoration-2">
+                            <h3 className="text-xl md:text-2xl font-black leading-tight text-white tracking-tight group-hover:underline underline-offset-4 decoration-2">
                                 {title}
                             </h3>
                         </Link>
@@ -318,21 +311,22 @@ export function NewsCard({
 
     if (variant === 'overlay-grid') {
         return (
-            <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-xl">
-                <Image
-                    src={image}
-                    alt={title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    unoptimized
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                <div className="absolute bottom-0 left-0 p-5 w-full">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-[#990000] mb-2 block bg-white/10 backdrop-blur-sm w-fit px-2 py-0.5 rounded">
+            <div className="group flex flex-col h-full space-y-3">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none border border-black/5">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        unoptimized
+                    />
+                </div>
+                <div className="flex flex-col space-y-2">
+                    <span className={`text-[9px] font-black uppercase tracking-wider ${isDark ? 'text-white/60' : 'text-primary'}`}>
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-base font-bold leading-tight text-white group-hover:text-gray-200 transition-colors line-clamp-3 mb-1">
+                        <h4 className={`text-sm font-bold leading-tight group-hover:text-primary transition-colors line-clamp-3 ${isDark ? 'text-white' : 'text-black'}`}>
                             {title}
                         </h4>
                     </Link>
@@ -358,7 +352,7 @@ export function NewsCard({
                     {category}
                 </span>
                 <Link href={`/news/${slug}`} className="block">
-                    <h3 className={`text-xl font-bold leading-tight hover:text-primary transition-colors line-clamp-5 ${isDark ? 'text-white' : 'text-black'}`}>
+                    <h3 className={`text-lg font-bold leading-tight hover:text-primary transition-colors line-clamp-5 ${isDark ? 'text-white' : 'text-black'}`}>
                         {title}
                     </h3>
                 </Link>
