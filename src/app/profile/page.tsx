@@ -85,6 +85,9 @@ export default function ProfilePage() {
                         <MenuItem icon={Bell} title="Notifikasi" color="text-blue-500" href="#" />
                         <MenuItem icon={CreditCard} title="Langganan Saya" color="text-green-500" href="/subscribe" />
                         <MenuItem icon={Megaphone} title="Aduan" color="text-purple-500" href="/profile/complaints" />
+                        {role === 'admin' && (
+                            <MenuItem icon={Shield} title="Admin Panel" color="text-red-600" href="/admin" />
+                        )}
                         <MenuItem icon={Settings} title="Pengaturan" color="text-gray-500" href="/profile/settings" />
                     </div>
                 </div>

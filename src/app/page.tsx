@@ -7,6 +7,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import AdRenderer from '@/components/news/AdRenderer'
+import {
+  getBanners,
+  getBreakingNews,
+  getCategoriesWithNews,
+  getFeedAds,
+  getLatestArticlesTop20,
+  getLatestGridNews
+} from '@/lib/data'
 
 // Helper function to determine if text should be white or black based on background color
 function getContrastColor(hexColor: string | null) {
@@ -31,51 +39,21 @@ export default async function HomePage({
   const offset = (currentPage - 1) * itemsPerPage
 
   // Parallel data fetching
+  // Parallel data fetching
   const [
-    { data: banners },
-    { data: latestArticles },
-    { data: categoriesWithNews },
-    { data: breakingNewsResult },
-    { data: feedAds },
+    banners,
+    latestArticles,
+    categoriesWithNews,
+    breakingNewsResult,
+    feedAds,
     { data: latestGridNews, count: totalLatestNews }
   ] = await Promise.all([
-    supabase.from('banners').select('*').eq('is_active', true).order('display_order', { ascending: true }),
-    supabase.from('articles').select('*, categories(name, bg_color)').eq('is_published', true).order('created_at', { ascending: false }).limit(20),
-    supabase.from('categories').select(`
-          id,
-          name,
-          slug,
-          show_on_home,
-          display_order,
-          bg_color,
-          sidebar_ad_id,
-          sidebar_ad:advertisements!sidebar_ad_id(*),
-          sidebar_ad_2_id,
-          sidebar_ad_2:advertisements!sidebar_ad_2_id(*),
-          sidebar_ad_3_id,
-          sidebar_ad_3:advertisements!sidebar_ad_3_id(*),
-          articles(
-            id,
-            title,
-            slug,
-            featured_image,
-            excerpt,
-            is_premium,
-            created_at
-          )
-        `)
-      .eq('show_on_home', true)
-      .neq('slug', 'uncategorized') // Exclude Uncategorized
-      .order('display_order', { ascending: true })
-      .eq('articles.is_published', true),
-    supabase.from('articles').select('title').eq('is_published', true).eq('is_breaking', true).order('created_at', { ascending: false }).limit(5),
-    supabase.from('advertisements').select('*').eq('placement', 'feed_between').eq('is_active', true),
-    // Fetch paginated latest news for the bottom grid
-    supabase.from('articles')
-      .select('*, categories(name, bg_color)', { count: 'exact' })
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + itemsPerPage - 1)
+    getBanners(),
+    getLatestArticlesTop20(),
+    getCategoriesWithNews(),
+    getBreakingNews(),
+    getFeedAds(),
+    getLatestGridNews(currentPage, itemsPerPage)
   ])
 
   let breakingNews = breakingNewsResult

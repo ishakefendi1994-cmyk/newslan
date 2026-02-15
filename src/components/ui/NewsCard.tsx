@@ -43,7 +43,8 @@ export function NewsCard({
                     alt={title}
                     fill
                     className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
-                    unoptimized
+                    sizes="100vw"
+                    priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
                 <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full max-w-4xl">
@@ -95,6 +96,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 768px) 128px, 192px"
                     />
                 </div>
             </div>
@@ -138,6 +140,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 60vw"
                     />
                     {isPremium && (
                         <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs font-black px-3 py-1 uppercase tracking-widest">
@@ -174,6 +177,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <div className="absolute bottom-4 left-4">
                         <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000] shadow-xl">
@@ -205,6 +209,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
                     />
                     <div className="absolute bottom-4 left-4">
                         <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000]">
@@ -236,6 +241,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 128px, 192px"
                     />
                 </div>
                 <div className="flex-1 space-y-2">
@@ -262,6 +268,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="80px"
                     />
                 </div>
                 <div className="flex-1 space-y-1">
@@ -287,6 +294,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                     />
                 </div>
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-between" style={{ backgroundColor: blockBgColor }}>
@@ -318,7 +326,7 @@ export function NewsCard({
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        unoptimized
+                        sizes="(max-width: 768px) 50vw, 25vw"
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
@@ -344,7 +352,7 @@ export function NewsCard({
                     alt={title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    unoptimized
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
                 />
             </div>
             <div className="flex flex-col space-y-2">

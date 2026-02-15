@@ -47,6 +47,7 @@ export default function BannerSlider({ banners }: any) {
                                 fill
                                 className="object-cover"
                                 priority={index === 0}
+                                sizes="(max-width: 1280px) 100vw, 1280px"
                             />
                         </div>
                     ))}

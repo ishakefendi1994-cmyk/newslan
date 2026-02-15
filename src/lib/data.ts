@@ -1,0 +1,119 @@
+import { createPublicClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+
+// Cache revalidation time in seconds
+const REVALIDATE_TIME = 60
+
+export const getBanners = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('banners')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+        return data
+    },
+    ['banners'],
+    { revalidate: REVALIDATE_TIME, tags: ['banners'] }
+)
+
+export const getLatestArticlesTop20 = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('articles')
+            .select('*, categories(name, bg_color)')
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .limit(20)
+        return data
+    },
+    ['latest-articles-top-20'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)
+
+export const getCategoriesWithNews = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('categories')
+            .select(`
+        id,
+        name,
+        slug,
+        show_on_home,
+        display_order,
+        bg_color,
+        sidebar_ad_id,
+        sidebar_ad:advertisements!sidebar_ad_id(*),
+        sidebar_ad_2_id,
+        sidebar_ad_2:advertisements!sidebar_ad_2_id(*),
+        sidebar_ad_3_id,
+        sidebar_ad_3:advertisements!sidebar_ad_3_id(*),
+        articles(
+          id,
+          title,
+          slug,
+          featured_image,
+          excerpt,
+          is_premium,
+          created_at
+        )
+      `)
+            .eq('show_on_home', true)
+            .neq('slug', 'uncategorized')
+            .order('display_order', { ascending: true })
+            .eq('articles.is_published', true)
+
+        return data
+    },
+    ['categories-with-news'],
+    { revalidate: REVALIDATE_TIME, tags: ['categories', 'articles'] }
+)
+
+export const getBreakingNews = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('articles')
+            .select('title')
+            .eq('is_published', true)
+            .eq('is_breaking', true)
+            .order('created_at', { ascending: false })
+            .limit(5)
+        return data
+    },
+    ['breaking-news'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)
+
+export const getFeedAds = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('advertisements')
+            .select('*')
+            .eq('placement', 'feed_between')
+            .eq('is_active', true)
+        return data
+    },
+    ['feed-ads'],
+    { revalidate: REVALIDATE_TIME, tags: ['ads'] }
+)
+
+export const getLatestGridNews = unstable_cache(
+    async (page: number, itemsPerPage: number) => {
+        const supabase = createPublicClient()
+        const offset = (page - 1) * itemsPerPage
+        const { data, count } = await supabase
+            .from('articles')
+            .select('*, categories(name, bg_color)', { count: 'exact' })
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + itemsPerPage - 1)
+        return { data, count }
+    },
+    ['latest-grid-news'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)

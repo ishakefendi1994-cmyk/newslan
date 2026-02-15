@@ -62,7 +62,7 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSid
                                     alt={article.title}
                                     fill
                                     className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                    unoptimized
+                                    sizes="96px"
                                 />
                             </div>
                             <div className="flex flex-col justify-center space-y-2">
