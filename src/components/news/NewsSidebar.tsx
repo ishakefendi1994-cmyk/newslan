@@ -7,9 +7,10 @@ import AdRenderer from './AdRenderer'
 interface NewsSidebarProps {
     latestArticles: any[]
     sidebarAds?: any[]
+    trendingNews?: any[]
 }
 
-export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSidebarProps) {
+export default function NewsSidebar({ latestArticles, sidebarAds = [], trendingNews = [] }: NewsSidebarProps) {
     return (
         <aside className="space-y-10">
             {/* Sidebar Ad Placements */}
@@ -101,28 +102,48 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [] }: NewsSid
                 </Link>
             </div>
 
-            {/* Sticky Floating Ad */}
+            {/* Trending News (Sticky) */}
             <div className="sticky top-24 pt-4">
-                <div className="relative w-full aspect-[300/400] bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-gray-800 flex flex-col items-center justify-center text-center p-8 group cursor-pointer shadow-xl">
-                    <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-widest text-black bg-white/90 px-3 py-1 rounded-full shadow-sm">Available</span>
-
-                    <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 backdrop-blur-sm">
-                        <TrendingUp className="w-10 h-10 text-white" />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                        <div className="flex items-center space-x-2">
+                            <TrendingUp className="w-4 h-4 text-[#990000]" />
+                            <h3 className="text-sm font-black uppercase tracking-wide text-gray-900">Trending Now</h3>
+                        </div>
+                        <span className="text-[9px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
+                            Last 7 Days
+                        </span>
                     </div>
 
-                    <h4 className="text-lg font-black text-gray-800 leading-tight mb-2">
-                        Floating Space
-                    </h4>
-                    <p className="text-xs text-gray-500 mb-6 max-w-[200px]">
-                        Iklan ini akan tetap terlihat saat user melakukan scroll ke bawah.
-                    </p>
-
-                    <button className="px-6 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full group-hover:bg-primary transition-colors">
-                        Learn More
-                    </button>
-
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]" />
+                    <div className="divide-y divide-gray-50">
+                        {trendingNews && trendingNews.length > 0 ? (
+                            trendingNews.map((article, idx) => (
+                                <Link
+                                    key={article.id}
+                                    href={`/news/${article.slug}`}
+                                    className="block p-4 hover:bg-gray-50 transition-colors group"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <span className={`text-2xl font-black italic text-[#990000] leading-none -mt-1 group-hover:scale-110 transition-transform`}>
+                                            0{idx + 1}
+                                        </span>
+                                        <div className="flex-1 space-y-1">
+                                            <h4 className="text-sm font-black text-black leading-tight line-clamp-2 group-hover:text-[#990000] transition-colors">
+                                                {article.title}
+                                            </h4>
+                                            <div className="flex items-center text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                                                <span>{article.categories?.name || 'News'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="p-6 text-center text-gray-400 text-xs">
+                                No trending news available
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </aside >

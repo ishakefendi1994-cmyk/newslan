@@ -13,7 +13,8 @@ import {
   getCategoriesWithNews,
   getFeedAds,
   getLatestArticlesTop20,
-  getLatestGridNews
+  getLatestGridNews,
+  getTrendingNews
 } from '@/lib/data'
 
 // Helper function to determine if text should be white or black based on background color
@@ -46,14 +47,16 @@ export default async function HomePage({
     categoriesWithNews,
     breakingNewsResult,
     feedAds,
-    { data: latestGridNews, count: totalLatestNews }
+    { data: latestGridNews, count: totalLatestNews },
+    trendingNews
   ] = await Promise.all([
     getBanners(),
     getLatestArticlesTop20(),
     getCategoriesWithNews(),
     getBreakingNews(),
     getFeedAds(),
-    getLatestGridNews(currentPage, itemsPerPage)
+    getLatestGridNews(currentPage, itemsPerPage),
+    getTrendingNews()
   ])
 
   let breakingNews = breakingNewsResult

@@ -117,3 +117,19 @@ export const getLatestGridNews = unstable_cache(
     ['latest-grid-news'],
     { revalidate: REVALIDATE_TIME, tags: ['articles'] }
 )
+
+export const getTrendingNews = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('articles')
+            .select('*, categories(name, bg_color)')
+            .eq('is_published', true)
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
+            .order('created_at', { ascending: false }) // Fallback since no views column
+            .limit(7)
+        return data
+    },
+    ['trending-news'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)

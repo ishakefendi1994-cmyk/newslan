@@ -10,6 +10,7 @@ import NewsSidebar from '@/components/news/NewsSidebar'
 import SocialShare from '@/components/news/SocialShare'
 import AdRenderer from '@/components/news/AdRenderer'
 import BannerSlider from '@/components/ui/BannerSlider'
+import { getTrendingNews } from '@/lib/data'
 import { Metadata } from 'next'
 
 // Generate Metadata for SEO and Social Sharing
@@ -140,6 +141,8 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
             .neq('id', article.id)
             .order('created_at', { ascending: false })
             .limit(6)
+
+        const trendingNews = await getTrendingNews()
 
         // Get User for Paywall
         const { data: { user } } = await supabase.auth.getUser()
@@ -404,7 +407,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
                         {/* Sidebar (5 Columns) */}
                         <div className="lg:col-span-5 lg:border-l lg:border-gray-100 lg:pl-10">
-                            <NewsSidebar latestArticles={sidebarArticles || []} sidebarAds={sidebarAds} />
+                            <NewsSidebar latestArticles={sidebarArticles || []} sidebarAds={sidebarAds} trendingNews={trendingNews || []} />
                         </div>
 
                     </div>

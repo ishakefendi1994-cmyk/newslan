@@ -24,7 +24,8 @@ export default function SocialShare({ url, title, description = '', variant = 'd
     }
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(url)
+        const textToCopy = `${title}\n\n${description}\n\nSelengkapnya di Newslan.id: ${url}`
+        navigator.clipboard.writeText(textToCopy)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }

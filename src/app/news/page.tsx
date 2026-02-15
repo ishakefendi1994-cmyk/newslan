@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTrendingNews } from '@/lib/data'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
@@ -44,6 +45,8 @@ export default async function NewsIndexPage({ searchParams }: { searchParams: { 
         .select('*')
         .eq('is_active', true)
         .eq('placement', 'sidebar')
+
+    const trendingNews = await getTrendingNews()
 
     const totalPages = Math.ceil((count || 0) / limit)
 
@@ -136,7 +139,7 @@ export default async function NewsIndexPage({ searchParams }: { searchParams: { 
 
                     {/* Sidebar */}
                     <div className="lg:col-span-4 lg:border-l lg:border-gray-100 lg:pl-10">
-                        <NewsSidebar latestArticles={latestArticles || []} sidebarAds={sidebarAds || []} />
+                        <NewsSidebar latestArticles={latestArticles || []} sidebarAds={sidebarAds || []} trendingNews={trendingNews || []} />
                     </div>
                 </div>
             </div>

@@ -60,7 +60,7 @@
 
 body {
   color: #000;
-  background: #222222;
+  background: #ffff;
   /* Charcoal Grey/Black for side areas */
   font-family: var(--font-sans);
 }
@@ -77,7 +77,7 @@ body {
   margin-right: auto;
   background-color: white;
   min-height: 100vh;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+  /* box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); */
 }
 
 .line-clamp-2 {

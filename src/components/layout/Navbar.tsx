@@ -29,74 +29,110 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full bg-white border-b border-black">
-                <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        {/* Left: Logo & Menu Toggle */}
-                        <div className="flex items-center space-x-4">
-                            {/* Mobile Menu Toggle */}
-                            <button
-                                onClick={() => setIsOpen(!isOpen)}
-                                className="lg:hidden p-1 text-black hover:bg-gray-100 focus:outline-none"
-                            >
-                                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                            </button>
-
-                            {/* Logo */}
+            <header className="sticky top-0 z-50 w-full bg-black text-white border-b border-[#333]">
+                {/* Top Bar: Logo & Actions */}
+                <div className="w-full px-4 sm:px-6 lg:px-8 border-b border-[#333]">
+                    <div className="flex justify-between h-20 items-center">
+                        {/* Logo (Centered on Desktop, Left on Mobile) */}
+                        <div className="flex-1 flex justify-start lg:justify-center">
                             <Link href="/" className="flex items-center shrink-0">
                                 <NextImage
                                     src="/logo.png"
                                     alt="NEWSLAN.ID Logo"
                                     width={400}
                                     height={100}
-                                    className="h-8 w-auto object-contain"
+                                    className="h-10 w-auto object-contain"
                                     priority
                                     quality={100}
                                 />
                             </Link>
-
-                            {/* Desktop Categories */}
-                            <div className="hidden lg:flex items-center space-x-6 ml-6">
-                                {categories.slice(0, 6).map((cat) => (
-                                    <Link
-                                        key={cat.id}
-                                        href={`/category/${cat.slug}`}
-                                        className="text-sm font-bold text-black hover:text-primary transition-colors"
-                                    >
-                                        {cat.name}
-                                    </Link>
-                                ))}
-                                {/* More dropdown could go here */}
-                            </div>
                         </div>
 
-                        {/* Right: Actions */}
-                        <div className="flex items-center space-x-4">
-                            <button className="hidden sm:flex p-1 hover:text-primary transition-colors text-black">
-                                <Search className="w-5 h-5" />
-                            </button>
+                        {/* Right: Actions (Search, Subscribe, User) */}
+                        <div className="flex items-center space-x-4 absolute right-4 lg:static lg:flex-1 lg:justify-end">
+                            {/* Search Bar (Desktop) */}
+                            <div className="hidden lg:flex items-center bg-[#222] rounded px-3 py-1.5 w-64 border border-[#333]">
+                                <input
+                                    type="text"
+                                    placeholder="Cari tokoh, topik atau peristiwa"
+                                    className="bg-transparent border-none text-xs text-gray-300 placeholder-gray-500 w-full focus:outline-none focus:ring-0"
+                                />
+                                <Search className="w-4 h-4 text-gray-400" />
+                            </div>
 
+                            {/* Subscribe Button */}
                             <Link
-                                href="/auth/login"
-                                className="hidden sm:flex text-sm font-bold text-black hover:text-primary transition-colors"
+                                href="/subscribe"
+                                className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
                             >
-                                Login
+                                Langganan Newslan+
                             </Link>
+
+                            {/* Icons */}
+                            <div className="flex items-center space-x-3 text-gray-400">
+                                <button className="hover:text-white transition-colors">
+                                    <Zap className="w-5 h-5" />
+                                </button>
+                                <Link href="/auth/login" className="hover:text-white transition-colors">
+                                    <User className="w-5 h-5" />
+                                </Link>
+                            </div>
+
+                            {/* Mobile Menu Toggle */}
+                            <button
+                                onClick={() => setIsOpen(!isOpen)}
+                                className="lg:hidden p-1 text-white hover:bg-gray-800 focus:outline-none ml-2"
+                            >
+                                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation Bar (Categories) */}
+                <div className="hidden lg:block bg-black w-full border-b border-[#333]">
+                    <div className="w-full px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
+                            <Link href="/" className="text-[11px] font-bold uppercase tracking-widest text-white hover:text-primary transition-colors whitespace-nowrap">
+                                Home
+                            </Link>
+                            {categories.slice(0, 8).map((cat) => (
+                                <Link
+                                    key={cat.id}
+                                    href={`/category/${cat.slug}`}
+                                    className="text-[11px] font-bold uppercase tracking-widest text-gray-300 hover:text-white transition-colors whitespace-nowrap"
+                                >
+                                    {cat.name}
+                                </Link>
+                            ))}
+                            <button className="ml-auto text-gray-400 hover:text-white">
+                                <Menu className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 {/* Mobile Menu Overlay */}
                 {isOpen && (
-                    <div className="lg:hidden bg-white border-b border-black animate-in slide-in-from-top duration-200 absolute w-full left-0 top-16 shadow-xl h-screen overflow-y-auto pb-40">
+                    <div className="lg:hidden bg-black border-t border-[#333] animate-in slide-in-from-top duration-200 absolute w-full left-0 top-20 shadow-xl h-screen overflow-y-auto pb-40 z-50">
                         <div className="p-4 space-y-6">
+                            {/* Mobile Search */}
+                            <div className="flex items-center bg-[#222] rounded px-3 py-2 border border-[#333]">
+                                <input
+                                    type="text"
+                                    placeholder="Cari berita..."
+                                    className="bg-transparent border-none text-sm text-gray-300 placeholder-gray-500 w-full focus:outline-none"
+                                />
+                                <Search className="w-4 h-4 text-gray-400" />
+                            </div>
+
                             <div className="space-y-1">
-                                <p className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest">Sections</p>
+                                <p className="text-xs font-black text-gray-500 uppercase mb-3 tracking-widest">Kategori</p>
                                 {categories.map((cat) => (
                                     <Link
                                         key={cat.id}
                                         href={`/category/${cat.slug}`}
-                                        className="block py-2 text-xl font-bold text-black hover:text-primary border-b border-gray-100"
+                                        className="block py-3 text-lg font-bold text-gray-200 hover:text-white border-b border-[#222]"
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {cat.name}
@@ -104,9 +140,21 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                                 ))}
                             </div>
 
-                            <div className="space-y-1">
-                                <p className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest">More</p>
-                                <Link href="/auth/login" className="block py-2 text-lg font-bold text-gray-600" onClick={() => setIsOpen(false)}>Login</Link>
+                            <div className="space-y-4 pt-4">
+                                <Link
+                                    href="/subscribe"
+                                    className="block w-full text-center bg-[#0087c9] text-white py-3 rounded font-bold uppercase tracking-widest text-xs"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Langganan Newslan+
+                                </Link>
+                                <Link
+                                    href="/auth/login"
+                                    className="block w-full text-center border border-[#333] text-white py-3 rounded font-bold uppercase tracking-widest text-xs hover:bg-[#222]"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Masuk Akun
+                                </Link>
                             </div>
                         </div>
                     </div>
