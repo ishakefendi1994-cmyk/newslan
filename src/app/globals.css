@@ -8,16 +8,14 @@
 .article-content p {
   margin-bottom: 2rem !important;
   line-height: 1.8;
-  font-family: var(--font-serif), serif;
+  font-family: 'Merriweather', serif;
   font-size: 1.125rem;
   color: #111;
   font-weight: 400;
-  /* Ensure normal weight */
 }
 
 .article-content img {
   border-radius: 0;
-  /* Sharp edges for images */
   margin: 2rem auto;
   max-width: 100%;
   height: auto;
@@ -34,7 +32,7 @@
   margin: 2rem 0;
 }
 
-/* Drop Cap Effect - Updated selector for nested prose blocks */
+/* Drop Cap Effect */
 .article-content div:first-child p:first-of-type::first-letter,
 .article-content>p:first-of-type::first-letter {
   float: left;
@@ -47,17 +45,13 @@
   text-transform: uppercase;
 }
 
-@theme {
+/* Standard CSS Variables instead of @theme */
+:root {
   --color-primary: #990000;
-  /* Dark Red Theme */
   --color-secondary: #0a0a0a;
   --color-accent: #f4f4f4;
-
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Merriweather', serif;
-}
-
-:root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
@@ -65,8 +59,7 @@
 
 body {
   color: #000;
-  background: #ffff;
-  /* Charcoal Grey/Black for side areas */
+  background: #fff;
   font-family: var(--font-sans);
 }
 
@@ -77,12 +70,10 @@ body {
 
 .boxed-container {
   max-width: 1100px;
-  /* Reduced from 1280px to 1100px for a tighter look */
   margin-left: auto;
   margin-right: auto;
   background-color: white;
   min-height: 100vh;
-  /* box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); */
 }
 
 .line-clamp-2 {
@@ -92,14 +83,12 @@ body {
   overflow: hidden;
 }
 
-/* Sharp Cards, No Shadows for TechCrunch look */
 .news-card-hover {
   transition: all 0.2s ease;
 }
 
 .news-card-hover:hover {
   transform: translateY(-2px);
-  /* No heavy shadow, maybe just opacity change */
   opacity: 0.9;
 }
 

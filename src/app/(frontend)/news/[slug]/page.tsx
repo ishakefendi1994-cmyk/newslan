@@ -17,6 +17,8 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import NewsSidebarContainer from '@/components/news/NewsSidebarContainer'
 import RelatedArticlesContainer from '@/components/news/RelatedArticlesContainer'
+import SkeletonSidebar from '@/components/ui/SkeletonSidebar'
+import SkeletonCard from '@/components/ui/SkeletonCard'
 
 // Generate Metadata for SEO and Social Sharing
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -281,42 +283,49 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                 />
                             </div>
 
-                            {/* Products Section */}
-                            {products.length > 0 && (
-                                <div className="mt-20 pt-10 border-t-4 border-black space-y-8">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="h-4 w-4 bg-primary rotate-45" />
-                                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Rekomendasi Produk Terkait</h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {products.map((product: any, i: number) => (
-                                            <ProductCard
-                                                key={i}
-                                                name={product.name}
-                                                description={product.description}
-                                                image={product.image_url}
-                                                priceRange={product.price_range}
-                                                links={product.links}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Related Articles Section - Dark Premium Style (Async Streamed) */}
-                            <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse mt-24"></div>}>
-                                <RelatedArticlesContainer currentArticleId={article.id} categoryId={article.categories?.id} />
-                            </Suspense>
                         </div>
 
                         {/* Sidebar (5 Columns) (Async Streamed) */}
                         <div className="lg:col-span-5 min-w-0 lg:border-l lg:border-gray-100 lg:pl-8">
-                            <Suspense fallback={<div className="space-y-8 animate-pulse"><div className="h-64 bg-gray-100 rounded-xl"></div><div className="h-96 bg-gray-100 rounded-xl"></div></div>}>
+                            <Suspense fallback={<SkeletonSidebar />}>
                                 <NewsSidebarContainer currentArticleId={article.id} />
                             </Suspense>
                         </div>
 
                     </div>
+
+                    {/* Products Section - Full Width */}
+                    {products.length > 0 && (
+                        <div className="mt-20 pt-10 border-t-4 border-black space-y-8">
+                            <div className="flex items-center space-x-3">
+                                <div className="h-4 w-4 bg-primary rotate-45" />
+                                <h2 className="text-2xl font-black uppercase tracking-tighter italic">Rekomendasi Produk Terkait</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {products.map((product: any, i: number) => (
+                                    <ProductCard
+                                        key={i}
+                                        name={product.name}
+                                        description={product.description}
+                                        image={product.image_url}
+                                        priceRange={product.price_range}
+                                        links={product.links}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Related Articles Section - Full Width (Async Streamed) */}
+                    <Suspense fallback={
+                        <div className="space-y-6 mt-16">
+                            {[...Array(6)].map((_, i) => (
+                                <SkeletonCard key={i} variant="tempo-horizontal" />
+                            ))}
+                        </div>
+                    }>
+                        <RelatedArticlesContainer currentArticleId={article.id} categoryId={article.categories?.id} />
+                    </Suspense>
                 </div>
             </div>
         )

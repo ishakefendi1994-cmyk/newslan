@@ -15,7 +15,7 @@ interface NewsCardProps {
     excerpt?: string
     isPremium?: boolean
     isDark?: boolean
-    variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief' | 'grid-standard' | 'horizontal-medium' | 'recent-list' | 'spotlight' | 'feature-block' | 'overlay-grid'
+    variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief' | 'grid-standard' | 'horizontal-medium' | 'recent-list' | 'spotlight' | 'feature-block' | 'overlay-grid' | 'tempo-hero' | 'tempo-sub' | 'tempo-sidebar' | 'tempo-horizontal'
     author?: string
     date?: string
 }
@@ -391,6 +391,118 @@ export function NewsCard({
                     </Link>
 
                     {/* Optional: Read More link can be removed for cleaner look, or kept small */}
+                </div>
+            </div>
+        )
+    }
+
+    // === TEMPO-STYLE VARIANTS ===
+
+    // Tempo Hero: Large bold hero card with dramatic styling
+    if (variant === 'tempo-hero') {
+        return (
+            <div className="group relative aspect-[16/9] w-full overflow-hidden bg-black border-4 border-black" onMouseEnter={handlePrefetch}>
+                <Image
+                    src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 1200 })}
+                    alt={title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 1200px) 100vw, 1200px"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 w-full">
+                    <div className="flex items-center space-x-2 mb-3">
+                        <span className="bg-[#990000] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                            {category}
+                        </span>
+                    </div>
+                    <Link href={`/news/${slug}`} className="block">
+                        <h2 className="text-xl md:text-3xl font-black text-white leading-tight tracking-tighter hover:text-[#990000] transition-colors line-clamp-3">
+                            {title}
+                        </h2>
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    // Tempo Sub: Medium cards for sub-hero grid
+    if (variant === 'tempo-sub') {
+        return (
+            <div className="group flex flex-col space-y-4" onMouseEnter={handlePrefetch}>
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100 border-2 border-black/10">
+                    <Image
+                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 600 })}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <span className="bg-[#990000] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white inline-block">
+                        {category}
+                    </span>
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className="text-base md:text-lg font-bold leading-snug text-black hover:text-[#990000] transition-colors line-clamp-3">
+                            {title}
+                        </h3>
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    // Tempo Sidebar: Compact horizontal cards
+    if (variant === 'tempo-sidebar') {
+        return (
+            <div className="group flex flex-row items-start gap-3 py-3 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
+                <div className="relative w-20 h-20 shrink-0 overflow-hidden bg-gray-100">
+                    <Image
+                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 200 })}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="80px"
+                    />
+                </div>
+                <div className="flex-1 space-y-1">
+                    <Link href={`/news/${slug}`} className="block">
+                        <h4 className="text-xs font-bold leading-snug text-black hover:text-[#990000] transition-colors line-clamp-3">
+                            {title}
+                        </h4>
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    // Tempo Horizontal: Full-width horizontal cards
+    if (variant === 'tempo-horizontal') {
+        return (
+            <div className="group flex flex-col md:flex-row gap-6 py-8 border-b border-gray-100 last:border-0 items-center" onMouseEnter={handlePrefetch}>
+                <div className="relative md:w-1/3 aspect-video overflow-hidden">
+                    <Image
+                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 600 })}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                </div>
+                <div className="flex-1 flex flex-col justify-center space-y-3">
+                    <div className="flex items-center space-x-2">
+                        <span className="bg-[#990000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                            {category}
+                        </span>
+                    </div>
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className="text-lg md:text-2xl font-bold text-black leading-tight hover:text-[#990000] transition-colors line-clamp-2">
+                            {title}
+                        </h3>
+                    </Link>
+                    {excerpt && <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">{excerpt}</p>}
                 </div>
             </div>
         )
