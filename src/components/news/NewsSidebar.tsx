@@ -90,17 +90,7 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [], trendingN
                 </Link>
             </div>
 
-            {/* Secondary Ad */}
-            <div className="bg-black rounded-2xl p-8 text-center space-y-4">
-                <h3 className="text-white font-black text-lg leading-tight">Langganan Konten Premium?</h3>
-                <p className="text-gray-400 text-xs">Dapatkan investigasi mendalam & eksklusif setiap hari.</p>
-                <Link
-                    href="/subscribe"
-                    className="block w-full py-3 bg-primary text-white rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
-                >
-                    Klik Di Sini
-                </Link>
-            </div>
+
 
             {/* Trending News (Sticky) */}
             <div className="sticky top-24 pt-4">

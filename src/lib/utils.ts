@@ -40,3 +40,39 @@ function formatSingleValue(val: string): string {
         maximumFractionDigits: 0
     }).format(amount)
 }
+
+/**
+ * Optimizes Cloudinary URLs by injecting f_auto,q_auto and optional params
+ */
+export function optimizeCloudinaryUrl(
+    url: string,
+    options?: { width?: number; quality?: string }
+): string {
+    if (!url || !url.includes('cloudinary.com')) return url
+
+    // Helper to build transformation string
+    const transforms = ['f_auto']
+
+    // Quality (default to q_auto if not specified, or use provided like 'q_auto:eco')
+    transforms.push(options?.quality ? `q_${options.quality}` : 'q_auto')
+
+    // Width (if specified)
+    if (options?.width) {
+        transforms.push(`w_${options.width}`)
+        transforms.push('c_limit') // Ensure we don't upscale, just limit
+    }
+
+    const transformString = transforms.join(',')
+
+    // If already has some optimization (basic check), we might want to replace or just append?
+    // For simplicity, this regex replaces the first /upload/ with /upload/{transforms}/
+    // It does NOT handle if there are already params there cleanly without more complex parsing,
+    // but for standard Cloudinary URLs it works.
+    if (url.includes('/upload/')) {
+        // Remove existing widespread optimizations if any to avoid duplication/conflict if we are strict
+        // But here we'll just replace /upload/ with our new set.
+        return url.replace('/upload/', `/upload/${transformString}/`)
+    }
+
+    return url
+}

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import NextImage from 'next/image'
 import { useState, useEffect } from 'react'
-import { Menu, X, Search, User, ShoppingBag, Zap, ChevronDown } from 'lucide-react'
+import { Menu, X, Search, User, ShoppingBag, ChevronDown } from 'lucide-react'
 import AdRenderer from '../news/AdRenderer'
 
 interface NavbarProps {
@@ -18,6 +18,7 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
     const [isOpen, setIsOpen] = useState(false)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
     const [searchQuery, setSearchQuery] = useState('')
+    const [isScrolled, setIsScrolled] = useState(false)
     const router = useRouter()
 
     useEffect(() => {
@@ -30,6 +31,15 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
             setMenus(grouped)
         }
     }, [navLinks])
+
+    // Detect scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 50)
+        }
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
 
     const handleSearch = (e?: React.FormEvent) => {
         e?.preventDefault()
@@ -47,14 +57,13 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full bg-black text-white border-b border-[#333]">
+            <header className={`sticky top-0 z-50 w-full bg-black text-white border-b border-[#333] transition-all duration-300 ${isScrolled ? 'shadow-lg' : ''}`}>
                 {/* Top Bar: Logo & Actions */}
-                <div className="w-full border-b border-[#333]">
+                <div className={`w-full border-b border-[#333] transition-all duration-300 ${isScrolled ? 'border-b-0' : ''}`}>
                     <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-20 items-center">
+                        <div className={`flex justify-between items-center transition-all duration-300 ${isScrolled ? 'h-14' : 'h-20'}`}>
 
-
-                            {/* Logo (Centered on Desktop, Left on Mobile) */}
+                            {/* Logo */}
                             <div className="flex-1 flex justify-start">
                                 <Link href="/" className="flex items-center shrink-0">
                                     <NextImage
@@ -62,43 +71,53 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                                         alt="NEWSLAN.ID Logo"
                                         width={400}
                                         height={100}
-                                        className="h-10 w-auto object-contain"
+                                        className={`w-auto object-contain transition-all duration-300 ${isScrolled ? 'h-7' : 'h-10'}`}
                                         priority
                                         quality={100}
                                     />
                                 </Link>
                             </div>
 
-                            {/* Right: Actions (Search, Subscribe, User) */}
+                            {/* Right: Actions */}
                             <div className="flex items-center space-x-4 absolute right-4 lg:static lg:flex-1 lg:justify-end">
-                                {/* Search Bar (Desktop) */}
-                                <div className="hidden lg:flex items-center bg-[#222] rounded px-3 py-1.5 w-64 border border-[#333]">
-                                    <input
-                                        type="text"
-                                        placeholder="Cari tokoh, topik atau peristiwa"
-                                        className="bg-transparent border-none text-xs text-gray-300 placeholder-gray-500 w-full focus:outline-none focus:ring-0"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                    />
-                                    <button onClick={handleSearch} className="hover:text-white transition-colors">
-                                        <Search className="w-4 h-4 text-gray-400" />
-                                    </button>
-                                </div>
+                                {/* Search Bar (Desktop) - Hide when scrolled */}
+                                {!isScrolled && (
+                                    <div className="hidden lg:flex items-center bg-[#222] rounded px-3 py-1.5 w-64 border border-[#333]">
+                                        <input
+                                            type="text"
+                                            placeholder="Cari tokoh, topik atau peristiwa"
+                                            className="bg-transparent border-none text-xs text-gray-300 placeholder-gray-500 w-full focus:outline-none focus:ring-0"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={handleKeyDown}
+                                        />
+                                        <button onClick={handleSearch} className="hover:text-white transition-colors">
+                                            <Search className="w-4 h-4 text-gray-400" />
+                                        </button>
+                                    </div>
+                                )}
 
-                                {/* Subscribe Button */}
-                                <Link
-                                    href="/subscribe"
-                                    className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
-                                >
-                                    Newslan+
-                                </Link>
+                                {/* Subscribe Button - Hide when scrolled */}
+                                {!isScrolled && (
+                                    <Link
+                                        href="/subscribe"
+                                        className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
+                                    >
+                                        Newslan+
+                                    </Link>
+                                )}
 
                                 {/* Icons */}
                                 <div className="flex items-center space-x-3 text-gray-400">
-                                    <button className="hover:text-white transition-colors">
-                                        <Zap className="w-5 h-5" />
-                                    </button>
+                                    {/* Search Icon - Show when scrolled */}
+                                    {isScrolled && (
+                                        <button
+                                            onClick={() => router.push('/search')}
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            <Search className="w-5 h-5" />
+                                        </button>
+                                    )}
                                     <Link href="/auth/login" className="hover:text-white transition-colors">
                                         <User className="w-5 h-5" />
                                     </Link>

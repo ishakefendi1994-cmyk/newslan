@@ -1,6 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar } from 'lucide-react'
+import { optimizeCloudinaryUrl } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 interface NewsCardProps {
     title: string
@@ -33,13 +37,18 @@ export function NewsCard({
     const secondaryTextColor = isDark ? 'text-gray-300' : 'text-gray-500' // Use hard gray for consistency
     const borderColor = isDark ? 'border-white/10' : 'border-gray-100'
     const hoverBg = isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'
+    const router = useRouter()
+
+    const handlePrefetch = () => {
+        router.prefetch(`/news/${slug}`)
+    }
 
     // TechCrunch Hero: Large image with text overlay at bottom
     if (variant === 'techcrunch-hero') {
         return (
-            <div className="group relative w-full h-[500px] md:h-[600px] overflow-hidden bg-black">
+            <div className="group relative w-full h-[500px] md:h-[600px] overflow-hidden bg-black" onMouseEnter={handlePrefetch}>
                 <Image
-                    src={image}
+                    src={optimizeCloudinaryUrl(image)}
                     alt={title}
                     fill
                     className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
@@ -74,7 +83,7 @@ export function NewsCard({
     // TechCrunch List: Content Left, Small Image Right
     if (variant === 'techcrunch-list') {
         return (
-            <div className="group flex flex-row justify-between items-start gap-6 py-6 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+            <div className="group flex flex-row justify-between items-start gap-6 py-6 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors" onMouseEnter={handlePrefetch}>
                 <div className="flex-1 flex flex-col space-y-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
                         {category}
@@ -106,7 +115,7 @@ export function NewsCard({
     // In Brief: Tiny compact text only or with icon
     if (variant === 'in-brief') {
         return (
-            <div className="group py-4 border-b border-gray-100 last:border-0">
+            <div className="group py-4 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="flex items-start space-x-3">
                     <div className="shrink-0 mt-1">
                         {/* TechCrunch green double diamond icon simulation */}
@@ -132,7 +141,7 @@ export function NewsCard({
 
     if (variant === 'large') {
         return (
-            <div className={`group flex flex-col md:flex-row gap-8 overflow-hidden h-auto ${isDark ? 'bg-transparent' : 'bg-white'}`}>
+            <div className={`group flex flex-col md:flex-row gap-8 overflow-hidden h-auto ${isDark ? 'bg-transparent' : 'bg-white'}`} onMouseEnter={handlePrefetch}>
                 {/* Large Image */}
                 <div className="md:w-3/5 relative aspect-[2/1] h-[200px] md:h-auto overflow-hidden">
                     <Image
@@ -170,7 +179,7 @@ export function NewsCard({
 
     if (variant === 'spotlight') {
         return (
-            <div className="group flex flex-col space-y-4 pb-6 border-b border-gray-100 last:border-0">
+            <div className="group flex flex-col space-y-4 pb-6 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 rounded-none border border-black/5">
                     <Image
                         src={image}
@@ -217,7 +226,7 @@ export function NewsCard({
 
     if (variant === 'grid-standard') {
         return (
-            <div className="group flex flex-col space-y-6">
+            <div className="group flex flex-col space-y-6" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-black/10">
                     <Image
                         src={image}
@@ -249,7 +258,7 @@ export function NewsCard({
 
     if (variant === 'horizontal-medium') {
         return (
-            <div className="group flex flex-row items-start gap-5 py-6 border-b border-gray-100 last:border-0">
+            <div className="group flex flex-row items-start gap-5 py-6 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="relative w-32 md:w-48 h-24 md:h-32 shrink-0 overflow-hidden border border-black/5">
                     <Image
                         src={image}
@@ -276,7 +285,7 @@ export function NewsCard({
 
     if (variant === 'recent-list') {
         return (
-            <div className="group flex flex-row items-center gap-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors px-2 rounded-xl">
+            <div className="group flex flex-row items-center gap-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors px-2 rounded-xl" onMouseEnter={handlePrefetch}>
                 <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-gray-50">
                     <Image
                         src={image}
@@ -302,7 +311,7 @@ export function NewsCard({
         const blockBgColor = isLightBg || !categoryColor ? '#990000' : categoryColor
 
         return (
-            <div className={`group flex flex-col h-full rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
+            <div className={`group flex flex-col h-full rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow`} onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-video w-full overflow-hidden">
                     <Image
                         src={image}
@@ -334,7 +343,7 @@ export function NewsCard({
 
     if (variant === 'overlay-grid') {
         return (
-            <div className="group flex flex-col h-full space-y-3">
+            <div className="group flex flex-col h-full space-y-3" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none border border-black/5">
                     <Image
                         src={image}
@@ -360,7 +369,7 @@ export function NewsCard({
 
     // Default Card (Vertical)
     return (
-        <div className={`group flex flex-col space-y-4 pb-8 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`}>
+        <div className={`group flex flex-col space-y-4 pb-8 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`} onMouseEnter={handlePrefetch}>
             <div className="relative aspect-[2/1] w-full overflow-hidden bg-gray-100">
                 <Image
                     src={image}

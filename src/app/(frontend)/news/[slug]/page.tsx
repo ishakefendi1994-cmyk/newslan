@@ -6,23 +6,23 @@ import { Calendar, User, Share2, Bookmark, Lock, ArrowLeft, Zap, Sparkles, Eye }
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import NewsSidebar from '@/components/news/NewsSidebar'
+import NewsSidebar from '@/components/news/NewsSidebar' // Keep for types if needed, or remove if unused 
 import SocialShare from '@/components/news/SocialShare'
 import AdRenderer from '@/components/news/AdRenderer'
-import BannerSlider from '@/components/ui/BannerSlider'
-import { getTrendingNews } from '@/lib/data'
+import { getArticleBySlug, getNextArticle } from '@/lib/data'
+import { optimizeCloudinaryUrl } from '@/lib/utils'
+import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
 import { Metadata } from 'next'
+import { Suspense } from 'react'
+import NewsSidebarContainer from '@/components/news/NewsSidebarContainer'
+import RelatedArticlesContainer from '@/components/news/RelatedArticlesContainer'
 
 // Generate Metadata for SEO and Social Sharing
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
     const { slug } = await params
-    const supabase = await createClient()
 
-    const { data: article } = await supabase
-        .from('articles')
-        .select('title, excerpt, featured_image')
-        .eq('slug', slug)
-        .single()
+    // Use Cached Access (ISR) for fast metadata resolution
+    const article = await getArticleBySlug(slug)
 
     if (!article) return { title: 'Article Not Found - Newslan.id' }
 
@@ -78,79 +78,50 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         const { slug } = await params
         const supabase = await createClient()
 
-        // Fetch Article with Category and Products
-        const { data: article, error } = await supabase
-            .from('articles')
-            .select(`
-            *,
-            categories(id, name),
-            profiles(full_name),
-            article_products(
-                products(
-                    *,
-                    affiliate_links(*)
-                )
-            )
-        `)
-            .eq('slug', slug)
-            .eq('is_published', true)
-            .single()
+        // 1. Fetch MAIN Data (Critical for First Paint)
+        // We use cached functions (ISR) for article data to ensure instant load.
+        const article = await getArticleBySlug(slug)
 
-        if (!article || error) {
+        if (!article) {
             return notFound()
         }
 
-        // Increment Views Count using RPC (Ignore if fails)
-        try {
-            await supabase.rpc('increment_article_views', { article_id: article.id })
-        } catch (rpcError) {
-            console.error('RPC Error:', rpcError)
-        }
+        // Parallel fetch for other non-critical or dynamic data
+        const [
+            userResult,
+            pageAdsResult,
+            nextArticle
+        ] = await Promise.all([
+            // Get User Session (Dynamic - for paywall)
+            supabase.auth.getUser(),
 
-        // Fetch Latest Articles for Sidebar
-        const { data: sidebarArticles } = await supabase
-            .from('articles')
-            .select('*, categories(name)')
-            .eq('is_published', true)
-            .neq('id', article.id)
-            .order('created_at', { ascending: false })
-            .limit(5)
+            // Fetch Page Ads (Needed for Content Injection)
+            supabase
+                .from('advertisements')
+                .select('*')
+                .eq('is_active', true)
+                .in('placement', ['article_before', 'article_middle', 'article_after']),
 
-        // Fetch Banners for Detail Page
-        const { data: banners } = await supabase
-            .from('banners')
-            .select('*')
-            .eq('is_active', true)
-            .order('display_order', { ascending: true })
+            // Fetch Next Article for Prefetching
+            getNextArticle(article.id)
+        ])
 
-        // Fetch Related Articles (Same Category)
-        const { data: relatedArticles } = await supabase
-            .from('articles')
-            .select('*, categories(name)')
-            .eq('is_published', true)
-            .eq('category_id', article.categories?.id)
-            .neq('id', article.id)
-            .order('created_at', { ascending: false })
-            .limit(6)
+        // Article already checked above
 
-        // Fetch Latest Articles for Bottom Section
-        const { data: latestArticlesSection } = await supabase
-            .from('articles')
-            .select('*, categories(name)')
-            .eq('is_published', true)
-            .neq('id', article.id)
-            .order('created_at', { ascending: false })
-            .limit(6)
-
-        const trendingNews = await getTrendingNews()
-
-        // Get User for Paywall
-        const { data: { user } } = await supabase.auth.getUser()
+        // 2. Fetch User Profile (Only if logged in) - Still needed for Paywall logic
         let profile = null
-        if (user) {
-            const { data: p } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        if (userResult.data.user) {
+            const { data: p } = await supabase.from('profiles').select('role').eq('id', userResult.data.user.id).single()
             profile = p
         }
+
+        // 3. Fire-and-forget View Increment (Non-blocking)
+        supabase.rpc('increment_article_views', { article_id: article.id }).then(({ error }) => {
+            if (error) console.error('RPC Error:', error)
+        })
+
+        // Extract Data
+        const pageAds = pageAdsResult.data
 
         const isSubscribed = profile?.role === 'subscriber' || profile?.role === 'admin'
         const showPaywall = article.is_premium && !isSubscribed
@@ -166,17 +137,9 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
         const currentUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ''}/news/${slug}`
 
-        // Fetch Advertisements for this page
-        const { data: pageAds } = await supabase
-            .from('advertisements')
-            .select('*')
-            .eq('is_active', true)
-            .in('placement', ['article_before', 'article_middle', 'article_after', 'sidebar'])
-
         const beforeAd = pageAds?.find(a => a.placement === 'article_before')
         const middleAd = pageAds?.find(a => a.placement === 'article_middle')
         const afterAd = pageAds?.find(a => a.placement === 'article_after')
-        const sidebarAds = pageAds?.filter(a => a.placement === 'sidebar') || []
 
         // Function to inject middle ad
         const renderContentWithAds = (content: string) => {
@@ -206,6 +169,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
         return (
             <div className="bg-white min-h-screen">
+                <PrefetchNextArticle slug={nextArticle?.slug} />
                 {/* Breadcrumb / Back button */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <Link href="/" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors group">
@@ -214,23 +178,18 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                     </Link>
                 </div>
 
-                {/* Banner Slider */}
-                {banners && banners.length > 0 && (
-                    <BannerSlider banners={banners} />
-                )}
-
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
                     {/* TechCrunch Article Hero (Full Width) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px] mb-12 border border-black shadow-2xl">
                         {/* Left: Image */}
-                        <div className="relative aspect-square md:aspect-auto md:h-full w-full bg-gray-100 border-b md:border-b-0 md:border-r border-black">
+                        <div className="relative aspect-video md:aspect-auto md:h-full w-full bg-gray-100 border-b md:border-b-0 md:border-r border-black">
                             <Image
-                                src={article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200"}
+                                src={optimizeCloudinaryUrl(article.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200", { quality: 'auto:low', width: 650 })}
                                 alt={article.title}
                                 fill
                                 className="object-cover"
                                 priority
-                                unoptimized
+                                sizes="(max-width: 768px) 100vw, 50vw"
                             />
                         </div>
 
@@ -352,62 +311,17 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                 </div>
                             )}
 
-                            {/* Related Articles Section - Dark Premium Style */}
-                            {relatedArticles && relatedArticles.length > 0 && (
-                                <div className="mt-24 bg-[#222222] p-8 sm:p-12 -mx-4 sm:-mx-6 lg:-mx-8 border-t-8 border-primary space-y-10">
-                                    <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                                        <div className="flex items-center space-x-3 text-white">
-                                            <Sparkles className="w-6 h-6 text-primary" />
-                                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">Berita <span className="text-primary font-light">Terkait</span></h2>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-                                        {relatedArticles.map((item) => (
-                                            <NewsCard
-                                                key={item.id}
-                                                title={item.title}
-                                                slug={item.slug}
-                                                image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
-                                                category={item.categories?.name || 'News'}
-                                                isPremium={item.is_premium}
-                                                isDark={true}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Latest News Footer Section (Moved Inside) */}
-                            {latestArticlesSection && latestArticlesSection.length > 0 && (
-                                <div className="mt-24 space-y-8 border-t-4 border-black pt-10">
-                                    <div className="flex items-center justify-between pb-2">
-                                        <div className="flex items-center space-x-3">
-                                            <Zap className="w-5 h-5 text-primary" />
-                                            <h2 className="text-2xl font-black uppercase tracking-tighter italic">Berita Terbaru</h2>
-                                        </div>
-                                        <Link href="/news" className="text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors">
-                                            Lihat Semua &rarr;
-                                        </Link>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {latestArticlesSection.map((item) => (
-                                            <NewsCard
-                                                key={item.id}
-                                                title={item.title}
-                                                slug={item.slug}
-                                                image={item.featured_image || "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600"}
-                                                category={item.categories?.name || 'News'}
-                                                isPremium={item.is_premium}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            {/* Related Articles Section - Dark Premium Style (Async Streamed) */}
+                            <Suspense fallback={<div className="h-96 bg-gray-100 animate-pulse mt-24"></div>}>
+                                <RelatedArticlesContainer currentArticleId={article.id} categoryId={article.categories?.id} />
+                            </Suspense>
                         </div>
 
-                        {/* Sidebar (5 Columns) */}
+                        {/* Sidebar (5 Columns) (Async Streamed) */}
                         <div className="lg:col-span-5 min-w-0 lg:border-l lg:border-gray-100 lg:pl-8">
-                            <NewsSidebar latestArticles={sidebarArticles || []} sidebarAds={sidebarAds} trendingNews={trendingNews || []} />
+                            <Suspense fallback={<div className="space-y-8 animate-pulse"><div className="h-64 bg-gray-100 rounded-xl"></div><div className="h-96 bg-gray-100 rounded-xl"></div></div>}>
+                                <NewsSidebarContainer currentArticleId={article.id} />
+                            </Suspense>
                         </div>
 
                     </div>

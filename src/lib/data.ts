@@ -145,3 +145,49 @@ export const searchArticles = async (query: string) => {
         .limit(20)
     return data
 }
+
+export const getArticleBySlug = unstable_cache(
+    async (slug: string) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('articles')
+            .select(`
+                *,
+                categories(id, name),
+                profiles(full_name),
+                article_products(
+                    products(
+                        *,
+                        affiliate_links(*)
+                    )
+                )
+            `)
+            .eq('slug', slug)
+            .eq('is_published', true)
+            .single()
+        return data
+    },
+    ['article-by-slug'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)
+
+export const getNextArticle = unstable_cache(
+    async (currentId: string) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('articles')
+            .select('slug, title, featured_image')
+            .eq('is_published', true)
+            .neq('id', currentId)
+            // Ideally we'd use a more complex logic (same category, newer), 
+            // but for "Next Article" flow, getting the immediately preceding or following record 
+            // is often done by sorting or ID comparison. 
+            // Here simply getting the latest one that isn't current for simplicity/demo.
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+        return data
+    },
+    ['next-article'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)

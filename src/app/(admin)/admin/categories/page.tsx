@@ -12,7 +12,9 @@ import {
     ArrowDown,
     Eye,
     EyeOff,
-    Palette
+    Palette,
+    Plus,
+    X
 } from 'lucide-react'
 
 // Helper function to determine if text should be white or black based on background color
@@ -41,6 +43,16 @@ export default function AdminCategoriesPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState<string | null>(null)
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+
+    // New Category Modal State
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [creating, setCreating] = useState(false)
+    const [newCategory, setNewCategory] = useState({
+        name: '',
+        slug: '',
+        bg_color: '#E11D48',
+        show_on_home: true
+    })
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -103,6 +115,52 @@ export default function AdminCategoriesPage() {
         }
     }
 
+    async function createCategory() {
+        if (!newCategory.name.trim()) {
+            setStatus({ type: 'error', message: 'Category name is required.' })
+            return
+        }
+
+        try {
+            setCreating(true)
+
+            // Auto-generate slug if not provided
+            const slug = newCategory.slug || newCategory.name.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '')
+
+            // Get max display_order
+            const maxOrder = categories.length > 0
+                ? Math.max(...categories.map(c => c.display_order || 0))
+                : 0
+
+            const { data, error } = await supabase
+                .from('categories')
+                .insert({
+                    name: newCategory.name.trim(),
+                    slug,
+                    bg_color: newCategory.bg_color,
+                    show_on_home: newCategory.show_on_home,
+                    display_order: maxOrder + 1
+                })
+                .select()
+                .single()
+
+            if (error) throw error
+
+            setCategories(prev => [...prev, data].sort((a, b) => a.display_order - b.display_order))
+            setStatus({ type: 'success', message: 'Category created successfully!' })
+
+            // Reset form and close modal
+            setNewCategory({ name: '', slug: '', bg_color: '#E11D48', show_on_home: true })
+            setShowCreateModal(false)
+        } catch (error: any) {
+            setStatus({ type: 'error', message: error.message })
+        } finally {
+            setCreating(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
@@ -119,6 +177,13 @@ export default function AdminCategoriesPage() {
                     <h1 className="text-3xl font-black tracking-tighter">Categories</h1>
                     <p className="text-gray-500 text-sm">Manage category visibility and order on the home page.</p>
                 </div>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="bg-black text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:bg-gray-800 transition-all shadow-lg shadow-black/10"
+                >
+                    <Plus className="w-5 h-5" />
+                    <span>Create New Category</span>
+                </button>
             </div>
 
             {status && (
@@ -254,6 +319,139 @@ export default function AdminCategoriesPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Create Category Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-black tracking-tight">Create New Category</h2>
+                            <button
+                                onClick={() => setShowCreateModal(false)}
+                                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-5">
+                            {/* Category Name */}
+                            <div>
+                                <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                                    Category Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newCategory.name}
+                                    onChange={(e) => {
+                                        setNewCategory(prev => ({ ...prev, name: e.target.value }))
+                                        // Auto-generate slug
+                                        if (!newCategory.slug) {
+                                            const autoSlug = e.target.value.toLowerCase()
+                                                .replace(/[^a-z0-9]+/g, '-')
+                                                .replace(/(^-|-$)/g, '')
+                                            setNewCategory(prev => ({ ...prev, slug: autoSlug }))
+                                        }
+                                    }}
+                                    placeholder="e.g., Technology, Sports, Politics"
+                                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium"
+                                />
+                            </div>
+
+                            {/* Slug */}
+                            <div>
+                                <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                                    Slug (URL-friendly)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newCategory.slug}
+                                    onChange={(e) => setNewCategory(prev => ({ ...prev, slug: e.target.value }))}
+                                    placeholder="Auto-generated from name"
+                                    className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-sm"
+                                />
+                            </div>
+
+                            {/* Color Picker */}
+                            <div>
+                                <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                                    Badge Color
+                                </label>
+                                <div className="flex items-center space-x-4">
+                                    <input
+                                        type="color"
+                                        value={newCategory.bg_color}
+                                        onChange={(e) => setNewCategory(prev => ({ ...prev, bg_color: e.target.value }))}
+                                        className="w-16 h-16 rounded-2xl overflow-hidden cursor-pointer border-2 border-gray-200"
+                                    />
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            value={newCategory.bg_color}
+                                            onChange={(e) => setNewCategory(prev => ({ ...prev, bg_color: e.target.value }))}
+                                            className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-sm uppercase"
+                                        />
+                                    </div>
+                                    {/* Preview */}
+                                    <span
+                                        className="px-4 py-2 text-xs font-black uppercase tracking-widest italic rounded-lg"
+                                        style={{
+                                            backgroundColor: newCategory.bg_color,
+                                            color: getContrastColor(newCategory.bg_color)
+                                        }}
+                                    >
+                                        {newCategory.name || 'Preview'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Show on Home Toggle */}
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
+                                <div>
+                                    <p className="font-bold text-sm">Show on Homepage</p>
+                                    <p className="text-xs text-gray-500">Display this category on the main page</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={newCategory.show_on_home}
+                                        onChange={(e) => setNewCategory(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center space-x-3 mt-8">
+                            <button
+                                onClick={() => setShowCreateModal(false)}
+                                className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-200 font-bold hover:bg-gray-50 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={createCategory}
+                                disabled={creating || !newCategory.name.trim()}
+                                className="flex-1 bg-black text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {creating ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Creating...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="w-5 h-5" />
+                                        <span>Create Category</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

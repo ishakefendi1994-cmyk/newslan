@@ -26,7 +26,7 @@ export function ProductCard({ name, description, image, priceRange, links }: Pro
     return (
         <div className="bg-white border-l-4 border-primary p-5 flex flex-col md:flex-row gap-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="relative w-full md:w-1/3 aspect-square overflow-hidden bg-gray-50">
-                <Image src={image} alt={name} fill className="object-cover" unoptimized />
+                <Image src={image} alt={name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
             </div>
 
             <div className="flex-1 flex flex-col justify-between space-y-4">
