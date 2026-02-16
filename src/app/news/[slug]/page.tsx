@@ -189,7 +189,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
             const firstHalf = paragraphs.slice(0, middleIndex).join('</p>') + '</p>'
             const secondHalf = paragraphs.slice(middleIndex).join('</p>')
 
-            const proseClasses = "prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-p:leading-relaxed prose-strong:text-black"
+            const proseClasses = "prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-strong:text-black"
 
             return (
                 <div className="article-content">
@@ -263,10 +263,10 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
 
                         {/* Main Content (7 Columns) */}
-                        <div className="lg:col-span-7 space-y-8">
+                        <div className="lg:col-span-7 min-w-0 space-y-8">
 
 
                             {/* Article Text */}
@@ -282,7 +282,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                     <>
                                         <div className="text-gray-600 line-clamp-3 overflow-hidden">
                                             <div
-                                                className="prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-p:leading-relaxed prose-strong:text-black"
+                                                className="prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-strong:text-black"
                                                 dangerouslySetInnerHTML={{ __html: article.content.substring(0, 500) }}
                                             />
                                         </div>
@@ -406,7 +406,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                         </div>
 
                         {/* Sidebar (5 Columns) */}
-                        <div className="lg:col-span-5 lg:border-l lg:border-gray-100 lg:pl-10">
+                        <div className="lg:col-span-5 min-w-0 lg:border-l lg:border-gray-100 lg:pl-8">
                             <NewsSidebar latestArticles={sidebarArticles || []} sidebarAds={sidebarAds} trendingNews={trendingNews || []} />
                         </div>
 

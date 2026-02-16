@@ -11,12 +11,16 @@
   font-family: var(--font-serif), serif;
   font-size: 1.125rem;
   color: #111;
+  font-weight: 400;
+  /* Ensure normal weight */
 }
 
 .article-content img {
   border-radius: 0;
   /* Sharp edges for images */
   margin: 2rem auto;
+  max-width: 100%;
+  height: auto;
 }
 
 .article-content figure {
@@ -30,7 +34,8 @@
   margin: 2rem 0;
 }
 
-/* Drop Cap Effect */
+/* Drop Cap Effect - Updated selector for nested prose blocks */
+.article-content div:first-child p:first-of-type::first-letter,
 .article-content>p:first-of-type::first-letter {
   float: left;
   font-size: 4.5rem;
@@ -38,7 +43,7 @@
   font-weight: 900;
   margin-right: 1rem;
   margin-top: 0.5rem;
-  color: var(--color-primary);
+  color: #990000;
   text-transform: uppercase;
 }
 

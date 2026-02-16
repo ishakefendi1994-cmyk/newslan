@@ -46,6 +46,9 @@ export default function AdRenderer({ ad, className = "", isSidebar = false }: Ad
                     // and handle potential multiple pushes
                     const content = oldScript.textContent || ''
                     if (content.includes('adsbygoogle')) {
+                        // Prevent duplicate AdSense init
+                        if (document.querySelector('script[data-adsense-init]')) return
+                        newScript.setAttribute('data-adsense-init', 'true')
                         newScript.textContent = `
                             try {
                                 if (window.adsbygoogle) {
@@ -56,6 +59,10 @@ export default function AdRenderer({ ad, className = "", isSidebar = false }: Ad
                             }
                         `
                     } else {
+                        // For other inline scripts, check if already injected
+                        const scriptId = `ad-script-${content.length}-${content.substring(0, 20).replace(/[^a-z0-9]/gi, '-')}`
+                        if (document.querySelector(`script[id="${scriptId}"]`)) return
+                        newScript.id = scriptId
                         newScript.textContent = content
                     }
                 }
@@ -67,27 +74,27 @@ export default function AdRenderer({ ad, className = "", isSidebar = false }: Ad
 
     if (!ad) return null
 
-    // Determine dimensions
-    const adWidth = ad.width || (isSidebar ? 400 : 1200)
-    const adHeight = ad.height || (isSidebar ? 400 : 400)
+    // Determine dimensions - Optimized for standard ad sizes and container constraints
+    const adWidth = ad.width || (isSidebar ? 336 : 800)
+    const adHeight = ad.height || (isSidebar ? 280 : 400)
 
     return (
-        <div className={`w-full ${isSidebar ? 'm-0 p-0' : 'overflow-hidden'} not-prose ${className}`}>
+        <div className={`w-full flex justify-center ${isSidebar ? 'm-0 p-0' : 'overflow-hidden'} not-prose ${className}`}>
             {ad.type === 'image' && ad.image_url ? (
                 <a
                     href={ad.link_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block transition-opacity hover:opacity-90"
+                    className="block transition-opacity hover:opacity-90 max-w-full"
                 >
                     {isSidebar ? (
-                        <p className="m-0 p-0">
+                        <p className="m-0 p-0 flex justify-center">
                             <img
                                 src={ad.image_url}
                                 alt={ad.title || ''}
                                 width={ad.width || undefined}
                                 height={ad.height || undefined}
-                                style={{ maxWidth: '100%', height: 'auto' }}
+                                style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
                             />
                         </p>
                     ) : (
@@ -106,7 +113,7 @@ export default function AdRenderer({ ad, className = "", isSidebar = false }: Ad
             ) : ad.type === 'html' && ad.html_content ? (
                 <div
                     ref={containerRef}
-                    className="flex justify-center w-full"
+                    className="flex justify-center w-full max-w-full overflow-hidden [&>iframe]:max-w-full [&>img]:max-w-full"
                     dangerouslySetInnerHTML={{ __html: ad.html_content }}
                 />
             ) : ad.type === 'product_list' && ad.id ? (

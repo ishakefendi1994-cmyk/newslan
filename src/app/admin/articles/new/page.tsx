@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import { uploadImage } from '@/lib/storage'
 
-const Editor = dynamic(() => import('@/components/admin/Editor'), {
+const Editor = dynamic(() => import('@/components/admin/ProEditor'), {
     ssr: false,
     loading: () => <div className="h-[400px] w-full bg-gray-50 animate-pulse rounded-2xl" />
 })
