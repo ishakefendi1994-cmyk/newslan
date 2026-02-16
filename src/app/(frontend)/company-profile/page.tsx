@@ -17,6 +17,11 @@ export default function CompanyProfilePage() {
             title: 'SK Kemenkumham',
             description: 'Pengesahan Pendirian Badan Hukum Perseroan Terbatas PT LINTAS AKTUAL NUSANTARA.',
             src: '/company/sk-kemenkumham.jpg'
+        },
+        {
+            title: 'KTA Resmi Serikat Pers Republik Indonesia',
+            description: 'Kartu Tanda Anggota resmi yang menandakan legalitas jurnalis di bawah naungan SPRI.',
+            src: '/press.jpg'
         }
     ]
 

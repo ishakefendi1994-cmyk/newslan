@@ -1,5 +1,6 @@
-import { Shield, Users, MapPin, Briefcase, Info, AlertTriangle, Scale, Target } from 'lucide-react'
+import { Shield, Users, MapPin, Briefcase, Info, AlertTriangle, Scale, Target, CreditCard } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import Image from 'next/image'
 
 export default function RedaksiPage() {
     return (
@@ -16,8 +17,8 @@ export default function RedaksiPage() {
             <div className="max-w-6xl mx-auto px-4 py-16 space-y-20">
 
                 {/* Company Info Card */}
-                <section className="bg-gray-50 p-8 md:p-12 border-l-8 border-black shadow-sm grid grid-cols-1 md:col-span-2 gap-12 items-center">
-                    <div className="space-y-6">
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                    <div className="md:col-span-2 bg-gray-50 p-8 md:p-12 border-l-8 border-black shadow-sm h-full flex flex-col justify-center space-y-6">
                         <div className="space-y-2">
                             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Profil Perusahaan</h2>
                             <p className="text-gray-600 leading-relaxed text-sm">
@@ -44,18 +45,41 @@ export default function RedaksiPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-inner space-y-4">
-                        <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest">Legalitas & Keuangan</h3>
-                        <div className="space-y-4">
-                            <div className="pb-4 border-b border-gray-50">
-                                <p className="text-[10px] text-gray-400 uppercase font-black">Notaris PPAT</p>
-                                <p className="text-sm font-bold uppercase">ASWANTO , SH, M.Kn</p>
-                                <p className="text-[10px] text-gray-500">Akta No. 38 Tanggal 30 November 2021</p>
+                    <div className="space-y-8">
+                        {/* Legal Card */}
+                        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-inner space-y-4">
+                            <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest">Legalitas & Keuangan</h3>
+                            <div className="space-y-4">
+                                <div className="pb-4 border-b border-gray-50">
+                                    <p className="text-[10px] text-gray-400 uppercase font-black">Notaris PPAT</p>
+                                    <p className="text-sm font-bold uppercase">ASWANTO , SH, M.Kn</p>
+                                    <p className="text-[10px] text-gray-500">Akta No. 38 Tanggal 30 November 2021</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-400 uppercase font-black">Rekening Perusahaan</p>
+                                    <p className="text-lg font-black text-black">2027819049</p>
+                                    <p className="text-xs font-bold text-gray-500 uppercase">BNI AN. PT LINTAS AKTUAL NUSANTARA</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[10px] text-gray-400 uppercase font-black">Rekening Perusahaan</p>
-                                <p className="text-lg font-black text-black">2027819049</p>
-                                <p className="text-xs font-bold text-gray-500 uppercase">BNI AN. PT LINTAS AKTUAL NUSANTARA</p>
+                        </div>
+
+                        {/* Official KTA Card */}
+                        <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20 space-y-4">
+                            <div className="flex items-center space-x-2 text-primary">
+                                <CreditCard className="w-4 h-4" />
+                                <h3 className="font-black uppercase text-[10px] tracking-widest">KTA Resmi Organisasi</h3>
+                            </div>
+                            <div className="relative aspect-[3/2] w-full rounded-xl overflow-hidden shadow-lg border border-primary/10 group cursor-zoom-in">
+                                <Image
+                                    src="/press.jpg"
+                                    alt="Official KTA Serikat Pers Republik Indonesia"
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-gray-900 leading-tight uppercase">SERIKAT PERS REPUBLIK INDONESIA</p>
+                                <p className="text-[9px] text-gray-500 italic">Dokumen identitas resmi keanggotaan pers nasional.</p>
                             </div>
                         </div>
                     </div>

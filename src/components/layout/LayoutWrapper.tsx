@@ -42,7 +42,7 @@ export default function LayoutWrapper({ children, categories, navLinks, headerAd
                                     alt="NEWSLAN.ID Logo"
                                     width={400}
                                     height={140}
-                                    className="h-12 w-auto object-contain"
+                                    className="h-12 w-auto object-contain brightness-0 invert"
                                     quality={100}
                                 />
                             </Link>
