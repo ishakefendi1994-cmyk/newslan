@@ -367,6 +367,35 @@ export function NewsCard({
         )
     }
 
+    // Compact Card (Small Font, 4 Lines - for Related News)
+    if (variant === 'compact') {
+        return (
+            <div className={`group flex flex-col space-y-3 pb-6 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`} onMouseEnter={handlePrefetch}>
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                    <Image
+                        src={image}
+                        alt={title}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                    />
+                </div>
+                <div className="flex flex-col space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                        {category}
+                    </span>
+                    <Link href={`/news/${slug}`} className="block">
+                        <h3 className={`text-sm font-bold leading-snug hover:text-primary transition-colors line-clamp-4 ${isDark ? 'text-white' : 'text-black'}`}>
+                            {title}
+                        </h3>
+                    </Link>
+
+                    {/* Optional: Read More link can be removed for cleaner look, or kept small */}
+                </div>
+            </div>
+        )
+    }
+
     // Default Card (Vertical)
     return (
         <div className={`group flex flex-col space-y-4 pb-8 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`} onMouseEnter={handlePrefetch}>

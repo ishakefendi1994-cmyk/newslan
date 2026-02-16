@@ -9,9 +9,10 @@ import { notFound } from 'next/navigation'
 import NewsSidebar from '@/components/news/NewsSidebar' // Keep for types if needed, or remove if unused 
 import SocialShare from '@/components/news/SocialShare'
 import AdRenderer from '@/components/news/AdRenderer'
-import { getArticleBySlug, getNextArticle } from '@/lib/data'
+import { getArticleBySlug, getNextArticle, getBanners } from '@/lib/data'
 import { optimizeCloudinaryUrl } from '@/lib/utils'
 import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
+import BannerSlider from '@/components/ui/BannerSlider'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 import NewsSidebarContainer from '@/components/news/NewsSidebarContainer'
@@ -87,14 +88,12 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         }
 
         // Parallel fetch for other non-critical or dynamic data
+        // OPTIMIZATION: AUTH & PREMIUM DISABLED (FORCE FAST LOAD)
         const [
-            userResult,
             pageAdsResult,
-            nextArticle
+            nextArticle,
+            banners
         ] = await Promise.all([
-            // Get User Session (Dynamic - for paywall)
-            supabase.auth.getUser(),
-
             // Fetch Page Ads (Needed for Content Injection)
             supabase
                 .from('advertisements')
@@ -103,17 +102,11 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                 .in('placement', ['article_before', 'article_middle', 'article_after']),
 
             // Fetch Next Article for Prefetching
-            getNextArticle(article.id)
+            getNextArticle(article.id),
+
+            // Fetch Banners for testing
+            getBanners()
         ])
-
-        // Article already checked above
-
-        // 2. Fetch User Profile (Only if logged in) - Still needed for Paywall logic
-        let profile = null
-        if (userResult.data.user) {
-            const { data: p } = await supabase.from('profiles').select('role').eq('id', userResult.data.user.id).single()
-            profile = p
-        }
 
         // 3. Fire-and-forget View Increment (Non-blocking)
         supabase.rpc('increment_article_views', { article_id: article.id }).then(({ error }) => {
@@ -122,9 +115,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
         // Extract Data
         const pageAds = pageAdsResult.data
-
-        const isSubscribed = profile?.role === 'subscriber' || profile?.role === 'admin'
-        const showPaywall = article.is_premium && !isSubscribed
+        const showPaywall = false // Force disabled as requested
 
         // Process Products
         const products = article.article_products?.map((ap: any) => ({
@@ -169,6 +160,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
         return (
             <div className="bg-white min-h-screen">
+                {banners && banners.length > 0 && <BannerSlider banners={banners} />}
                 <PrefetchNextArticle slug={nextArticle?.slug} />
                 {/* Breadcrumb / Back button */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

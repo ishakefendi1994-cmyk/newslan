@@ -13,9 +13,10 @@ import {
     List, ListOrdered, Quote, Heading1, Heading2, Heading3,
     AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Link as LinkIcon, Image as ImageIcon, Undo, Redo,
-    Type, Eraser, Code
+    Type, Eraser, Code, Loader2
 } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { uploadImage } from '@/lib/storage'
 
 interface ProEditorProps {
     value: string
@@ -48,6 +49,9 @@ const MenuButton = ({
 )
 
 export default function ProEditor({ value, onChange, placeholder }: ProEditorProps) {
+    const [isUploading, setIsUploading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     const editor = useEditor({
         immediatelyRender: false,
         extensions: [
@@ -100,17 +104,55 @@ export default function ProEditor({ value, onChange, placeholder }: ProEditorPro
         editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
     }, [editor])
 
-    const addImage = useCallback(() => {
-        const url = window.prompt('URL Gambar')
-        if (url) {
-            editor?.chain().focus().setImage({ src: url }).run()
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !editor) return
+
+        try {
+            setIsUploading(true)
+            const url = await uploadImage(file)
+            editor.chain().focus().setImage({ src: url }).run()
+        } catch (error) {
+            console.error('Upload failed:', error)
+            alert('Gagal mengunggah gambar. Silakan coba lagi.')
+        } finally {
+            setIsUploading(false)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
         }
-    }, [editor])
+    }
+
+    const addImage = useCallback(() => {
+        fileInputRef.current?.click()
+    }, [])
 
     if (!editor) return null
 
     return (
-        <div className="pro-editor bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+        <div className="pro-editor bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative">
+            {/* Hidden File Input */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
+
+            {/* Loading Overlay */}
+            {isUploading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center space-y-3 animate-in fade-in duration-300">
+                    <div className="p-4 bg-white rounded-2xl shadow-xl flex items-center space-x-4 border border-gray-100">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                        <div className="text-left">
+                            <p className="font-bold text-gray-900 leading-none">Mengunggah Gambar...</p>
+                            <p className="text-xs text-gray-500 mt-1">Sabar ya, lagi di-compress biar ringan.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Toolbar */}
             <div className="bg-gray-50/50 border-b border-gray-100 p-2 flex flex-wrap gap-1 sticky top-0 z-10 backdrop-blur-sm">
                 {/* Undo/Redo */}
@@ -224,6 +266,11 @@ export default function ProEditor({ value, onChange, placeholder }: ProEditorPro
         .pro-editor .ProseMirror ol {
           list-style-type: decimal;
           padding-left: 1.5rem;
+        }
+        .pro-editor .ProseMirror img {
+            display: block;
+            margin: 2rem auto;
+            cursor: default;
         }
       `}</style>
         </div>
