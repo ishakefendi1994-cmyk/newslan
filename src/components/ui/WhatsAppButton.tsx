@@ -2,9 +2,11 @@
 
 import { MessageCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function WhatsAppButton() {
     const [isVisible, setIsVisible] = useState(false)
+    const pathname = usePathname()
 
     useEffect(() => {
         // Show button after a short delay or scroll
@@ -16,7 +18,10 @@ export default function WhatsAppButton() {
     const message = encodeURIComponent('Halo Newslan, saya mau pesan tiket bus')
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
 
-    if (!isVisible) return null
+    // Show only on Home ('/') and News detail pages (starts with '/news/')
+    const shouldShow = pathname === '/' || pathname?.startsWith('/news/')
+
+    if (!isVisible || !shouldShow) return null
 
     return (
         <a
