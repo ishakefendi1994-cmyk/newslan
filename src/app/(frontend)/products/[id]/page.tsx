@@ -87,8 +87,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 <div className="bg-white p-4 md:p-8 shadow-sm border border-gray-100">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
 
-                        {/* Left: Product Visuals */}
-                        <div className="lg:col-span-5 space-y-6">
+                        {/* Left: Product Visuals (Larger - 7 cols) */}
+                        <div className="lg:col-span-7 space-y-6">
                             <div className="relative aspect-square w-full bg-gray-50 overflow-hidden border border-gray-100 group shadow-lg">
                                 {product.image_url ? (
                                     <Image
@@ -139,8 +139,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                             </div>
                         </div>
 
-                        {/* Right: Product Detail Info */}
-                        <div className="lg:col-span-7 flex flex-col">
+                        {/* Right: Product Detail Info (Smaller - 5 cols) */}
+                        <div className="lg:col-span-5 flex flex-col">
                             <div className="space-y-6 flex-1">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                         <span className="text-xs font-bold text-gray-400">(4.9/5.0) | Terjual 1rb+</span>
                                     </div>
 
-                                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-[0.9] text-gray-900">
+                                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-tight">
                                         {product.name}
                                     </h1>
 
@@ -184,7 +184,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                     </div>
 
                                     <div
-                                        className="prose prose-lg prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-strong:text-black"
+                                        className="prose prose-sm prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed"
                                         dangerouslySetInnerHTML={{ __html: product.description || 'Pilihan produk terbaik yang telah melewati proses kurasi tim Editorial Newslan.id untuk menjamin kualitas bagi pelanggan kami.' }}
                                     />
                                 </div>
