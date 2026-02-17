@@ -89,7 +89,7 @@ export async function fetchAllRSSFeeds(feedIds?: string[]): Promise<RSSArticle[]
     )
 
     const articles = results
-        .filter((r): r is PromissFulfilledResult<RSSArticle[]> => r.status === 'fulfilled')
+        .filter((r): r is PromiseFulfilledResult<RSSArticle[]> => r.status === 'fulfilled')
         .flatMap(r => r.value)
 
     const failedCount = results.filter(r => r.status === 'rejected').length
