@@ -1,7 +1,5 @@
-'use client'
-
 import { useState, useEffect, useMemo } from 'react'
-import { ShoppingBag, ChevronRight, Loader2, Search, Filter, SlidersHorizontal, ArrowUpDown, Tag, Star, Package } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Loader2, Search, Filter, SlidersHorizontal, ArrowUpDown, Tag, Star, Package, ShoppingCart, Bell, Mail, Smartphone, Laptop, Tv, Shirt, UtensilsCrossed, HeartPulse, Sparkles, Zap, Flame } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/utils'
@@ -34,7 +32,6 @@ export default function ProductsPage() {
         fetchProducts()
     }, [])
 
-    // Get unique stores for filter
     const stores = useMemo(() => {
         const storeSet = new Set<string>()
         products.forEach(p => {
@@ -43,7 +40,6 @@ export default function ProductsPage() {
         return ['Semua', ...Array.from(storeSet)]
     }, [products])
 
-    // Filter and Sort Logic
     const filteredAndSortedProducts = useMemo(() => {
         let result = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -52,12 +48,6 @@ export default function ProductsPage() {
         })
 
         const extractPrice = (priceStr: string) => {
-            // Match the first sequence of numbers (handling dots/commas if needed, but here we just strip non-digits)
-            // If it's a range like "Rp 100.000 - 200.000", we want the 100000
-            const match = priceStr.match(/\d+(\.\d+)?/g)
-            if (!match) return 0
-            // Join and re-strip to handle thousands separators if they were matched as separate parts
-            // But usually just taking the first group of digits before any non-digit separator is safer for range start
             const firstPart = priceStr.split('-')[0].replace(/[^0-9]/g, '')
             return parseInt(firstPart) || 0
         }
@@ -71,133 +61,168 @@ export default function ProductsPage() {
         return result
     }, [products, searchTerm, selectedStore, sortBy])
 
+    const categoryShortcuts = [
+        { name: 'Gawai', icon: <Smartphone className="w-6 h-6" />, color: 'bg-emerald-100 text-emerald-600' },
+        { name: 'Komputer', icon: <Laptop className="w-6 h-6" />, color: 'bg-blue-100 text-blue-600' },
+        { name: 'Elektronik', icon: <Tv className="w-6 h-6" />, color: 'bg-orange-100 text-orange-600' },
+        { name: 'Fashion', icon: <Shirt className="w-6 h-6" />, color: 'bg-pink-100 text-pink-600' },
+        { name: 'Kuliner', icon: <UtensilsCrossed className="w-6 h-6" />, color: 'bg-yellow-100 text-yellow-600' },
+        { name: 'Kesehatan', icon: <HeartPulse className="w-6 h-6" />, color: 'bg-red-100 text-red-600' },
+        { name: 'Kecantikan', icon: <Sparkles className="w-6 h-6" />, color: 'bg-purple-100 text-purple-600' },
+        { name: 'Official Store', icon: <Tag className="w-6 h-6" />, color: 'bg-indigo-100 text-indigo-600' },
+    ]
+
     return (
         <div className="min-h-screen bg-[#f5f5f5] pb-20">
-            {/* Header Banner */}
-            <div className="bg-[#990000] text-white overflow-hidden relative">
-                <div className="max-w-7xl mx-auto px-6 py-10 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                    <div className="text-center md:text-left space-y-4">
-                        <div className="inline-flex items-center space-x-2 bg-black/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10">
-                            <Tag className="w-4 h-4 text-yellow-400" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Newslan Prime Choice</span>
+            {/* Top Marketplace Navigation Bar (Sticky Mockup) */}
+            <div className="sticky top-0 z-50 bg-white border-b border-gray-100 py-3 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-4 lg:gap-8">
+                        {/* Search Bar (Tokopedia Style) */}
+                        <div className="flex-1 flex items-center relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                                <Search className="w-4 h-4 text-gray-400 group-focus-within:text-[#03AC0E]" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder={`Cari di Newslan Commerce...`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-11 pr-20 py-2.5 rounded-lg border border-gray-200 focus:border-[#03AC0E] focus:ring-1 focus:ring-[#03AC0E]/20 text-sm transition-all outline-none"
+                            />
+                            <button className="absolute right-1 top-1/2 -translate-y-1/2 bg-[#03AC0E] text-white px-5 py-1.5 rounded-md text-xs font-black uppercase tracking-widest hover:bg-[#028b0b] transition-colors">
+                                Cari
+                            </button>
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">
-                            Shopee <span className="text-yellow-400">Deals</span> <br />
-                            Collection
-                        </h1>
-                        <p className="text-white/70 font-medium max-w-md text-sm md:text-base">
-                            Produk terbaik pilihan redaksi dengan penawaran harga paling kompetitif dari marketplace terpercaya.
-                        </p>
+
+                        {/* Icons */}
+                        <div className="hidden md:flex items-center gap-5 text-gray-400">
+                            <Mail className="w-6 h-6 hover:text-gray-600 cursor-pointer transition-colors" />
+                            <Bell className="w-6 h-6 hover:text-gray-600 cursor-pointer transition-colors" />
+                            <ShoppingCart className="w-6 h-6 hover:text-gray-600 cursor-pointer transition-colors" />
+                        </div>
+
+                        <div className="h-8 w-[1px] bg-gray-100 hidden md:block" />
+
+                        <div className="hidden md:flex items-center gap-3">
+                            <button className="px-5 py-2 text-xs font-black text-[#03AC0E] border border-[#03AC0E] rounded-lg hover:bg-[#03AC0E]/5 transition-colors">Masuk</button>
+                            <button className="px-5 py-2 text-xs font-black bg-[#03AC0E] text-white border border-[#03AC0E] rounded-lg hover:bg-[#028b0b] transition-colors shadow-md shadow-[#03AC0E]/10">Daftar</button>
+                        </div>
                     </div>
-                    <div className="hidden md:block relative w-64 h-64">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-3xl opacity-20 animate-pulse" />
-                        <Package className="w-full h-full text-white/10 rotate-12" />
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {/* Hero Banner (Marketplace Promo) */}
+                <div className="relative w-full aspect-[21/9] md:aspect-[3/1] bg-gradient-to-r from-emerald-600 to-teal-500 rounded-[1.5rem] overflow-hidden shadow-xl mb-8 group">
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                    <div className="absolute inset-0 flex items-center justify-between px-8 md:px-16 text-white z-10">
+                        <div className="max-w-lg space-y-4">
+                            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                                <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Ramadan Ekstra Seru</span>
+                            </div>
+                            <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.9]">
+                                Gadget Andalan <br /> <span className="text-yellow-300">Diskon s.d 80%</span>
+                            </h2>
+                            <p className="text-xs md:text-sm font-bold text-white/80 uppercase tracking-[0.2em]">Verified Seller Only • Limited Time</p>
+                            <button className="bg-white text-emerald-700 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-yellow-300 hover:text-emerald-900 transition-all shadow-lg">Cek Sekarang</button>
+                        </div>
+                        <div className="hidden lg:block relative w-96 h-96 opacity-40 translate-x-12 translate-y-12 rotate-12">
+                            <ShoppingCart className="w-full h-full text-white" />
+                        </div>
                     </div>
                 </div>
 
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-black/5 -skew-x-12 translate-x-1/4" />
-            </div>
+                {/* Category Icon Shortcuts */}
+                <div className="mb-12">
+                    <h3 className="text-lg font-black italic tracking-tighter uppercase mb-6 flex items-center gap-3">
+                        <div className="w-1 h-6 bg-[#03AC0E] rounded-full" />
+                        Kategori Populer
+                    </h3>
+                    <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-4 md:gap-6 px-1">
+                        {categoryShortcuts.map((cat, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-3 group cursor-pointer">
+                                <div className={`w-14 h-14 md:w-16 md:h-16 ${cat.color} rounded-[1.5rem] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all`}>
+                                    {cat.icon}
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-500 text-center uppercase tracking-tight group-hover:text-black">{cat.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex flex-col lg:flex-row gap-8">
-
-                    {/* Desktop Sidebar Filter */}
-                    <div className="hidden lg:block w-64 shrink-0 space-y-8">
-                        <div>
-                            <h3 className="flex items-center text-sm font-black uppercase tracking-widest mb-6">
-                                <Filter className="w-4 h-4 mr-2" />
+                {/* Content Section with Filters & Grid */}
+                <div className="flex flex-col lg:flex-row gap-10">
+                    {/* Desktop Filter Sidebar */}
+                    <div className="hidden lg:block w-64 shrink-0">
+                        <div className="bg-white border border-gray-100 rounded-3xl p-6 sticky top-28 shadow-sm">
+                            <h3 className="font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <Filter className="w-4 h-4 text-[#03AC0E]" />
                                 Filter Produk
                             </h3>
-
-                            <div className="space-y-6">
+                            <div className="space-y-8">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Marketplace</p>
-                                    <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Urutkan Berdasarkan</p>
+                                    <div className="flex flex-col gap-2">
+                                        <button onClick={() => setSortBy('latest')} className={`text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${sortBy === 'latest' ? 'bg-[#03AC0E]/10 text-[#03AC0E]' : 'text-gray-500 hover:bg-gray-50'}`}>Terbaru</button>
+                                        <button onClick={() => setSortBy('price-low')} className={`text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${sortBy === 'price-low' ? 'bg-[#03AC0E]/10 text-[#03AC0E]' : 'text-gray-500 hover:bg-gray-50'}`}>Harga Terendah</button>
+                                        <button onClick={() => setSortBy('price-high')} className={`text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${sortBy === 'price-high' ? 'bg-[#03AC0E]/10 text-[#03AC0E]' : 'text-gray-500 hover:bg-gray-50'}`}>Harga Tertinggi</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Marketplace</p>
+                                    <div className="flex flex-col gap-2">
                                         {stores.map(store => (
                                             <button
                                                 key={store}
                                                 onClick={() => setSelectedStore(store)}
-                                                className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedStore === store
-                                                    ? 'bg-[#990000] text-white border-[#990000] shadow-lg shadow-[#990000]/20'
-                                                    : 'bg-white text-gray-600 border-gray-100 hover:border-gray-300'
-                                                    }`}
+                                                className={`text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${selectedStore === store ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                                             >
                                                 {store}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
-
-                                <div className="p-6 bg-gradient-to-br from-gray-900 to-black rounded-3xl text-white">
-                                    <Star className="w-8 h-8 text-yellow-400 mb-4" />
-                                    <h4 className="font-black text-sm uppercase italic tracking-tighter">Newslan Verified</h4>
-                                    <p className="text-[10px] text-gray-400 mt-2 font-medium">Semua produk telah melewati kurasi editorial kami.</p>
+                                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Star className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+                                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Verified Ads</span>
+                                    </div>
+                                    <p className="text-[10px] text-emerald-600 font-medium">Temukan penawaran terbaik dari toko terverifikasi kami.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Main Content Areas */}
-                    <div className="flex-1 space-y-6">
-
-                        {/* Mobile Category Chips (Horizontal Scroll) */}
-                        <div className="lg:hidden flex overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 gap-2">
-                            {stores.map(store => (
-                                <button
-                                    key={store}
-                                    onClick={() => setSelectedStore(store)}
-                                    className={`whitespace-nowrap px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedStore === store
-                                        ? 'bg-[#990000] text-white shadow-lg shadow-[#990000]/20'
-                                        : 'bg-white text-gray-500 border border-gray-100'
-                                        }`}
-                                >
-                                    {store}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Control Bar (Search & Sort) */}
-                        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-                            <div className="relative flex-1 w-full">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari produk impian Anda..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-gray-200 focus:ring-0 text-sm transition-all"
-                                />
+                    {/* Main Grid Area */}
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-6 border-b-2 border-transparent">
+                                <button className="pb-3 border-b-2 border-[#03AC0E] text-[#03AC0E] text-sm font-black uppercase italic tracking-tighter">For You</button>
+                                <button className="pb-3 text-gray-400 text-sm font-black uppercase italic tracking-tighter hover:text-gray-700">Official Store</button>
+                                <button className="pb-3 text-gray-400 text-sm font-black uppercase italic tracking-tighter hover:text-gray-700">Terbaru</button>
                             </div>
-
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2 hidden md:block">Urutkan:</div>
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="flex-1 md:flex-none bg-gray-50 border-none text-xs font-bold rounded-xl py-2.5 px-4 focus:ring-0"
-                                >
-                                    <option value="latest">Terbaru</option>
-                                    <option value="price-low">Harga Terendah</option>
-                                    <option value="price-high">Harga Tertinggi</option>
-                                </select>
+                            <div className="hidden md:flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <Flame className="w-4 h-4 text-red-500" />
+                                {filteredAndSortedProducts.length} Produk ditemukan
                             </div>
                         </div>
 
-                        {/* Product Grid */}
                         {loading ? (
                             <div className="py-20 text-center text-gray-400">
-                                <Loader2 className="w-10 h-10 animate-spin mx-auto mb-4 text-[#990000]" />
-                                <p className="text-xs font-black uppercase tracking-widest">Memuat Produk Terbaik...</p>
+                                <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-[#03AC0E]" />
+                                <p className="text-xs font-black uppercase tracking-widest">Menyiapkan Rekomendasi Marketplace...</p>
                             </div>
                         ) : filteredAndSortedProducts.length === 0 ? (
-                            <div className="py-32 text-center bg-white rounded-[2rem] border border-dashed border-gray-200">
-                                <ShoppingBag className="w-16 h-16 mx-auto mb-6 opacity-10" />
-                                <p className="text-sm font-black uppercase tracking-widest text-gray-400">Produk tidak ditemukan</p>
-                                <button onClick={() => { setSearchTerm(''); setSelectedStore('Semua'); }} className="mt-4 text-[#990000] text-[10px] font-bold uppercase tracking-widest hover:underline">Reset Filter</button>
+                            <div className="py-32 text-center bg-white rounded-[3rem] border border-gray-100 shadow-sm">
+                                <ShoppingBag className="w-16 h-16 mx-auto mb-6 opacity-20 text-[#03AC0E]" />
+                                <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2">Produk Tidak Ditemukan</h3>
+                                <p className="text-xs text-gray-500 mb-6">Coba gunakan kata kunci lain atau reset filter Anda.</p>
+                                <button onClick={() => { setSearchTerm(''); setSelectedStore('Semua'); }} className="bg-[#03AC0E] text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#03AC0E]/20">Reset Semua Filter</button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                                 {filteredAndSortedProducts.map((product) => (
                                     <ShopeeProductCard
                                         key={product.id}
@@ -214,9 +239,10 @@ export default function ProductsPage() {
                 </div>
             </div>
 
-            <div className="px-6 py-20 text-center opacity-30">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Curated with high Standards</p>
-                <h3 className="text-2xl font-black mt-2 italic tracking-tighter">NEWLAN COMMERCE NETWORK © 2026</h3>
+            <div className="px-6 py-24 text-center">
+                <div className="max-w-xs mx-auto h-[1px] bg-gray-200 mb-8" />
+                <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">Premium Shopping Network</p>
+                <h3 className="text-3xl font-black mt-2 italic tracking-tighter text-gray-200 uppercase">NEWLAN COMMERCE</h3>
             </div>
         </div>
     )
