@@ -39,7 +39,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         if (s.includes('tiktok')) return 'bg-black hover:bg-gray-800'
         if (s.includes('tokopedia')) return 'bg-[#03AC0E] hover:bg-[#028b0b]'
         if (s.includes('lazada')) return 'bg-[#101452] hover:bg-[#0a0d35]'
-        return 'bg-primary hover:bg-secondary'
+        if (s.includes('whatsapp')) return 'bg-[#25D366] hover:bg-[#128C7E]'
+        return 'bg-[#990000] hover:bg-black'
     }
 
     if (loading) {
@@ -74,8 +75,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         <span className="text-xs font-black uppercase tracking-widest">Katalog Produk</span>
                     </Link>
                     <div className="flex items-center space-x-2">
-                        <Tag className="w-4 h-4 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Newslan Choice</span>
+                        <Tag className="w-4 h-4 text-[#990000]" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#990000]">Newslan Choice</span>
                     </div>
                 </div>
             </div>
@@ -137,7 +138,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                                 {product.name}
                             </h1>
                             <div className="flex items-center space-x-4">
-                                <div className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/20">
+                                <div className="bg-[#990000]/10 text-[#990000] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#990000]/20">
                                     Official Selection
                                 </div>
                                 <div className="h-4 w-[1px] bg-gray-200" />
@@ -156,12 +157,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
                         <div className="space-y-4">
                             <div className="flex items-center space-x-2">
-                                <div className="h-4 w-1 bg-primary rounded-full" />
+                                <div className="h-4 w-1 bg-[#990000] rounded-full" />
                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Deskripsi Produk</h3>
                             </div>
-                            <p className="text-gray-700 text-lg leading-relaxed font-medium">
-                                {product.description || 'Produk pilihan redaksi Newslan.id yang telah dikurasi untuk memberikan pengalaman terbaik bagi Anda. Kualitas terjamin dengan dukungan purna jual dari toko official partner kami.'}
-                            </p>
+                            <div
+                                className="prose prose-slate max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-black prose-li:text-gray-700"
+                                dangerouslySetInnerHTML={{
+                                    __html: product.description || 'Produk pilihan redaksi Newslan.id yang telah dikurasi untuk memberikan pengalaman terbaik bagi Anda.'
+                                }}
+                            />
                         </div>
 
                         {/* Purchase Options */}

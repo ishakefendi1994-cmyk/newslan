@@ -36,6 +36,43 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'i.ytimg.com',
+      },
+      // RSS Feed Image Domains
+      {
+        protocol: 'https',
+        hostname: 'akcdn.detik.net.id',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.cnnindonesia.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'statik.tempo.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'asset.kompas.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.liputan6.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.antaranews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-2.tstatic.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'asset.tribunnews.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.antaranews.com',
       }
     ],
   },

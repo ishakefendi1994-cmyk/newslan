@@ -22,7 +22,9 @@ import {
     X,
     ChevronRight,
     Search,
-    Bell
+    Bell,
+    Newspaper,
+    Sparkles
 } from 'lucide-react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -56,6 +58,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Products', href: '/admin/products', icon: ShoppingBag },
         { name: 'Shorts', href: '/admin/shorts', icon: Video },
         { name: 'Import WP', href: '/admin/import-wp', icon: Download },
+        { name: 'RSS Auto-Grab', href: '/admin/rss-manager', icon: Newspaper },
+        { name: 'RSS Auto-Jobs', href: '/admin/rss-jobs', icon: Newspaper },
+        { name: 'AI Writer', href: '/admin/ai-writer', icon: Sparkles },
+        { name: 'AI Auto-Jobs', href: '/admin/ai-auto-jobs', icon: Sparkles },
         { name: 'Aduan', href: '/admin/complaints', icon: Megaphone },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: 'Settings', href: '/admin/settings', icon: Settings },

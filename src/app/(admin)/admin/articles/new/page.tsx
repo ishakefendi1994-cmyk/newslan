@@ -190,7 +190,7 @@ export default function NewArticlePage() {
                                     </button>
                                     <button
                                         onClick={() => setIsPublished(true)}
-                                        className={`py-3 rounded-2xl text-xs font-bold border transition-all ${isPublished ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100'}`}
+                                        className={`py-3 rounded-2xl text-xs font-bold border transition-all ${isPublished ? 'bg-[#990000] text-white border-[#990000]' : 'bg-white text-gray-600 border-gray-100'}`}
                                     >
                                         Publik
                                     </button>
@@ -210,7 +210,7 @@ export default function NewArticlePage() {
                                         onChange={(e) => setIsPremium(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#990000]"></div>
                                 </label>
                             </div>
 

@@ -37,7 +37,8 @@ export default function ProductsPage() {
         if (s.includes('tiktok')) return 'bg-black hover:bg-gray-800'
         if (s.includes('tokopedia')) return 'bg-[#03AC0E] hover:bg-[#028b0b]'
         if (s.includes('lazada')) return 'bg-[#101452] hover:bg-[#0a0d35]'
-        return 'bg-primary hover:bg-secondary'
+        if (s.includes('whatsapp')) return 'bg-[#25D366] hover:bg-[#128C7E]'
+        return 'bg-[#990000] hover:bg-black'
     }
 
     return (

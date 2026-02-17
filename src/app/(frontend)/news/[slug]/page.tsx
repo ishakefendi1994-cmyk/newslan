@@ -136,23 +136,24 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
         // Function to inject middle ad
         const renderContentWithAds = (content: string) => {
-            if (!middleAd) return <div className="article-content" dangerouslySetInnerHTML={{ __html: content }} />
+            // Updated Prose Classes for a cleaner, premium look
+            const proseClasses = "prose prose-lg md:prose-xl max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b-4 prose-h2:border-[#990000]/10 prose-h2:pb-2 prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-4 prose-strong:text-black prose-strong:font-bold prose-img:rounded-2xl prose-img:shadow-xl"
+
+            if (!middleAd) return <div className={proseClasses} dangerouslySetInnerHTML={{ __html: content }} />
 
             const paragraphs = content.split('</p>')
-            if (paragraphs.length < 3) return <div className="article-content" dangerouslySetInnerHTML={{ __html: content }} />
+            if (paragraphs.length < 3) return <div className={proseClasses} dangerouslySetInnerHTML={{ __html: content }} />
 
             const middleIndex = Math.floor(paragraphs.length / 2)
             const firstHalf = paragraphs.slice(0, middleIndex).join('</p>') + '</p>'
             const secondHalf = paragraphs.slice(middleIndex).join('</p>')
 
-            const proseClasses = "prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-strong:text-black"
-
             return (
                 <div className="article-content">
                     <div className={proseClasses} dangerouslySetInnerHTML={{ __html: firstHalf }} />
-                    <div className="my-12 not-prose clear-both">
+                    <div className="my-14 not-prose clear-both">
                         <AdRenderer ad={middleAd} />
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest text-center block mt-2">- Advertisement -</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] text-center block mt-3">- Advertisement -</span>
                     </div>
                     <div className={proseClasses} dangerouslySetInnerHTML={{ __html: secondHalf }} />
                 </div>
@@ -235,7 +236,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                     <>
                                         <div className="text-gray-600 line-clamp-3 overflow-hidden">
                                             <div
-                                                className="prose prose-xl max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-800 prose-strong:text-black"
+                                                className="prose prose-lg md:prose-xl max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-3xl prose-strong:text-black prose-strong:font-bold"
                                                 dangerouslySetInnerHTML={{ __html: article.content.substring(0, 500) }}
                                             />
                                         </div>
