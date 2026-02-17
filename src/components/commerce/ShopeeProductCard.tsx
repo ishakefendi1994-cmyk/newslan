@@ -20,16 +20,25 @@ interface ShopeeProductCardProps {
 }
 
 export function ShopeeProductCard({ id, name, priceRange, image, storeNames = [] }: ShopeeProductCardProps) {
+    const getStoreStyle = (store: string) => {
+        const s = store.toLowerCase()
+        if (s.includes('whatsapp')) return 'bg-emerald-50 text-emerald-600 border-emerald-100'
+        if (s.includes('tiktok')) return 'bg-gray-900 text-white border-gray-900'
+        if (s.includes('shopee')) return 'bg-orange-50 text-orange-600 border-orange-100'
+        if (s.includes('tokopedia')) return 'bg-green-50 text-green-600 border-green-100'
+        return 'bg-gray-50 text-gray-500 border-gray-100'
+    }
+
     return (
-        <Link href={`/products/${id}`} className="group bg-white overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full">
-            {/* Image Container */}
-            <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
+        <Link href={`/products/${id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 border border-gray-100 flex flex-col h-full">
+            {/* Image Container with refined proportions */}
+            <div className="relative aspect-[4/5] w-full bg-gray-50 overflow-hidden">
                 {image ? (
                     <Image
                         src={image}
                         alt={name}
                         fill
-                        className="object-contain group-hover:scale-110 transition-transform duration-700"
+                        className="object-cover group-hover:scale-105 transition-transform duration-1000"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                         unoptimized
                     />
@@ -39,44 +48,46 @@ export function ShopeeProductCard({ id, name, priceRange, image, storeNames = []
                     </div>
                 )}
 
-                {/* Sale Badge (Optional Decoration) */}
-                <div className="absolute top-2 left-0 bg-[#990000] text-white text-[10px] font-black px-2 py-0.5 rounded-r-sm shadow-sm uppercase italic">
+                {/* Refined Sale Badge */}
+                <div className="absolute top-3 left-3 bg-[#990000] text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest italic z-10">
                     Hot Deal
                 </div>
             </div>
 
             {/* Content Container */}
-            <div className="p-3 flex flex-col flex-1 justify-between">
-                <div>
-                    {/* Title (2 lines max) */}
-                    <h3 className="text-sm font-bold text-gray-800 line-clamp-2 leading-tight mb-2 group-hover:text-[#990000] transition-colors h-[2.5rem]">
+            <div className="p-4 flex flex-col flex-1">
+                <div className="flex-1">
+                    {/* Marketplace Tag - Positioned at top of content for better visibility */}
+                    {storeNames.length > 0 && (
+                        <div className={`inline-block text-[8px] font-black uppercase tracking-widest border px-2 py-0.5 rounded-md mb-3 ${getStoreStyle(storeNames[0])}`}>
+                            {storeNames[0]}
+                        </div>
+                    )}
+
+                    {/* Title (Clean Typography) */}
+                    <h3 className="text-[13px] font-bold text-gray-800 line-clamp-2 leading-tight mb-2 group-hover:text-[#990000] transition-colors">
                         {name}
                     </h3>
 
-                    {/* Price - Highlighted */}
-                    <div className="text-[#990000] font-black text-lg tracking-tighter mb-2">
+                    {/* Price - Elegant & Bold */}
+                    <div className="text-[#990000] font-black text-base tracking-tighter mb-4">
                         {formatRupiah(priceRange)}
                     </div>
                 </div>
 
-                {/* Footer Meta */}
-                <div className="flex items-center justify-between mt-auto">
-                    <div className="flex items-center space-x-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-[10px] font-bold text-gray-500">4.9 | Terjual 100+</span>
+                {/* Footer Meta (Trust & Progress) */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                    <div className="flex items-center gap-1.5 gray-400">
+                        <div className="flex -space-x-1">
+                            {[1, 2, 3].map(i => <Star key={i} className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />)}
+                        </div>
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-tight">4.9 | 100+ Terjual</span>
                     </div>
-                    {storeNames.length > 0 && (
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">
-                            {storeNames[0]}
-                        </span>
-                    )}
                 </div>
             </div>
 
-            {/* Hover Action Strip */}
-            <div className="bg-[#990000] text-center py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-[10px] font-black uppercase tracking-widest">Detail Produk</span>
-            </div>
+            {/* Discrete Modern Detail Indicator */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
         </Link>
     )
 }

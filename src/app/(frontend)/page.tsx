@@ -7,6 +7,7 @@ import { Zap, TrendingUp, Sparkles, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import AdRenderer from '@/components/news/AdRenderer'
 import {
   getBanners,
@@ -15,7 +16,8 @@ import {
   getFeedAds,
   getLatestArticlesTop20,
   getLatestGridNews,
-  getTrendingNews
+  getTrendingNews,
+  getSiteSettings
 } from '@/lib/data'
 import { optimizeCloudinaryUrl } from '@/lib/utils'
 
@@ -41,8 +43,15 @@ export default async function HomePage({
   const itemsPerPage = 10
   const offset = (currentPage - 1) * itemsPerPage
 
-  // Parallel data fetching
-  // Parallel data fetching
+  // Fetch settings first for immediate redirect
+  const settings = await getSiteSettings()
+  const defaultHome = settings?.default_homepage
+
+  if (defaultHome && defaultHome !== '/' && currentPage === 1) {
+    redirect(defaultHome)
+  }
+
+  // Parallel data fetching for the rest
   const [
     banners,
     latestArticles,

@@ -219,3 +219,17 @@ export const getTrendingProducts = unstable_cache(
     ['trending-products'],
     { revalidate: REVALIDATE_TIME, tags: ['products'] }
 )
+
+export async function getSiteSettings() {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+        .from('site_settings')
+        .select('setting_key, setting_value')
+
+    // Convert array to key-value object
+    const settings: Record<string, string> = {}
+    data?.forEach((item: any) => {
+        settings[item.setting_key] = item.setting_value
+    })
+    return settings
+}

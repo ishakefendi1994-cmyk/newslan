@@ -152,7 +152,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                         <span className="text-xs font-bold text-gray-400">(4.9/5.0) | Terjual 1rb+</span>
                                     </div>
 
-                                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-tight">
+                                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-tight break-words">
                                         {product.name}
                                     </h1>
 
@@ -190,41 +190,39 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                 </div>
                             </div>
 
-                            {/* Purchase Options Container */}
-                            <div className="mt-12 p-8 bg-gray-900 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                                {/* Decor */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#990000]/20 rounded-full blur-[60px]" />
-                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#990000]/10 rounded-full blur-[80px]" />
+                            {/* Purchase Options Container - Simplified */}
+                            <div className="mt-12 space-y-6">
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-gray-900">Dapatkan Sekarang</h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Pilih marketplace resmi Newslan network di bawah ini</p>
+                                </div>
 
-                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                                    <div className="text-center md:text-left space-y-2">
-                                        <h3 className="text-xl font-black uppercase italic tracking-tighter">Dapatkan Sekarang</h3>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Pilih marketplace resmi Newslan network di bawah ini</p>
-                                    </div>
-
-                                    <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
-                                        {product.affiliate_links && product.affiliate_links.length > 0 ? (
-                                            product.affiliate_links.map((link: any) => (
-                                                <Link
-                                                    key={link.id}
-                                                    href={link.url}
-                                                    target="_blank"
-                                                    className={`${getStoreColor(link.store_name)} px-8 py-4 rounded-[1.2rem] flex items-center gap-3 group transition-all transform hover:scale-105 shadow-xl`}
-                                                >
-                                                    <ShoppingCart className="w-5 h-5" />
-                                                    <div className="text-left">
-                                                        <p className="text-[8px] font-bold uppercase tracking-widest opacity-60 leading-none">Marketplace</p>
-                                                        <p className="text-lg font-black tracking-tighter leading-none">{link.store_name}</p>
+                                <div className="flex flex-wrap gap-4">
+                                    {product.affiliate_links && product.affiliate_links.length > 0 ? (
+                                        product.affiliate_links.map((link: any) => (
+                                            <Link
+                                                key={link.id}
+                                                href={link.url}
+                                                target="_blank"
+                                                className={`${getStoreColor(link.store_name)} flex-1 min-w-[200px] px-8 py-5 rounded-2xl flex items-center justify-between group transition-all transform hover:scale-[1.02] shadow-xl shadow-black/5 text-white animate-in fade-in slide-in-from-bottom-2`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                                                        <ShoppingCart className="w-5 h-5" />
                                                     </div>
-                                                    <ExternalLink className="w-4 h-4 ml-2 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                                </Link>
-                                            ))
-                                        ) : (
-                                            <div className="bg-white/5 border border-white/10 px-8 py-4 rounded-3xl text-gray-500 font-bold uppercase tracking-widest text-xs">
-                                                Link Belum Tersedia
-                                            </div>
-                                        )}
-                                    </div>
+                                                    <div className="text-left">
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 leading-none mb-1">Beli di</p>
+                                                        <p className="text-xl font-black tracking-tighter leading-none">{link.store_name}</p>
+                                                    </div>
+                                                </div>
+                                                <ExternalLink className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                                            </Link>
+                                        ))
+                                    ) : (
+                                        <div className="w-full bg-gray-100 border border-gray-200 px-8 py-6 rounded-3xl text-gray-400 font-bold uppercase tracking-widest text-xs text-center border-dashed">
+                                            Link Pembelian Belum Tersedia
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -257,19 +255,22 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 </Suspense>
             </div>
 
-            {/* Mobile Bottom Sticky Action (Optional - showing just for demo) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-50 flex items-center justify-between gap-4">
-                <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase">Harga Terbaik</p>
-                    <p className="text-lg font-black text-[#990000] tracking-tighter">{formatRupiah(product.price_range)}</p>
+            {/* Mobile Bottom Sticky Action - Balanced with BottomNav */}
+            <div className="md:hidden fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-7xl bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 py-3 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 truncate">Harga Terbaik</span>
+                    <span className="text-lg sm:text-xl font-black text-[#990000] tracking-tighter leading-none truncate">
+                        {formatRupiah(product.price_range)}
+                    </span>
                 </div>
                 {product.affiliate_links?.[0] && (
                     <Link
                         href={product.affiliate_links[0].url}
                         target="_blank"
-                        className={`${getStoreColor(product.affiliate_links[0].store_name)} flex-1 py-4 rounded-2xl text-white text-center font-black uppercase tracking-widest text-xs shadow-lg`}
+                        className={`${getStoreColor(product.affiliate_links[0].store_name)} shrink-0 px-5 py-3 rounded-xl text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-black/5 flex items-center gap-2 active:scale-95 transition-transform`}
                     >
-                        Beli di {product.affiliate_links[0].store_name}
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>Beli di {product.affiliate_links[0].store_name.split(' ')[0]}</span>
                     </Link>
                 )}
             </div>

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
     LayoutDashboard,
+    LayoutGrid,
     FileText,
     ImageIcon,
     Settings,
@@ -56,6 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Advertisements', href: '/admin/ads', icon: Megaphone },
         { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
         { name: 'Products', href: '/admin/products', icon: ShoppingBag },
+        { name: 'Kategori Produk', href: '/admin/product-categories', icon: LayoutGrid },
         { name: 'Shorts', href: '/admin/shorts', icon: Video },
         { name: 'Import WP', href: '/admin/import-wp', icon: Download },
         { name: 'RSS Auto-Grab', href: '/admin/rss-manager', icon: Newspaper },

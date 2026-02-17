@@ -17,6 +17,17 @@ export default function EditProductPage() {
     const [priceRange, setPriceRange] = useState('')
     const [imageUrl, setImageUrl] = useState('')
     const [links, setLinks] = useState<any[]>([])
+    const [category, setCategory] = useState('')
+    const [productCategories, setProductCategories] = useState<any[]>([])
+
+    useEffect(() => {
+        fetchProductCategories()
+    }, [])
+
+    async function fetchProductCategories() {
+        const { data } = await supabase.from('product_categories').select('*').order('name')
+        if (data) setProductCategories(data)
+    }
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -43,6 +54,7 @@ export default function EditProductPage() {
             setPriceRange(data.price_range || '')
             setImageUrl(data.image_url || '')
             setLinks(data.affiliate_links || [])
+            setCategory(data.category || '')
         } catch (error: any) {
             setStatus({ type: 'error', message: 'Gagal mengambil data produk: ' + error.message })
         } finally {
@@ -92,7 +104,7 @@ export default function EditProductPage() {
             // 1. Update Product
             const { error: pError } = await supabase
                 .from('products')
-                .update({ name, description, image_url: imageUrl, price_range: priceRange })
+                .update({ name, description, image_url: imageUrl, price_range: priceRange, category })
                 .eq('id', id)
 
             if (pError) throw pError
@@ -188,6 +200,20 @@ export default function EditProductPage() {
                                 placeholder="Contoh: Rp 15.000.000 - 20.000.000"
                                 className="w-full text-lg border-none focus:ring-0 placeholder:text-slate-200 p-0 text-slate-700 font-medium"
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Kategori</label>
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="w-full text-sm font-bold border-none focus:ring-0 p-0 text-slate-700 bg-transparent cursor-pointer"
+                            >
+                                <option value="">Pilih Kategori</option>
+                                {productCategories.map(cat => (
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="space-y-2">

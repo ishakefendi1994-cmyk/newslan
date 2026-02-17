@@ -1,5 +1,8 @@
+'use client'
+
 import { useState, useEffect, useMemo } from 'react'
-import { ShoppingBag, ChevronRight, Loader2, Search, Filter, SlidersHorizontal, ArrowUpDown, Tag, Star, Package, ShoppingCart, Bell, Mail, Smartphone, Laptop, Tv, Shirt, UtensilsCrossed, HeartPulse, Sparkles, Zap, Flame } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Loader2, Search, Filter, SlidersHorizontal, ArrowUpDown, Tag, Star, Package, ShoppingCart, Bell, Mail, Smartphone, Laptop, Tv, Shirt, UtensilsCrossed, HeartPulse, Sparkles, Zap, Flame, Briefcase, Cpu, Plane, MoreHorizontal, HelpCircle } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/utils'
@@ -10,21 +13,26 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedStore, setSelectedStore] = useState('Semua')
+    const [selectedCategory, setSelectedCategory] = useState('Semua')
     const [sortBy, setSortBy] = useState<'latest' | 'price-low' | 'price-high'>('latest')
+    const [productCategories, setProductCategories] = useState<any[]>([])
     const supabase = createClient()
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('*, affiliate_links(*)')
-                    .order('created_at', { ascending: false })
+                const [pRes, cRes] = await Promise.all([
+                    supabase.from('products').select('*, affiliate_links(*)').order('created_at', { ascending: false }),
+                    supabase.from('product_categories').select('*').order('name', { ascending: true })
+                ])
 
-                if (error) throw error
-                setProducts(data || [])
+                if (pRes.error) throw pRes.error
+                if (cRes.error) throw cRes.error
+
+                setProducts(pRes.data || [])
+                setProductCategories(cRes.data || [])
             } catch (err) {
-                console.error('Error fetching products:', err)
+                console.error('Error fetching data:', err)
             } finally {
                 setLoading(false)
             }
@@ -44,7 +52,8 @@ export default function ProductsPage() {
         let result = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
             const matchesStore = selectedStore === 'Semua' || p.affiliate_links?.some((l: any) => l.store_name === selectedStore)
-            return matchesSearch && matchesStore
+            const matchesCategory = selectedCategory === 'Semua' || p.category === selectedCategory
+            return matchesSearch && matchesStore && matchesCategory
         })
 
         const extractPrice = (priceStr: string) => {
@@ -59,18 +68,12 @@ export default function ProductsPage() {
         }
 
         return result
-    }, [products, searchTerm, selectedStore, sortBy])
+    }, [products, searchTerm, selectedStore, selectedCategory, sortBy])
 
-    const categoryShortcuts = [
-        { name: 'Gawai', icon: <Smartphone className="w-6 h-6" />, color: 'bg-emerald-100 text-emerald-600' },
-        { name: 'Komputer', icon: <Laptop className="w-6 h-6" />, color: 'bg-blue-100 text-blue-600' },
-        { name: 'Elektronik', icon: <Tv className="w-6 h-6" />, color: 'bg-orange-100 text-orange-600' },
-        { name: 'Fashion', icon: <Shirt className="w-6 h-6" />, color: 'bg-pink-100 text-pink-600' },
-        { name: 'Kuliner', icon: <UtensilsCrossed className="w-6 h-6" />, color: 'bg-yellow-100 text-yellow-600' },
-        { name: 'Kesehatan', icon: <HeartPulse className="w-6 h-6" />, color: 'bg-red-100 text-red-600' },
-        { name: 'Kecantikan', icon: <Sparkles className="w-6 h-6" />, color: 'bg-purple-100 text-purple-600' },
-        { name: 'Official Store', icon: <Tag className="w-6 h-6" />, color: 'bg-indigo-100 text-indigo-600' },
-    ]
+    const DynamicIcon = ({ name, className }: { name: string, className?: string }) => {
+        const IconComponent = (LucideIcons as any)[name] || HelpCircle
+        return <IconComponent className={className} />
+    }
 
     return (
         <div className="min-h-screen bg-[#f5f5f5] pb-20">
@@ -141,12 +144,16 @@ export default function ProductsPage() {
                         Kategori Populer
                     </h3>
                     <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-4 md:gap-6 px-1">
-                        {categoryShortcuts.map((cat, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-3 group cursor-pointer">
-                                <div className={`w-14 h-14 md:w-16 md:h-16 ${cat.color} rounded-[1.5rem] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all`}>
-                                    {cat.icon}
+                        {productCategories.map((cat, idx) => (
+                            <div
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'Semua' : cat.name)}
+                                className="flex flex-col items-center gap-3 group cursor-pointer"
+                            >
+                                <div className={`w-14 h-14 md:w-16 md:h-16 ${cat.color} rounded-[1.5rem] flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all ${selectedCategory === cat.name ? 'ring-2 ring-[#03AC0E] ring-offset-2 scale-105' : ''}`}>
+                                    <DynamicIcon name={cat.icon} className="w-6 h-6" />
                                 </div>
-                                <span className="text-[10px] font-bold text-gray-500 text-center uppercase tracking-tight group-hover:text-black">{cat.name}</span>
+                                <span className={`text-[10px] font-bold text-center uppercase tracking-tight transition-colors ${selectedCategory === cat.name ? 'text-[#03AC0E]' : 'text-gray-500 group-hover:text-black'}`}>{cat.name}</span>
                             </div>
                         ))}
                     </div>
@@ -199,7 +206,7 @@ export default function ProductsPage() {
                     <div className="flex-1">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-6 border-b-2 border-transparent">
-                                <button className="pb-3 border-b-2 border-[#03AC0E] text-[#03AC0E] text-sm font-black uppercase italic tracking-tighter">For You</button>
+                                <button onClick={() => { setSelectedCategory('Semua'); setSelectedStore('Semua'); }} className={`pb-3 border-b-2 text-sm font-black uppercase italic tracking-tighter transition-all ${selectedCategory === 'Semua' && selectedStore === 'Semua' ? 'border-[#03AC0E] text-[#03AC0E]' : 'border-transparent text-gray-400 hover:text-gray-700'}`}>For You</button>
                                 <button className="pb-3 text-gray-400 text-sm font-black uppercase italic tracking-tighter hover:text-gray-700">Official Store</button>
                                 <button className="pb-3 text-gray-400 text-sm font-black uppercase italic tracking-tighter hover:text-gray-700">Terbaru</button>
                             </div>
@@ -219,7 +226,7 @@ export default function ProductsPage() {
                                 <ShoppingBag className="w-16 h-16 mx-auto mb-6 opacity-20 text-[#03AC0E]" />
                                 <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2">Produk Tidak Ditemukan</h3>
                                 <p className="text-xs text-gray-500 mb-6">Coba gunakan kata kunci lain atau reset filter Anda.</p>
-                                <button onClick={() => { setSearchTerm(''); setSelectedStore('Semua'); }} className="bg-[#03AC0E] text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#03AC0E]/20">Reset Semua Filter</button>
+                                <button onClick={() => { setSearchTerm(''); setSelectedStore('Semua'); setSelectedCategory('Semua'); }} className="bg-[#03AC0E] text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#03AC0E]/20">Reset Semua Filter</button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
