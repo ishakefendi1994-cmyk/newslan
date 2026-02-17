@@ -1,37 +1,60 @@
-'use client'
-
-import { useState, useEffect, use } from 'react'
-import { ShoppingBag, ChevronLeft, Loader2, ExternalLink, ShieldCheck, Truck, ArrowLeft, Tag } from 'lucide-react'
+import { Suspense } from 'react'
+import { ShoppingBag, ChevronLeft, ShieldCheck, Truck, Tag, ExternalLink, Star, Package, CheckCircle2, ShoppingCart, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { getProductById } from '@/lib/data'
 import { formatRupiah } from '@/lib/utils'
+import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
+import Breadcrumbs from '@/components/ui/Breadcrumbs'
+import TrendingProductsContainer from '@/components/commerce/TrendingProductsContainer'
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params)
-    const [product, setProduct] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
-    const supabase = createClient()
+interface ProductPageProps {
+    params: { id: string }
+}
 
-    useEffect(() => {
-        const fetchProduct = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('*, affiliate_links(*)')
-                    .eq('id', id)
-                    .single()
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+    const { id } = await params
+    const product = await getProductById(id)
 
-                if (error) throw error
-                setProduct(data)
-            } catch (err) {
-                console.error('Error fetching product:', err)
-            } finally {
-                setLoading(false)
-            }
+    if (!product) return { title: 'Product Not Found' }
+
+    return {
+        title: `${product.name} - Harga Terbaik & Review | Newslan.id`,
+        description: product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Beli ${product.name} dengan harga terbaik.`,
+        openGraph: {
+            title: product.name,
+            description: product.description?.replace(/<[^>]*>/g, '').substring(0, 160),
+            images: [product.image_url || '/logo.png'],
+            type: 'website',
         }
-        fetchProduct()
-    }, [id])
+    }
+}
+
+export default async function ProductDetailPage({ params }: ProductPageProps) {
+    const { id } = await params
+    const product = await getProductById(id)
+
+    if (!product) {
+        return notFound()
+    }
+
+    // JSON-LD Structured Data for Product
+    const productJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        image: product.image_url,
+        description: product.description?.replace(/<[^>]*>/g, ''),
+        sku: `NL-${product.id.substring(0, 8)}`,
+        offers: {
+            '@type': 'Offer',
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.id}`,
+            priceCurrency: 'IDR',
+            price: product.price_range?.split('-')[0].replace(/[^0-9]/g, '') || '0',
+            availability: 'https://schema.org/InStock',
+        }
+    }
 
     const getStoreColor = (store: string) => {
         const s = store.toLowerCase()
@@ -43,178 +66,212 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         return 'bg-[#990000] hover:bg-black'
     }
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
-                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Memuat Detail Produk...</p>
-            </div>
-        )
-    }
-
-    if (!product) {
-        return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-                <ShoppingBag className="w-20 h-20 text-gray-100 mb-6" />
-                <h1 className="text-2xl font-black italic uppercase italic tracking-tighter">Produk Tidak Ditemukan</h1>
-                <p className="text-gray-500 mt-2 mb-8">Maaf, produk yang Anda cari mungkin sudah tidak tersedia.</p>
-                <Link href="/products" className="bg-black text-white px-8 py-3 rounded-none font-bold uppercase text-xs tracking-widest">
-                    Kembali ke Katalog
-                </Link>
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-screen bg-gray-50 pb-32">
-            {/* Header / Navigation */}
-            <div className="bg-white px-6 py-4 border-b border-gray-100 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link href="/products" className="flex items-center space-x-2 text-gray-500 hover:text-black transition-colors group">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-xs font-black uppercase tracking-widest">Katalog Produk</span>
-                    </Link>
-                    <div className="flex items-center space-x-2">
-                        <Tag className="w-4 h-4 text-[#990000]" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#990000]">Newslan Choice</span>
-                    </div>
+        <div className="min-h-screen bg-[#f5f5f5] pb-32">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+            />
+
+            {/* Breadcrumb Header */}
+            <div className="bg-white border-b border-gray-100 py-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Breadcrumbs items={[
+                        { label: 'Katalog', href: '/products' },
+                        { label: product.name }
+                    ]} />
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+                <div className="bg-white p-4 md:p-8 shadow-sm border border-gray-100">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
 
-                    {/* Left: Product Image */}
-                    <div className="lg:col-span-6">
-                        <div className="relative aspect-square w-full rounded-[3rem] bg-white overflow-hidden shadow-2xl border border-gray-100 group">
-                            {product.image_url ? (
-                                <Image
-                                    src={product.image_url}
-                                    alt={product.name}
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-1000"
-                                    unoptimized
-                                    priority
-                                />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                                    <ShoppingBag className="w-24 h-24 text-gray-200" />
-                                </div>
-                            )}
-
-                            {/* Zoom Badge */}
-                            <div className="absolute bottom-8 right-8 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-black">Ultra HD View</span>
-                            </div>
-                        </div>
-
-                        {/* Extra Info Cards */}
-                        <div className="grid grid-cols-2 gap-4 mt-8">
-                            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center space-x-4">
-                                <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center shrink-0">
-                                    <ShieldCheck className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Garansi</p>
-                                    <p className="text-sm font-bold">100% Original</p>
-                                </div>
-                            </div>
-                            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center space-x-4">
-                                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
-                                    <Truck className="w-6 h-6 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pengiriman</p>
-                                    <p className="text-sm font-bold">Seluruh Indonesia</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right: Product Content */}
-                    <div className="lg:col-span-6 space-y-10">
-                        <div className="space-y-4">
-                            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight italic uppercase italic transition-colors">
-                                {product.name}
-                            </h1>
-                            <div className="flex items-center space-x-4">
-                                <div className="bg-[#990000]/10 text-[#990000] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#990000]/20">
-                                    Official Selection
-                                </div>
-                                <div className="h-4 w-[1px] bg-gray-200" />
-                                <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                                    SKU: NL-{product.id.substring(0, 6)}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estimasi Harga Terbaik:</p>
-                            <div className="text-3xl font-black text-black tracking-tighter">
-                                {formatRupiah(product.price_range)}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <div className="h-4 w-1 bg-[#990000] rounded-full" />
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Deskripsi Produk</h3>
-                            </div>
-                            <div
-                                className="prose prose-slate max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-black prose-li:text-gray-700"
-                                dangerouslySetInnerHTML={{
-                                    __html: product.description || 'Produk pilihan redaksi Newslan.id yang telah dikurasi untuk memberikan pengalaman terbaik bagi Anda.'
-                                }}
-                            />
-                        </div>
-
-                        {/* Purchase Options */}
-                        <div className="space-y-6 pt-6 border-t border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-black uppercase tracking-widest">Pilih Tempat Belanja</h3>
-                                <span className="text-[10px] font-bold text-gray-400 italic">*Anda akan diarahkan ke Marketplace pilihan</span>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                {product.affiliate_links && product.affiliate_links.length > 0 ? (
-                                    product.affiliate_links.map((link: any) => (
-                                        <Link
-                                            key={link.id}
-                                            href={link.url}
-                                            target="_blank"
-                                            className={`${getStoreColor(link.store_name)} text-white py-4 px-6 rounded-2xl flex items-center justify-between group transition-all transform hover:scale-[1.02] shadow-xl hover:shadow-2xl`}
-                                        >
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                                                    <ShoppingBag className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-80 leading-none mb-1">Beli di Marketplace</p>
-                                                    <p className="text-lg font-black tracking-tight leading-none">{link.store_name} Official</p>
-                                                </div>
-                                            </div>
-                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                                                <ExternalLink className="w-4 h-4" />
-                                            </div>
-                                        </Link>
-                                    ))
+                        {/* Left: Product Visuals */}
+                        <div className="lg:col-span-5 space-y-6">
+                            <div className="relative aspect-square w-full bg-gray-50 overflow-hidden border border-gray-100 group shadow-lg">
+                                {product.image_url ? (
+                                    <Image
+                                        src={product.image_url}
+                                        alt={product.name}
+                                        fill
+                                        className="object-contain group-hover:scale-110 transition-transform duration-1000"
+                                        unoptimized
+                                        priority
+                                    />
                                 ) : (
-                                    <div className="bg-gray-100 p-8 rounded-[2rem] text-center border-2 border-dashed border-gray-200">
-                                        <p className="text-gray-400 text-sm font-black uppercase tracking-widest">Link Pembelian Belum Tersedia</p>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Package className="w-24 h-24 text-gray-200" />
                                     </div>
                                 )}
+
+                                {/* Status Overlay */}
+                                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                                    <div className="bg-[#990000] text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest italic">
+                                        Verified Choice
+                                    </div>
+                                    <div className="bg-white/90 backdrop-blur-md text-black text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest border border-black/5">
+                                        Limited Stock
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Trust Indicators */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                                        <ShieldCheck className="w-6 h-6 text-[#990000]" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Jaminan</p>
+                                        <p className="text-xs font-bold text-gray-800">100% Original</p>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                                        <Truck className="w-6 h-6 text-[#990000]" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Logistik</p>
+                                        <p className="text-xs font-bold text-gray-800">Cepat & Aman</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Note */}
-                        <div className="p-6 bg-yellow-50 rounded-[2rem] border border-yellow-100/50">
-                            <p className="text-[10px] font-bold text-yellow-800 leading-relaxed uppercase tracking-widest mb-1 italic">Disclaimer:</p>
-                            <p className="text-[10px] text-yellow-700 leading-relaxed font-bold">
-                                Harga dapat berubah sewaktu-waktu tergantung kebijakan Marketplace. Newslan.id mendapatkan komisi dari setiap pembelian yang Anda lakukan melalui link di atas tanpa biaya tambahan bagi Anda.
-                            </p>
+                        {/* Right: Product Detail Info */}
+                        <div className="lg:col-span-7 flex flex-col">
+                            <div className="space-y-6 flex-1">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex -space-x-1">
+                                            {[1, 2, 3, 4, 5].map(i => (
+                                                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                            ))}
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-400">(4.9/5.0) | Terjual 1rb+</span>
+                                    </div>
+
+                                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-[0.9] text-gray-900">
+                                        {product.name}
+                                    </h1>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-6 w-1 bg-[#990000] rounded-full" />
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">SKU: NL-{product.id.substring(0, 6)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50 px-8 py-6 rounded-[2rem] border border-gray-100 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Harga Terbaik Hari Ini:</p>
+                                        <div className="text-4xl font-black text-[#990000] tracking-tighter">
+                                            {formatRupiah(product.price_range)}
+                                        </div>
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <div className="bg-white px-4 py-2 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Harga Sudah Termasuk Promo</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-1 bg-[#990000] rounded-full" />
+                                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Deskripsi & Spesifikasi</h3>
+                                    </div>
+
+                                    <div
+                                        className="prose prose-lg prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-strong:text-black"
+                                        dangerouslySetInnerHTML={{ __html: product.description || 'Pilihan produk terbaik yang telah melewati proses kurasi tim Editorial Newslan.id untuk menjamin kualitas bagi pelanggan kami.' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Purchase Options Container */}
+                            <div className="mt-12 p-8 bg-gray-900 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                                {/* Decor */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#990000]/20 rounded-full blur-[60px]" />
+                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#990000]/10 rounded-full blur-[80px]" />
+
+                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                    <div className="text-center md:text-left space-y-2">
+                                        <h3 className="text-xl font-black uppercase italic tracking-tighter">Dapatkan Sekarang</h3>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Pilih marketplace resmi Newslan network di bawah ini</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
+                                        {product.affiliate_links && product.affiliate_links.length > 0 ? (
+                                            product.affiliate_links.map((link: any) => (
+                                                <Link
+                                                    key={link.id}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    className={`${getStoreColor(link.store_name)} px-8 py-4 rounded-[1.2rem] flex items-center gap-3 group transition-all transform hover:scale-105 shadow-xl`}
+                                                >
+                                                    <ShoppingCart className="w-5 h-5" />
+                                                    <div className="text-left">
+                                                        <p className="text-[8px] font-bold uppercase tracking-widest opacity-60 leading-none">Marketplace</p>
+                                                        <p className="text-lg font-black tracking-tighter leading-none">{link.store_name}</p>
+                                                    </div>
+                                                    <ExternalLink className="w-4 h-4 ml-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <div className="bg-white/5 border border-white/10 px-8 py-4 rounded-3xl text-gray-500 font-bold uppercase tracking-widest text-xs">
+                                                Link Belum Tersedia
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex items-center justify-center gap-8 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-3 h-3 text-[#990000]" />
+                                    <span>Verified Affiliate</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-3 h-3 text-[#990000]" />
+                                    <span>Official Warranty</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-3 h-3 text-[#990000]" />
+                                    <span>Trusted Seller</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Related Products Section */}
+                <Suspense fallback={
+                    <div className="mt-20 py-20 text-center text-gray-300">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Menemukan Rekomendasi Terkait...</p>
+                    </div>
+                }>
+                    <TrendingProductsContainer currentProductId={product.id} />
+                </Suspense>
+            </div>
+
+            {/* Mobile Bottom Sticky Action (Optional - showing just for demo) */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 z-50 flex items-center justify-between gap-4">
+                <div>
+                    <p className="text-[9px] font-black text-gray-400 uppercase">Harga Terbaik</p>
+                    <p className="text-lg font-black text-[#990000] tracking-tighter">{formatRupiah(product.price_range)}</p>
+                </div>
+                {product.affiliate_links?.[0] && (
+                    <Link
+                        href={product.affiliate_links[0].url}
+                        target="_blank"
+                        className={`${getStoreColor(product.affiliate_links[0].store_name)} flex-1 py-4 rounded-2xl text-white text-center font-black uppercase tracking-widest text-xs shadow-lg`}
+                    >
+                        Beli di {product.affiliate_links[0].store_name}
+                    </Link>
+                )}
             </div>
         </div>
     )

@@ -21,7 +21,7 @@ interface ShopeeProductCardProps {
 
 export function ShopeeProductCard({ id, name, priceRange, image, storeNames = [] }: ShopeeProductCardProps) {
     return (
-        <Link href={`/products/${id}`} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full">
+        <Link href={`/products/${id}`} className="group bg-white overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full">
             {/* Image Container */}
             <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
                 {image ? (
@@ -29,7 +29,7 @@ export function ShopeeProductCard({ id, name, priceRange, image, storeNames = []
                         src={image}
                         alt={name}
                         fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        className="object-contain group-hover:scale-110 transition-transform duration-700"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                         unoptimized
                     />

@@ -191,3 +191,31 @@ export const getNextArticle = unstable_cache(
     ['next-article'],
     { revalidate: REVALIDATE_TIME, tags: ['articles'] }
 )
+
+export const getProductById = unstable_cache(
+    async (id: string) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('products')
+            .select('*, affiliate_links(*)')
+            .eq('id', id)
+            .single()
+        return data
+    },
+    ['product-by-id'],
+    { revalidate: REVALIDATE_TIME, tags: ['products'] }
+)
+
+export const getTrendingProducts = unstable_cache(
+    async (limit: number = 4) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('products')
+            .select('*, affiliate_links(*)')
+            .order('created_at', { ascending: false })
+            .limit(limit)
+        return data
+    },
+    ['trending-products'],
+    { revalidate: REVALIDATE_TIME, tags: ['products'] }
+)
