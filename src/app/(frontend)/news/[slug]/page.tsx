@@ -19,6 +19,7 @@ import NewsSidebarContainer from '@/components/news/NewsSidebarContainer'
 import RelatedArticlesContainer from '@/components/news/RelatedArticlesContainer'
 import SkeletonSidebar from '@/components/ui/SkeletonSidebar'
 import SkeletonCard from '@/components/ui/SkeletonCard'
+import Breadcrumbs from '@/components/ui/Breadcrumbs'
 
 // Generate Metadata for SEO and Social Sharing
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -161,16 +162,44 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         }
 
 
+        // Create JSON-LD for Articles (SEO)
+        const articleJsonLd = {
+            '@context': 'https://schema.org',
+            '@type': 'NewsArticle',
+            headline: article.title,
+            image: [article.featured_image || `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`],
+            datePublished: article.created_at,
+            dateModified: article.updated_at || article.created_at,
+            author: [{
+                '@type': 'Person',
+                name: article.profiles?.full_name || 'Redaksi Newslan',
+                url: `${process.env.NEXT_PUBLIC_SITE_URL}/redaksi`,
+            }],
+            publisher: {
+                '@type': 'Organization',
+                name: 'Newslan.id',
+                logo: {
+                    '@type': 'ImageObject',
+                    url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+                },
+            },
+            description: article.excerpt || article.title,
+        }
+
         return (
             <div className="bg-white min-h-screen">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+                />
                 {banners && banners.length > 0 && <BannerSlider banners={banners} />}
                 <PrefetchNextArticle slug={nextArticle?.slug} />
-                {/* Breadcrumb / Back button */}
+                {/* Breadcrumb Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <Link href="/" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors group">
-                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                        Kembali ke Beranda
-                    </Link>
+                    <Breadcrumbs items={[
+                        { label: article.categories?.name || 'News', href: `/category/${article.categories?.slug}` },
+                        { label: article.title }
+                    ]} />
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
