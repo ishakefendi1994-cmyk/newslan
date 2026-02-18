@@ -228,8 +228,10 @@ export async function getSiteSettings() {
 
     // Convert array to key-value object
     const settings: Record<string, string> = {}
-    data?.forEach((item: any) => {
-        settings[item.setting_key] = item.setting_value
-    })
+    if (data) {
+        data.forEach((item: any) => {
+            settings[item.setting_key] = item.setting_value
+        })
+    }
     return settings
 }
