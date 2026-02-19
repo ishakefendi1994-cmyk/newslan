@@ -14,6 +14,7 @@ import { optimizeCloudinaryUrl } from '@/lib/utils'
 import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
 import BannerSlider from '@/components/ui/BannerSlider'
 import { Metadata } from 'next'
+import { getSiteSettings } from '@/lib/settings'
 import { Suspense } from 'react'
 import NewsSidebarContainer from '@/components/news/NewsSidebarContainer'
 import RelatedArticlesContainer from '@/components/news/RelatedArticlesContainer'
@@ -28,10 +29,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // Use Cached Access (ISR) for fast metadata resolution
     const article = await getArticleBySlug(slug)
 
-    if (!article) return { title: 'Article Not Found - Newslan.id' }
-
-    // Ensure absolute URLs for social sharing
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://newslan.id'
+    const settings = await getSiteSettings()
+    const siteUrl = settings.site_url || process.env.NEXT_PUBLIC_SITE_URL || ''
+    if (!article) return { title: `Article Not Found - ${settings.site_name}` }
     const title = article.title
     const description = article.excerpt || article.title
 
@@ -39,9 +39,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const imageUrl = article.featured_image || `${siteUrl}/logo.png`
 
     return {
-        title: `${title} - Newslan.id`,
+        title: `${title} - ${settings.site_name}`,
         description,
-        metadataBase: new URL(siteUrl),
+        metadataBase: new URL(siteUrl || 'http://localhost:3000'),
         alternates: {
             canonical: `/news/${slug}`,
         },
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
             title,
             description,
             url: `/news/${slug}`,
-            siteName: 'Newslan.id',
+            siteName: settings.site_name,
             locale: 'id_ID',
             type: 'article',
             images: [
@@ -176,15 +176,15 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
             dateModified: article.updated_at || article.created_at,
             author: [{
                 '@type': 'Person',
-                name: article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Newslan.id'}`,
-                url: `${process.env.NEXT_PUBLIC_SITE_URL}/redaksi`,
+                name: article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Portal Berita'}`,
+                url: `${siteSettings.site_url}/redaksi`,
             }],
             publisher: {
                 '@type': 'Organization',
-                name: 'Newslan.id',
+                name: siteSettings.site_name || 'Portal Berita',
                 logo: {
                     '@type': 'ImageObject',
-                    url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
+                    url: `${siteSettings.site_url}/logo.png`,
                 },
             },
             description: article.excerpt || article.title,
@@ -200,10 +200,13 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                 <PrefetchNextArticle slug={nextArticle?.slug} />
                 {/* Breadcrumb Section */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <Breadcrumbs items={[
-                        { label: article.categories?.name || 'News', href: `/category/${article.categories?.slug}` },
-                        { label: article.title }
-                    ]} />
+                    <Breadcrumbs
+                        siteUrl={siteSettings.site_url}
+                        items={[
+                            { label: article.categories?.name || 'News', href: `/category/${article.categories?.slug}` },
+                            { label: article.title }
+                        ]}
+                    />
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">

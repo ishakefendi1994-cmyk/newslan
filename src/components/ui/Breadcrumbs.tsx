@@ -8,10 +8,10 @@ interface BreadcrumbItem {
 
 interface BreadcrumbsProps {
     items: BreadcrumbItem[]
+    siteUrl?: string
 }
 
-export default function Breadcrumbs({ items }: BreadcrumbsProps) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://newslan.id'
+export default function Breadcrumbs({ items, siteUrl = '' }: BreadcrumbsProps) {
 
     // JSON-LD for Breadcrumbs
     const jsonLd = {

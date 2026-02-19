@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
 import TrendingProductsContainer from '@/components/commerce/TrendingProductsContainer'
+import { getSiteSettings } from '@/lib/settings'
 
 interface ProductPageProps {
     params: { id: string }
@@ -16,17 +17,20 @@ interface ProductPageProps {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
     const { id } = await params
     const product = await getProductById(id)
+    const settings = await getSiteSettings()
 
-    if (!product) return { title: 'Product Not Found' }
+    if (!product) return { title: `Product Not Found - ${settings.site_name}` }
 
     return {
-        title: `${product.name} - Harga Terbaik & Review | Newslan.id`,
+        title: `${product.name} - Harga Terbaik & Review | ${settings.site_name}`,
         description: product.description?.replace(/<[^>]*>/g, '').substring(0, 160) || `Beli ${product.name} dengan harga terbaik.`,
         openGraph: {
             title: product.name,
             description: product.description?.replace(/<[^>]*>/g, '').substring(0, 160),
             images: [product.image_url || '/logo.png'],
+            url: `/products/${id}`,
             type: 'website',
+            siteName: settings.site_name
         }
     }
 }
@@ -34,6 +38,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductDetailPage({ params }: ProductPageProps) {
     const { id } = await params
     const product = await getProductById(id)
+    const settings = await getSiteSettings()
 
     if (!product) {
         return notFound()
@@ -49,7 +54,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         sku: `NL-${product.id.substring(0, 8)}`,
         offers: {
             '@type': 'Offer',
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/products/${product.id}`,
+            url: `${settings.site_url}/products/${product.id}`,
             priceCurrency: 'IDR',
             price: product.price_range?.split('-')[0].replace(/[^0-9]/g, '') || '0',
             availability: 'https://schema.org/InStock',
@@ -76,10 +81,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {/* Breadcrumb Header */}
             <div className="bg-white border-b border-gray-100 py-4">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Breadcrumbs items={[
-                        { label: 'Katalog', href: '/products' },
-                        { label: product.name }
-                    ]} />
+                    <Breadcrumbs
+                        siteUrl={settings.site_url}
+                        items={[
+                            { label: 'Katalog', href: '/products' },
+                            { label: product.name }
+                        ]}
+                    />
                 </div>
             </div>
 

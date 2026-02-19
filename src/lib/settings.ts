@@ -13,10 +13,11 @@ export interface SiteSettings {
     contact_whatsapp: string
     contact_email: string
     site_favicon_url: string
+    site_url: string
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
-    site_name: 'NEWSLAN.ID',
+    site_name: 'cryptotechnews.net',
     theme_color: '#990000',
     description: 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat.',
     default_homepage: '/',
@@ -25,9 +26,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     default_ai_language: 'id',
     groq_api_key: '',
     replicate_api_token: '',
-    contact_whatsapp: '+62 823-7886-5775',
-    contact_email: 'redaksi@newslan.id',
-    site_favicon_url: '/favicon.ico'
+    contact_whatsapp: '',
+    contact_email: 'admin@cryptotechnews.net',
+    site_favicon_url: '/favicon.ico',
+    site_url: 'https://cryptotechnews.net'
 }
 
 export async function getSiteSettings(supabaseClient?: any): Promise<SiteSettings> {
@@ -56,6 +58,7 @@ export async function getSiteSettings(supabaseClient?: any): Promise<SiteSetting
             if (item.setting_key === 'contact_whatsapp') settings.contact_whatsapp = item.setting_value
             if (item.setting_key === 'contact_email') settings.contact_email = item.setting_value
             if (item.setting_key === 'site_favicon_url') settings.site_favicon_url = item.setting_value
+            if (item.setting_key === 'site_url') settings.site_url = item.setting_value
         })
 
         return settings

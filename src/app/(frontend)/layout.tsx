@@ -54,6 +54,8 @@ export default async function FrontendLayout({
             siteLogoUrl={settings.site_logo_url}
             contactWhatsapp={settings.contact_whatsapp}
             contactEmail={settings.contact_email}
+            site_url={settings.site_url}
+            site_favicon_url={settings.site_favicon_url}
             navLinks={[
                 ...navLinks,
                 ...footerPages.map((p: any) => ({

@@ -19,6 +19,8 @@ interface LayoutWrapperProps {
     siteLogoUrl?: string
     contactWhatsapp?: string
     contactEmail?: string
+    site_favicon_url?: string
+    site_url?: string
 }
 
 export default function LayoutWrapper({
@@ -31,7 +33,8 @@ export default function LayoutWrapper({
     logoType = 'text',
     siteLogoUrl = '/logo.png',
     contactWhatsapp = '+62 823-7886-5775',
-    contactEmail = 'redaksi@newslan.id'
+    contactEmail = 'redaksi@newslan.id',
+    site_url = ''
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')

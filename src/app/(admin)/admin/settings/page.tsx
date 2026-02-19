@@ -24,7 +24,8 @@ export default function SettingsPage() {
         replicate_api_token: '',
         contact_whatsapp: '',
         contact_email: '',
-        site_favicon_url: ''
+        site_favicon_url: '',
+        site_url: ''
     })
     const [categories, setCategories] = useState<any[]>([])
 
@@ -59,6 +60,7 @@ export default function SettingsPage() {
                 if (item.setting_key === 'contact_whatsapp') s.contact_whatsapp = item.setting_value
                 if (item.setting_key === 'contact_email') s.contact_email = item.setting_value
                 if (item.setting_key === 'site_favicon_url') s.site_favicon_url = item.setting_value
+                if (item.setting_key === 'site_url') s.site_url = item.setting_value
             })
             setSettings(s)
         } catch (error) {
@@ -92,7 +94,8 @@ export default function SettingsPage() {
                 { setting_key: 'replicate_api_token', setting_value: settings.replicate_api_token },
                 { setting_key: 'contact_whatsapp', setting_value: settings.contact_whatsapp },
                 { setting_key: 'contact_email', setting_value: settings.contact_email },
-                { setting_key: 'site_favicon_url', setting_value: settings.site_favicon_url }
+                { setting_key: 'site_favicon_url', setting_value: settings.site_favicon_url },
+                { setting_key: 'site_url', setting_value: settings.site_url }
             ]
 
             for (const update of finalUpdates) {
@@ -180,6 +183,18 @@ export default function SettingsPage() {
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm min-h-[100px]"
                                     placeholder="Masukkan deskripsi website untuk SEO..."
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">URL Website (Canonical URL)</label>
+                                <input
+                                    type="text"
+                                    value={settings.site_url}
+                                    onChange={(e) => setSettings({ ...settings, site_url: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm font-mono"
+                                    placeholder="https://newslan.id"
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1 italic">Penting untuk SEO, Sitemap, dan Robots.txt agar link berarah ke domain yang benar.</p>
                             </div>
                         </div>
                     </div>

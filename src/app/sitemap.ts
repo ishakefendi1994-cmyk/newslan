@@ -1,20 +1,22 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { getSiteSettings } from '@/lib/settings'
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
+const supabase = // ... handled inside sitemap function locally for simplicity or keep global
+    createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
         }
-    }
-)
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://newslan.id'
+    )
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    const settings = await getSiteSettings()
+    const SITE_URL = settings.site_url || process.env.NEXT_PUBLIC_SITE_URL || ''
     // 1. Fetch Articles
     const { data: articles } = await supabase
         .from('articles')
