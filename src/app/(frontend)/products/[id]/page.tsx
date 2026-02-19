@@ -63,7 +63,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         if (s.includes('tokopedia')) return 'bg-[#03AC0E] hover:bg-[#028b0b]'
         if (s.includes('lazada')) return 'bg-[#101452] hover:bg-[#0a0d35]'
         if (s.includes('whatsapp')) return 'bg-[#25D366] hover:bg-[#128C7E]'
-        return 'bg-[#990000] hover:bg-black'
+        return 'bg-primary hover:bg-black'
     }
 
     return (
@@ -107,7 +107,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
                                 {/* Status Overlay */}
                                 <div className="absolute top-6 left-6 flex flex-col gap-2">
-                                    <div className="bg-[#990000] text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest italic">
+                                    <div className="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest italic">
                                         Verified Choice
                                     </div>
                                     <div className="bg-white/90 backdrop-blur-md text-black text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-widest border border-black/5">
@@ -120,7 +120,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
-                                        <ShieldCheck className="w-6 h-6 text-[#990000]" />
+                                        <ShieldCheck className="w-6 h-6 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Jaminan</p>
@@ -129,7 +129,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                 </div>
                                 <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
-                                        <Truck className="w-6 h-6 text-[#990000]" />
+                                        <Truck className="w-6 h-6 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Logistik</p>
@@ -157,7 +157,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                     </h1>
 
                                     <div className="flex items-center gap-4">
-                                        <div className="h-6 w-1 bg-[#990000] rounded-full" />
+                                        <div className="h-6 w-1 bg-primary rounded-full" />
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">SKU: NL-{product.id.substring(0, 6)}</span>
                                     </div>
                                 </div>
@@ -165,7 +165,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                 <div className="bg-gray-50 px-8 py-6 rounded-[2rem] border border-gray-100 flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Harga Terbaik Hari Ini:</p>
-                                        <div className="text-4xl font-black text-[#990000] tracking-tighter">
+                                        <div className="text-4xl font-black text-primary tracking-tighter">
                                             {formatRupiah(product.price_range)}
                                         </div>
                                     </div>
@@ -179,7 +179,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-1 bg-[#990000] rounded-full" />
+                                        <div className="w-10 h-1 bg-primary rounded-full" />
                                         <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Deskripsi & Spesifikasi</h3>
                                     </div>
 
@@ -228,7 +228,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
                             <div className="mt-8 flex items-center justify-center gap-8 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">
                                 <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="w-3 h-3 text-[#990000]" />
+                                    <CheckCircle2 className="w-3 h-3 text-primary" />
                                     <span>Verified Affiliate</span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="md:hidden fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-7xl bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 py-3 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 truncate">Harga Terbaik</span>
-                    <span className="text-lg sm:text-xl font-black text-[#990000] tracking-tighter leading-none truncate">
+                    <span className="text-lg sm:text-xl font-black text-primary tracking-tighter leading-none truncate">
                         {formatRupiah(product.price_range)}
                     </span>
                 </div>

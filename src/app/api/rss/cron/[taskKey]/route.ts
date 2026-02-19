@@ -122,7 +122,8 @@ export async function GET(
                     body: JSON.stringify({
                         title: extractData.data.title,
                         content: extractData.data.content,
-                        sourceName: feed.title || 'RSS Feed'
+                        sourceName: feed.title || 'RSS Feed',
+                        language: job.target_language || 'id'
                     })
                 })
                 const rewriteData = await rewriteRes.json()

@@ -38,12 +38,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const fetchSiteSettings = async () => {
             const { data } = await supabase
                 .from('site_settings')
-                .select('site_name')
-                .eq('id', 'main')
+                .select('setting_key, setting_value')
+                .eq('setting_key', 'site_name')
                 .single()
 
-            if (data?.site_name) {
-                setSiteName(data.site_name)
+            if (data?.setting_value) {
+                setSiteName(data.setting_value)
             }
         }
         fetchSiteSettings()
@@ -163,7 +163,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="h-8 w-px bg-slate-200 mx-2 hidden md:block"></div>
                         <Link href="/admin/profile" className="flex items-center space-x-3 group">
                             <div className="text-right hidden md:block">
-                                <p className="text-sm font-semibold text-slate-900 leading-none">Admin Newslan</p>
+                                <p className="text-sm font-semibold text-slate-900 leading-none">Admin {siteName}</p>
                                 <p className="text-[10px] text-slate-500 font-medium uppercase mt-1 tracking-wider">Super Administrator</p>
                             </div>
                             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">

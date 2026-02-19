@@ -14,11 +14,14 @@ export default async function TrendingProductsContainer({ currentProductId }: { 
         <div className="mt-20 space-y-8">
             <div className="flex items-center justify-between border-b-4 border-black pb-4">
                 <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#990000] rounded-none flex items-center justify-center -rotate-3 shadow-lg">
+                    <div className="w-10 h-10 bg-primary rounded-none flex items-center justify-center -rotate-3 shadow-lg">
                         <Star className="w-6 h-6 text-white animate-pulse" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic leading-none">Rekomendasi Terpopuler</h2>
+                        <div className="flex items-center space-x-3 mb-8">
+                            <div className="w-12 h-[2px] bg-primary"></div>
+                            <h2 className="text-3xl font-black uppercase tracking-tighter italic">Trending <span className="text-primary text-stroke-thin">Offers</span></h2>
+                        </div>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Pilihan Terbaik Minggu Ini di Newslan.id</p>
                     </div>
                 </div>

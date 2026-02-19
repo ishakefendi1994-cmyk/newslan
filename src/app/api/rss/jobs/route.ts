@@ -30,6 +30,7 @@ export async function GET() {
         last_run_articles,
         total_runs,
         total_articles_published,
+        target_language,
         created_at
       `)
             .order('created_at', { ascending: false })
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
             isPublished = true,
             showSourceAttribution = true,
             useAIImage = false,
-            maxArticlesPerRun = 3
+            maxArticlesPerRun = 3,
+            targetLanguage = 'id'
         } = body
 
         if (!name || !rssUrl) {
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest) {
                 show_source_attribution: showSourceAttribution,
                 use_ai_image: useAIImage,
                 max_articles_per_run: maxArticlesPerRun,
+                target_language: targetLanguage,
                 is_active: true
             })
             .select()
@@ -114,7 +117,7 @@ export async function PATCH(request: NextRequest) {
         const supabase = await createClient()
         const body = await request.json()
 
-        const { id, showSourceAttribution, ...otherUpdates } = body
+        const { id, showSourceAttribution, targetLanguage, ...otherUpdates } = body
 
         const updates: any = { ...otherUpdates, updated_at: new Date().toISOString() }
         if (showSourceAttribution !== undefined) {
@@ -122,6 +125,9 @@ export async function PATCH(request: NextRequest) {
         }
         if (body.useAIImage !== undefined) {
             updates.use_ai_image = body.useAIImage
+        }
+        if (targetLanguage) {
+            updates.target_language = targetLanguage
         }
 
         if (!id) {

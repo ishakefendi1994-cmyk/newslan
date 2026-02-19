@@ -1,6 +1,7 @@
 import LayoutWrapper from '@/components/layout/LayoutWrapper'
 import { createClient } from '@/lib/supabase/server'
 import { unstable_cache } from 'next/cache'
+import { getSiteSettings } from '@/lib/settings'
 
 export default async function FrontendLayout({
     children,
@@ -8,6 +9,7 @@ export default async function FrontendLayout({
     children: React.ReactNode
 }) {
     const supabase = await createClient()
+    const settings = await getSiteSettings()
 
     const getCachedLayoutData = unstable_cache(
         async () => {
@@ -45,6 +47,9 @@ export default async function FrontendLayout({
             navLinks={navLinks}
             headerAd={headerAd}
             skinAds={skinAds}
+            siteName={settings.site_name}
+            logoType={settings.logo_type}
+            siteLogoUrl={settings.site_logo_url}
         >
             {children}
         </LayoutWrapper>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getSiteSettings } from "@/lib/settings";
 import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 
@@ -9,18 +10,23 @@ const merriweather = Merriweather({
   variable: '--font-serif',
 });
 
-export const metadata: Metadata = {
-  title: "NEWSLAN.ID | Portal Berita Terpercaya",
-  description: "Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings()
+  return {
+    title: `${settings.site_name} | Portal Berita Terpercaya`,
+    description: settings.description,
+  }
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings()
+
   return (
-    <html lang="id">
+    <html lang="id" style={{ '--site-primary-color': settings.theme_color } as React.CSSProperties}>
       <body className={`${inter.className} ${merriweather.variable} antialiased selection:bg-primary/20`}>
         {children}
       </body>

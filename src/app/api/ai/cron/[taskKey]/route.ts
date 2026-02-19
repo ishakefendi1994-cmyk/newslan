@@ -98,7 +98,8 @@ export async function GET(
                     thematicPrompt,
                     category?.name || 'Umum',
                     job.style as NewsStyle,
-                    job.model_type as NewsModel
+                    job.model_type as NewsModel,
+                    job.target_language || 'id'
                 )
 
                 // Generate Image

@@ -168,7 +168,7 @@ export function NewsCard({
                         </h3>
                     </Link>
                     {excerpt && <p className={`${secondaryTextColor} text-sm leading-relaxed line-clamp-3 font-medium`}>{excerpt}</p>}
-                    <div className="pt-4 flex items-center text-[10px] font-black uppercase tracking-widest text-[#990000]">
+                    <div className="pt-4 flex items-center text-[10px] font-black uppercase tracking-widest text-primary">
                         <span>Read Full Story</span>
                         <span className="ml-2 transition-transform group-hover:translate-x-1">&rarr;</span>
                     </div>
@@ -189,7 +189,7 @@ export function NewsCard({
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <div className="absolute bottom-4 left-4">
-                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000] shadow-xl">
+                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary border-l-4 border-primary shadow-xl">
                             {category}
                         </span>
                     </div>
@@ -197,14 +197,14 @@ export function NewsCard({
                 <div className="space-y-2">
 // Variant: spotlight
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-sm font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2 underline-offset-4 decoration-2 decoration-[#990000]/30 group-hover:underline">
+                        <h3 className="text-sm font-black leading-tight text-black group-hover:text-primary transition-colors line-clamp-2 underline-offset-4 decoration-2 decoration-primary/30 group-hover:underline">
                             {title}
                         </h3>
                     </Link>
 
 // Variant: grid-standard
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8 line-clamp-2">
+                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-primary transition-colors tracking-tighter decoration-4 decoration-primary/10 group-hover:underline underline-offset-8 line-clamp-2">
                             {title}
                         </h3>
                     </Link>
@@ -236,19 +236,19 @@ export function NewsCard({
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
                     />
                     <div className="absolute bottom-4 left-4">
-                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#990000] border-l-4 border-[#990000]">
+                        <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary border-l-4 border-primary">
                             {category}
                         </span>
                     </div>
                 </div>
                 <div className="space-y-3 px-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-[#990000] transition-colors tracking-tighter decoration-4 decoration-[#990000]/10 group-hover:underline underline-offset-8 line-clamp-2">
+                        <h3 className="text-xl font-black leading-[1.1] text-black group-hover:text-primary transition-colors tracking-tighter decoration-4 decoration-primary/10 group-hover:underline underline-offset-8 line-clamp-2">
                             {title}
                         </h3>
                     </Link>
                     <div className="flex items-center text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-t border-gray-100 pt-3">
-                        <Calendar className="w-3.5 h-3.5 mr-2 text-[#990000]/50" />
+                        <Calendar className="w-3.5 h-3.5 mr-2 text-primary/50" />
                         <span>{date}</span>
                     </div>
                 </div>
@@ -270,7 +270,7 @@ export function NewsCard({
                 </div>
                 <div className="flex-1 space-y-2">
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-sm md:text-base font-black leading-tight text-black group-hover:text-[#990000] transition-colors line-clamp-2">
+                        <h4 className="text-sm md:text-base font-black leading-tight text-black group-hover:text-primary transition-colors line-clamp-2">
                             {title}
                         </h4>
                     </Link>
@@ -297,7 +297,7 @@ export function NewsCard({
                 </div>
                 <div className="flex-1 space-y-1">
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-xs font-black leading-snug text-gray-800 group-hover:text-[#990000] transition-colors line-clamp-2">
+                        <h4 className="text-xs font-black leading-snug text-gray-800 group-hover:text-primary transition-colors line-clamp-2">
                             {title}
                         </h4>
                     </Link>
@@ -308,7 +308,7 @@ export function NewsCard({
 
     if (variant === 'feature-block') {
         const isLightBg = categoryColor === 'white' || categoryColor === '#ffffff' || categoryColor === '#fff'
-        const blockBgColor = isLightBg || !categoryColor ? '#990000' : categoryColor
+        const blockBgColor = isLightBg || !categoryColor ? 'var(--color-primary)' : categoryColor
 
         return (
             <div className={`group flex flex-col h-full rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow`} onMouseEnter={handlePrefetch}>
@@ -413,12 +413,12 @@ export function NewsCard({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-6 w-full">
                     <div className="flex items-center space-x-2 mb-3">
-                        <span className="bg-[#990000] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                        <span className="bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                             {category}
                         </span>
                     </div>
                     <Link href={`/news/${slug}`} className="block">
-                        <h2 className="text-xl md:text-3xl font-black text-white leading-tight tracking-tighter hover:text-[#990000] transition-colors line-clamp-3">
+                        <h2 className="text-xl md:text-3xl font-black text-white leading-tight tracking-tighter hover:text-primary transition-colors line-clamp-3">
                             {title}
                         </h2>
                     </Link>
@@ -441,11 +441,11 @@ export function NewsCard({
                     />
                 </div>
                 <div className="space-y-2">
-                    <span className="bg-[#990000] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white inline-block">
+                    <span className="bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white inline-block">
                         {category}
                     </span>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-base md:text-lg font-bold leading-snug text-black hover:text-[#990000] transition-colors line-clamp-3">
+                        <h3 className="text-base md:text-lg font-bold leading-snug text-black hover:text-primary transition-colors line-clamp-3">
                             {title}
                         </h3>
                     </Link>
@@ -469,7 +469,7 @@ export function NewsCard({
                 </div>
                 <div className="flex-1 space-y-1">
                     <Link href={`/news/${slug}`} className="block">
-                        <h4 className="text-xs font-bold leading-snug text-black hover:text-[#990000] transition-colors line-clamp-3">
+                        <h4 className="text-xs font-bold leading-snug text-black hover:text-primary transition-colors line-clamp-3">
                             {title}
                         </h4>
                     </Link>
@@ -493,12 +493,12 @@ export function NewsCard({
                 </div>
                 <div className="flex-1 flex flex-col justify-center space-y-3">
                     <div className="flex items-center space-x-2">
-                        <span className="bg-[#990000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                        <span className="bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                             {category}
                         </span>
                     </div>
                     <Link href={`/news/${slug}`} className="block">
-                        <h3 className="text-lg md:text-2xl font-bold text-black leading-tight hover:text-[#990000] transition-colors line-clamp-2">
+                        <h3 className="text-lg md:text-2xl font-bold text-black leading-tight hover:text-primary transition-colors line-clamp-2">
                             {title}
                         </h3>
                     </Link>

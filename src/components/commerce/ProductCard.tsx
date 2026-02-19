@@ -24,14 +24,14 @@ export function ProductCard({ name, description, image, priceRange, links }: Pro
     }
 
     return (
-        <div className="bg-white border-l-4 border-[#990000] p-5 flex flex-col md:flex-row gap-6 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white border-l-4 border-primary p-5 flex flex-col md:flex-row gap-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="relative w-full md:w-1/3 aspect-square overflow-hidden bg-gray-50">
                 <Image src={image} alt={name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
             </div>
 
             <div className="flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-[#990000]">
+                    <div className="flex items-center space-x-2 text-primary">
                         <Tag className="w-4 h-4" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Recommended Product</span>
                     </div>

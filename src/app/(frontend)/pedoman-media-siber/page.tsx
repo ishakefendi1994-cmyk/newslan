@@ -1,4 +1,8 @@
-export default function PedomanMediaSiberPage() {
+import { getSiteSettings } from "@/lib/settings";
+
+export default async function PedomanMediaSiberPage() {
+    const settings = await getSiteSettings();
+    const siteName = settings.site_name;
     const sections = [
         { id: 'ruang-lingkup', title: '1. Ruang Lingkup' },
         { id: 'verifikasi', title: '2. Verifikasi & Keberimbangan' },
@@ -54,7 +58,7 @@ export default function PedomanMediaSiberPage() {
                             <div className="bg-gray-900 p-8 space-y-4">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Dewan Pers</p>
                                 <p className="text-xs font-medium text-gray-300 leading-relaxed italic">
-                                    "NEWSLAN.ID berkomitmen menjaga integritas jurnalistik di dunia siber sesuai standar nasional."
+                                    "{siteName.toUpperCase()} berkomitmen menjaga integritas jurnalistik di dunia siber sesuai standar nasional."
                                 </p>
                             </div>
                         </div>
@@ -120,7 +124,7 @@ export default function PedomanMediaSiberPage() {
                             <section id="iklan" className="scroll-mt-32 mt-16">
                                 <h2>6. Iklan dan Konten Komersial</h2>
                                 <p>
-                                    Pemuatan iklan pada media siber NEWSLAN.ID wajib dibedakan secara tegas antara isi berita dan iklan (advertorial). Setiap konten yang bersifat iklan atau berbayar wajib mencantumkan keterangan "Iklan", "Advertorial", atau "Sponsored Content".
+                                    Pemuatan iklan pada media siber {siteName.toUpperCase()} wajib dibedakan secara tegas antara isi berita dan iklan (advertorial). Setiap konten yang bersifat iklan atau berbayar wajib mencantumkan keterangan "Iklan", "Advertorial", atau "Sponsored Content".
                                 </p>
                             </section>
 
@@ -134,11 +138,11 @@ export default function PedomanMediaSiberPage() {
                             <section id="tanggung-jawab" className="scroll-mt-32 mt-16 pb-20">
                                 <h2>8. Tanggung Jawab</h2>
                                 <p>
-                                    Media siber NEWSLAN.ID tidak bertanggung jawab atas isi buatan pengguna (komentar/forum) yang melanggar aturan jika media telah melakukan upaya pencegahan dan penghapusan segera setelah mengetahui adanya pelanggaran tersebut.
+                                    Media siber {siteName.toUpperCase()} tidak bertanggung jawab atas isi buatan pengguna (komentar/forum) yang melanggar aturan jika media telah melakukan upaya pencegahan dan penghapusan segera setelah mengetahui adanya pelanggaran tersebut.
                                 </p>
                                 <div className="mt-12 bg-black text-white p-10">
                                     <h4 className="text-white mt-0">Ditetapkan di Jakarta, 3 Februari 2012</h4>
-                                    <p className="m-0 text-gray-400 text-sm">Disahkan oleh Dewan Pers dan diadopsi oleh Redaksi NEWSLAN.ID sebagai standar operasional pemberitaan siber.</p>
+                                    <p className="m-0 text-gray-400 text-sm">Disahkan oleh Dewan Pers dan diadopsi oleh Redaksi {siteName.toUpperCase()} sebagai standar operasional pemberitaan siber.</p>
                                 </div>
                             </section>
                         </article>

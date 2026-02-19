@@ -151,7 +151,7 @@ export default async function HomePage({
                 <div className="lg:col-span-4">
                   <div className="space-y-8">
                     <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-1.5 h-6 bg-[#990000]" />
+                      <div className="w-1.5 h-6 bg-primary" />
                       <h2 className="text-xl font-black text-black uppercase tracking-tighter">
                         Artikel Terbaru
                       </h2>
@@ -199,14 +199,14 @@ export default async function HomePage({
                   {/* Section header inspired by Tempo */}
                   <div className="flex flex-row items-center justify-between mb-12">
                     <div className="flex items-center space-x-3">
-                      <div className="w-2 h-8 bg-[#990000]" />
+                      <div className="w-2 h-8 bg-primary" />
                       <h2 className={`text-4xl font-black uppercase tracking-tighter italic ${sectionTextColor} leading-none`}>
                         {section.name}
                       </h2>
                     </div>
                     <Link
                       href={`/category/${section.slug}`}
-                      className={`hidden sm:flex items-center text-[10px] font-black uppercase tracking-widest transition-colors ${sectionTextColor} hover:text-[#990000] group`}
+                      className={`hidden sm:flex items-center text-[10px] font-black uppercase tracking-widest transition-colors ${sectionTextColor} hover:text-primary group`}
                     >
                       Lihat Semua <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                     </Link>
@@ -295,13 +295,13 @@ export default async function HomePage({
                               sizes="(max-width: 1200px) 100vw, 60vw"
                             />
                             <div className="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black/60 to-transparent">
-                              <span className="bg-[#990000] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white inline-block mb-3">
+                              <span className="bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white inline-block mb-3">
                                 {section.name}
                               </span>
                               <Link href={`/news/${section.articles[0].slug}`} className="block">
-                                <h3 className="text-xl md:text-2xl font-bold text-white leading-tight hover:underline">
-                                  {section.articles[0].title}
-                                </h3>
+                                <h2 className="text-3xl md:text-5xl font-black leading-none tracking-tighter mb-8 uppercase italic">
+                                  Fokus <span className="text-primary text-stroke-thin">Utama</span>
+                                </h2>
                               </Link>
                             </div>
                           </div>
@@ -321,11 +321,11 @@ export default async function HomePage({
                               />
                             </div>
                             <div className="flex-1 space-y-2">
-                              <span className="bg-[#990000] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white inline-block">
+                              <span className="bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white inline-block">
                                 {section.name}
                               </span>
                               <Link href={`/news/${article.slug}`} className="block">
-                                <h4 className="text-sm font-bold leading-snug text-black hover:text-[#990000] transition-colors line-clamp-3">
+                                <h4 className="text-sm font-bold leading-snug text-black hover:text-primary transition-colors line-clamp-3">
                                   {article.title}
                                 </h4>
                               </Link>

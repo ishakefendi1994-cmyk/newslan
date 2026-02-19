@@ -21,6 +21,7 @@ interface RSSJob {
     last_run_articles: number
     total_runs: number
     total_articles_published: number
+    target_language: string
     created_at: string
 }
 
@@ -39,7 +40,8 @@ export default function RSSJobsPage() {
         isPublished: true,
         showSourceAttribution: true,
         useAIImage: false,
-        maxArticlesPerRun: 3
+        maxArticlesPerRun: 3,
+        targetLanguage: 'id'
     })
     const [creating, setCreating] = useState(false)
     const [newJobUrl, setNewJobUrl] = useState<string | null>(null)
@@ -108,7 +110,8 @@ export default function RSSJobsPage() {
                     isPublished: true,
                     showSourceAttribution: true,
                     useAIImage: false,
-                    maxArticlesPerRun: 3
+                    maxArticlesPerRun: 3,
+                    targetLanguage: 'id'
                 })
             } else {
                 alert('Error: ' + data.error)
@@ -310,6 +313,20 @@ export default function RSSJobsPage() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-blue-600 pl-3">Target Bahasa AI</label>
+                                <select
+                                    value={formData.targetLanguage}
+                                    onChange={(e) => setFormData({ ...formData, targetLanguage: e.target.value })}
+                                    className="w-full px-4 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-600 font-bold"
+                                >
+                                    <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                    <option value="en">🇺🇸 Bahasa Inggris (English)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <button
                             onClick={handleCreateJob}
                             disabled={creating}
@@ -328,37 +345,37 @@ export default function RSSJobsPage() {
                             )}
                         </button>
                     </div>
+                </div>
+            )}
 
-                    {/* Success Modal */}
-                    {newJobUrl && (
-                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <h3 className="font-bold text-green-900 mb-2">✅ Job Created Successfully!</h3>
-                            <p className="text-sm text-green-800 mb-2">Your Cron Trigger URL:</p>
-                            <div className="flex gap-2">
-                                <code className="flex-1 p-2 bg-white rounded text-xs font-mono overflow-x-auto">
-                                    {newJobUrl}
-                                </code>
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(newJobUrl)
-                                        alert('✅ URL copied!')
-                                    }}
-                                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <p className="text-xs text-green-700 mt-2">
-                                Copy this URL and add it to cron-job.org or your preferred cron service
-                            </p>
-                            <button
-                                onClick={() => setNewJobUrl(null)}
-                                className="mt-2 text-sm text-green-700 underline hover:text-green-900"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    )}
+            {/* Success Modal */}
+            {newJobUrl && (
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h3 className="font-bold text-green-900 mb-2">✅ Job Created Successfully!</h3>
+                    <p className="text-sm text-green-800 mb-2">Your Cron Trigger URL:</p>
+                    <div className="flex gap-2">
+                        <code className="flex-1 p-2 bg-white rounded text-xs font-mono overflow-x-auto">
+                            {newJobUrl}
+                        </code>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(newJobUrl)
+                                alert('✅ URL copied!')
+                            }}
+                            className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                            <Copy className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <p className="text-xs text-green-700 mt-2">
+                        Copy this URL and add it to cron-job.org or your preferred cron service
+                    </p>
+                    <button
+                        onClick={() => setNewJobUrl(null)}
+                        className="mt-2 text-sm text-green-700 underline hover:text-green-900"
+                    >
+                        Close
+                    </button>
                 </div>
             )}
 
@@ -396,7 +413,8 @@ export default function RSSJobsPage() {
                                         </div>
                                         <p className="text-sm text-gray-600">
                                             Category: {job.categories?.name || 'Default'} •
-                                            Max: {job.max_articles_per_run} articles/run
+                                            Max: {job.max_articles_per_run} articles/run •
+                                            Language: {job.target_language === 'en' ? '🇺🇸 English' : '🇮🇩 Local'}
                                         </p>
                                     </div>
 

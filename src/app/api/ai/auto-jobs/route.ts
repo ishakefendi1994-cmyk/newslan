@@ -30,6 +30,7 @@ export async function GET() {
                 last_run_status,
                 total_runs,
                 total_articles_generated,
+                target_language,
                 created_at
             `)
             .order('created_at', { ascending: false })
@@ -60,7 +61,8 @@ export async function POST(request: NextRequest) {
             modelType = 'Breaking News',
             generateImage = true,
             isPublished = true,
-            articlesPerRun = 1
+            articlesPerRun = 1,
+            targetLanguage = 'id'
         } = body
 
         if (!name || !theme) {
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
                 generate_image: generateImage,
                 is_published: isPublished,
                 articles_per_run: articlesPerRun,
+                target_language: targetLanguage,
                 is_active: true
             })
             .select()
@@ -116,8 +119,12 @@ export async function PATCH(request: NextRequest) {
         const supabase = await createClient()
         const body = await request.json()
 
-        const { id, ...updates } = body
-        updates.updated_at = new Date().toISOString()
+        const { id, targetLanguage, ...otherUpdates } = body
+        const updates: any = { ...otherUpdates, updated_at: new Date().toISOString() }
+
+        if (targetLanguage) {
+            updates.target_language = targetLanguage
+        }
 
         if (!id) {
             return NextResponse.json(

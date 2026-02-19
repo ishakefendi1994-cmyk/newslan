@@ -20,6 +20,7 @@ interface AIJob {
     last_run_status: string | null
     total_runs: number
     total_articles_generated: number
+    target_language: string
     created_at: string
 }
 
@@ -41,7 +42,8 @@ export default function AIAutoJobsPage() {
         modelType: 'Breaking News',
         generateImage: true,
         isPublished: true,
-        articlesPerRun: 1
+        articlesPerRun: 1,
+        targetLanguage: 'id'
     })
     const [creating, setCreating] = useState(false)
     const [newJobUrl, setNewJobUrl] = useState<string | null>(null)
@@ -104,7 +106,8 @@ export default function AIAutoJobsPage() {
                     modelType: 'Breaking News',
                     generateImage: true,
                     isPublished: true,
-                    articlesPerRun: 1
+                    articlesPerRun: 1,
+                    targetLanguage: 'id'
                 })
             } else {
                 alert('Error: ' + data.error)
@@ -257,6 +260,18 @@ export default function AIAutoJobsPage() {
                                 </div>
                             </div>
 
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-purple-600 pl-3">Target Bahasa AI</label>
+                                <select
+                                    value={formData.targetLanguage}
+                                    onChange={(e) => setFormData({ ...formData, targetLanguage: e.target.value })}
+                                    className="w-full px-4 py-2 border border-purple-200 bg-purple-50 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
+                                >
+                                    <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                    <option value="en">🇺🇸 Bahasa Inggris (English)</option>
+                                </select>
+                            </div>
+
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-100 flex-1">
                                     <input
@@ -379,6 +394,7 @@ export default function AIAutoJobsPage() {
                                             <span className="flex items-center gap-1">Category: <span className="text-black">{job.categories?.name || 'Uncategorized'}</span></span>
                                             <span className="flex items-center gap-1 text-purple-600 underline">Theme: {job.theme.substring(0, 50)}...</span>
                                             <span className="bg-gray-100 px-2 py-0.5 rounded text-black text-[10px]">Qty: {job.articles_per_run} art</span>
+                                            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px]">Lang: {job.target_language === 'en' ? '🇺🇸 EN' : '🇮🇩 ID'}</span>
                                             <span>Runs: {job.total_runs}</span>
                                             <span>Generated: {job.total_articles_generated}</span>
                                         </div>

@@ -8,7 +8,7 @@ import { rewriteArticle } from '@/lib/ai/rewriter'
  */
 export async function POST(request: NextRequest) {
     try {
-        const { title, content, sourceName, useAIThumbnail } = await request.json()
+        const { title, content, sourceName, useAIThumbnail, language = 'id' } = await request.json()
 
         if (!title || !content) {
             return NextResponse.json(
@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
         const result = await rewriteArticle(
             title,
             content,
-            sourceName || 'Unknown Source'
+            sourceName || 'Unknown Source',
+            language
         )
 
         // MANUAL AI IMAGE GENERATION

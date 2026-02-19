@@ -81,6 +81,10 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
     try {
         const { slug } = await params
         const supabase = await createClient()
+        const settings = await supabase.from('site_settings').select('setting_key, setting_value')
+        const siteSettings: Record<string, string> = {}
+        settings.data?.forEach(s => siteSettings[s.setting_key] = s.setting_value)
+        const primaryColor = siteSettings.theme_color || '#990000'
 
         // 1. Fetch MAIN Data (Critical for First Paint)
         // We use cached functions (ISR) for article data to ensure instant load.
@@ -138,7 +142,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         // Function to inject middle ad
         const renderContentWithAds = (content: string) => {
             // Updated Prose Classes for a cleaner, premium look
-            const proseClasses = "prose prose-lg md:prose-xl max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b-4 prose-h2:border-[#990000]/10 prose-h2:pb-2 prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-4 prose-strong:text-black prose-strong:font-bold prose-img:rounded-2xl prose-img:shadow-xl"
+            const proseClasses = `prose prose-lg md:prose-xl max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b-4 prose-h2:border-primary/10 prose-h2:pb-2 prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-4 prose-strong:text-black prose-strong:font-bold prose-img:rounded-2xl prose-img:shadow-xl`
 
             if (!middleAd) return <div className={proseClasses} dangerouslySetInnerHTML={{ __html: content }} />
 
@@ -218,7 +222,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                         </div>
 
                         {/* Right: Dark Red Content Box */}
-                        <div className="bg-[#990000] p-8 md:p-12 flex flex-col justify-between text-white relative">
+                        <div className="bg-primary p-8 md:p-12 flex flex-col justify-between text-white relative">
                             {/* Top Meta Actions */}
                             <div className="flex items-center justify-between mb-8">
                                 <span className="text-xs font-black uppercase tracking-[0.2em]">{article.categories?.name || 'News'}</span>

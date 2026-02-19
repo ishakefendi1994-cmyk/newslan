@@ -2,21 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LayoutGrid, Save, CheckCircle2, AlertCircle, Home, ShoppingBag, Clapperboard } from 'lucide-react'
-import { revalidateSettings } from '@/app/actions'
-
-const HOME_OPTIONS = [
-    { label: 'Halaman Berita (Home)', value: '/', icon: Home },
-    { label: 'Halaman Katalog Produk', value: '/products', icon: ShoppingBag },
-    { label: 'Halaman Video', value: '/shorts', icon: Clapperboard },
-]
+import { Loader2, Save, Palette, Globe, Info, Check, Layout, ChevronDown, Image as ImageIcon, Upload, X, Sparkles } from 'lucide-react'
+import { uploadImage } from '@/lib/storage'
 
 export default function SettingsPage() {
     const supabase = createClient()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [uploading, setUploading] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-    const [defaultHome, setDefaultHome] = useState('/')
+
+    const [settings, setSettings] = useState({
+        site_name: '',
+        theme_color: '#990000',
+        site_description: '',
+        default_homepage: '/',
+        logo_type: 'text',
+        site_logo_url: '',
+        default_ai_language: 'id'
+    })
+    const [categories, setCategories] = useState<any[]>([])
 
     useEffect(() => {
         fetchSettings()
@@ -24,15 +29,28 @@ export default function SettingsPage() {
 
     async function fetchSettings() {
         try {
-            const { data, error } = await supabase
-                .from('site_settings')
-                .select('setting_value')
-                .eq('setting_key', 'default_homepage')
-                .single()
+            setLoading(true)
+            const [settingsRes, categoriesRes] = await Promise.all([
+                supabase.from('site_settings').select('*'),
+                supabase.from('categories').select('id, name, slug').order('name')
+            ])
 
-            if (data) {
-                setDefaultHome(data.setting_value)
-            }
+            if (settingsRes.error) throw settingsRes.error
+            if (categoriesRes.error) throw categoriesRes.error
+
+            setCategories(categoriesRes.data || [])
+
+            const s = { ...settings }
+            settingsRes.data?.forEach(item => {
+                if (item.setting_key === 'site_name') s.site_name = item.setting_value
+                if (item.setting_key === 'theme_color') s.theme_color = item.setting_value
+                if (item.setting_key === 'site_description') s.site_description = item.setting_value
+                if (item.setting_key === 'default_homepage') s.default_homepage = item.setting_value
+                if (item.setting_key === 'logo_type') s.logo_type = item.setting_value
+                if (item.setting_key === 'site_logo_url') s.site_logo_url = item.setting_value
+                if (item.setting_key === 'default_ai_language') s.default_ai_language = item.setting_value
+            })
+            setSettings(s)
         } catch (error) {
             console.error('Error fetching settings:', error)
         } finally {
@@ -41,128 +59,286 @@ export default function SettingsPage() {
     }
 
     async function handleSave() {
-        setSaving(true)
-        setMessage(null)
-
         try {
-            const { error } = await supabase
-                .from('site_settings')
-                .upsert({
-                    setting_key: 'default_homepage',
-                    setting_value: defaultHome,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'setting_key' })
+            setSaving(true)
+            setMessage(null)
 
-            if (error) throw error
+            const updates = [
+                { setting_key: 'site_name', setting_value: settings.site_name },
+                { setting_key: 'theme_color', setting_color: settings.theme_color }, // Note: actual schema uses setting_value, but checking if I should use value
+                { setting_key: 'site_description', setting_value: settings.site_description }
+            ]
 
-            // Revalidate cache on server
-            await revalidateSettings()
+            // Re-checking schema from full_schema_migration.sql: setting_value text NOT NULL
+            const finalUpdates = [
+                { setting_key: 'site_name', setting_value: settings.site_name },
+                { setting_key: 'theme_color', setting_value: settings.theme_color },
+                { setting_key: 'site_description', setting_value: settings.site_description },
+                { setting_key: 'default_homepage', setting_value: settings.default_homepage },
+                { setting_key: 'logo_type', setting_value: settings.logo_type },
+                { setting_key: 'site_logo_url', setting_value: settings.site_logo_url },
+                { setting_key: 'default_ai_language', setting_value: settings.default_ai_language }
+            ]
 
-            setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan!' })
+            for (const update of finalUpdates) {
+                const { error } = await supabase
+                    .from('site_settings')
+                    .upsert(update, { onConflict: 'setting_key' })
 
-            // Revalidate via tag if needed (optional since we'll use server component logic later)
-            setTimeout(() => setMessage(null), 3000)
+                if (error) throw error
+            }
+
+            setMessage({ type: 'success', text: 'Pengaturan berhasil disimpan! Refresh halaman untuk melihat perubahan.' })
         } catch (error: any) {
-            setMessage({ type: 'error', text: error.message || 'Gagal menyimpan pengaturan' })
+            console.error('Error saving settings:', error)
+            setMessage({ type: 'error', text: 'Gagal menyimpan: ' + error.message })
         } finally {
             setSaving(false)
         }
     }
 
+    async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        if (!e.target.files || e.target.files.length === 0) return
+
+        try {
+            setUploading(true)
+            const file = e.target.files[0]
+            const publicUrl = await uploadImage(file)
+            setSettings({ ...settings, site_logo_url: publicUrl })
+            setMessage({ type: 'success', text: 'Logo berhasil diunggah!' })
+        } catch (error: any) {
+            setMessage({ type: 'error', text: error.message || 'Gagal mengunggah logo' })
+        } finally {
+            setUploading(false)
+        }
+    }
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#990000]"></div>
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                <p className="text-slate-500">Memuat pengaturan...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter italic">
-                        Pengaturan Situs
-                    </h1>
-                    <p className="text-sm text-gray-500 font-medium">Atur konfigurasi landing page dan fitur utama situs.</p>
-                </div>
-                <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2 bg-[#990000] hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 shadow-lg shadow-red-900/10"
-                >
-                    {saving ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                        <Save className="w-4 h-4" />
-                    )}
-                    Simpan Perubahan
-                </button>
+        <div className="max-w-4xl mx-auto space-y-8 pb-10">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pengaturan Website</h1>
+                <p className="text-slate-500 text-sm mt-1">Sesuaikan identitas dan tampilan website Anda.</p>
             </div>
 
             {message && (
-                <div className={`flex items-center gap-3 p-4 rounded-2xl border ${message.type === 'success'
-                    ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                    : 'bg-red-50 border-red-100 text-red-700'
-                    } animate-in slide-in-from-top-2`}>
-                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                    <span className="font-bold text-sm uppercase tracking-tight">{message.text}</span>
+                <div className={`p-4 rounded-xl flex items-center space-x-3 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                    <Check className="w-5 h-5 flex-shrink-0" />
+                    <p className="text-sm font-medium">{message.text}</p>
                 </div>
             )}
 
-            {/* Selection Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {HOME_OPTIONS.map((option) => {
-                    const isActive = defaultHome === option.value
-                    return (
-                        <button
-                            key={option.value}
-                            onClick={() => setDefaultHome(option.value)}
-                            className={`relative group p-6 rounded-3xl border-2 transition-all duration-300 text-left overflow-hidden ${isActive
-                                ? 'border-[#990000] bg-red-50/30'
-                                : 'border-gray-100 bg-white hover:border-gray-200'
-                                }`}
-                        >
-                            <div className={`p-4 rounded-2xl mb-4 transition-colors ${isActive ? 'bg-[#990000] text-white' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100'
-                                }`}>
-                                <option.icon className="w-6 h-6" />
-                            </div>
-                            <h3 className={`font-black uppercase tracking-tighter leading-tight ${isActive ? 'text-[#990000]' : 'text-gray-900'
-                                }`}>
-                                {option.label}
-                            </h3>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 leading-relaxed">
-                                {isActive ? 'Halaman Utama Saat Ini' : 'Pilih sebagai Landing Page'}
-                            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-6">
+                    {/* General Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Globe className="w-5 h-5 text-indigo-500" />
+                            <span>Identitas Website</span>
+                        </div>
 
-                            {isActive && (
-                                <div className="absolute top-4 right-4 animate-in zoom-in-50">
-                                    <CheckCircle2 className="w-5 h-5 text-[#990000] fill-red-50" />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Website</label>
+                                <input
+                                    type="text"
+                                    value={settings.site_name}
+                                    onChange={(e) => setSettings({ ...settings, site_name: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                    placeholder="Masukkan nama website..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi / Slogan</label>
+                                <textarea
+                                    value={settings.site_description}
+                                    onChange={(e) => setSettings({ ...settings, site_description: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm min-h-[100px]"
+                                    placeholder="Masukkan deskripsi website untuk SEO..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Logo Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Info className="w-5 h-5 text-blue-500" />
+                            <span>Pengaturan Logo</span>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipe Logo</label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={() => setSettings({ ...settings, logo_type: 'text' })}
+                                        className={`px-4 py-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${settings.logo_type === 'text' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 bg-slate-50 text-slate-400 opacity-60'}`}
+                                    >
+                                        <span className="font-black italic text-lg uppercase tracking-tighter">ABC</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Logo Teks</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setSettings({ ...settings, logo_type: 'image' })}
+                                        className={`px-4 py-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${settings.logo_type === 'image' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 bg-slate-50 text-slate-400 opacity-60'}`}
+                                    >
+                                        <Globe className="w-6 h-6" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Logo Gambar</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {settings.logo_type === 'image' && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 pt-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">File Logo</label>
+
+                                    {settings.site_logo_url ? (
+                                        <div className="relative aspect-video max-w-[240px] rounded-2xl overflow-hidden border border-slate-100 group bg-slate-50">
+                                            <img src={settings.site_logo_url} alt="Logo Preview" className="w-full h-full object-contain p-4" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2">
+                                                <label className="bg-white text-black p-2 rounded-xl cursor-pointer hover:bg-gray-100 shadow-sm">
+                                                    <Upload className="w-4 h-4" />
+                                                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploading} />
+                                                </label>
+                                                <button
+                                                    onClick={() => setSettings({ ...settings, site_logo_url: '' })}
+                                                    className="bg-white text-rose-600 p-2 rounded-xl hover:bg-rose-50 shadow-sm"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <label className="w-full max-w-[240px] aspect-video rounded-2xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center space-y-2 hover:bg-slate-50 transition-all text-slate-400 cursor-pointer">
+                                            {uploading ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : <ImageIcon className="w-8 h-8" />}
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{uploading ? 'Mengunggah...' : 'Pilih File Logo'}</span>
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploading} />
+                                        </label>
+                                    )}
+
+                                    <p className="text-[10px] text-slate-400 italic">Logo akan disimpan ke Cloudinary secara otomatis.</p>
                                 </div>
                             )}
-                        </button>
-                    )
-                })}
-            </div>
-
-            {/* Info Card */}
-            <div className="bg-gray-900 rounded-3xl p-8 text-white relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <LayoutGrid className="w-24 h-24" />
-                </div>
-                <div className="relative z-10 space-y-4">
-                    <h4 className="text-xl font-black uppercase italic tracking-tighter text-[#990000]">
-                        Informasi Penting
-                    </h4>
-                    <p className="text-sm text-gray-300 font-medium leading-relaxed max-w-2xl">
-                        Landing Page adalah halaman kartu nama utama situs Anda. Ketika pengunjung membuka domain utama tanpa path tambahan, mereka akan otomatis diarahkan ke halaman yang Anda pilih di atas.
-                    </p>
-                    <div className="flex items-center gap-4 pt-4">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Database Connected</span>
                         </div>
+                    </div>
+
+                    {/* AI Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Sparkles className="w-5 h-5 text-purple-500" />
+                            <span>Pengaturan AI Autowriter</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bahasa Default AI</label>
+                                <select
+                                    value={settings.default_ai_language}
+                                    onChange={(e) => setSettings({ ...settings, default_ai_language: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm appearance-none cursor-pointer"
+                                >
+                                    <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                    <option value="en">🇺🇸 Bahasa Inggris (English)</option>
+                                </select>
+                                <p className="text-[10px] text-slate-400 mt-1 italic">Tentukan bahasa utama yang digunakan AI saat menulis atau menerjemahkan artikel secara otomatis.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Appearance Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Palette className="w-5 h-5 text-amber-500" />
+                            <span>Tampilan & Tema</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Warna Utama (Primary Color)</label>
+                                <div className="flex items-center space-x-4">
+                                    <input
+                                        type="color"
+                                        value={settings.theme_color}
+                                        onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
+                                        className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-none"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={settings.theme_color}
+                                        onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
+                                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm font-mono"
+                                        placeholder="#000000"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 italic">Warna ini akan digunakan pada tombol, link, dan elemen branding lainnya.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Page Navigation Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Layout className="w-5 h-5 text-emerald-500" />
+                            <span>Navigasi & Halaman Utama</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Halaman Utama (Homepage)</label>
+                                <div className="relative">
+                                    <select
+                                        value={settings.default_homepage}
+                                        onChange={(e) => setSettings({ ...settings, default_homepage: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm appearance-none cursor-pointer"
+                                    >
+                                        <optgroup label="Halaman Standar">
+                                            <option value="/">Beranda Standar</option>
+                                            <option value="/news">Berita Terbaru</option>
+                                            <option value="/shorts">Video Shorts</option>
+                                        </optgroup>
+                                        <optgroup label="Kategori Berita">
+                                            {categories.map((cat) => (
+                                                <option key={cat.id} value={`/category/${cat.slug}`}>
+                                                    Kategori: {cat.name}
+                                                </option>
+                                            ))}
+                                        </optgroup>
+                                    </select>
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 italic">Pilih halaman mana yang ingin dijadikan sebagai tampilan awal saat pengunjung membuka website Anda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 sticky top-24">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold">
+                            <Info className="w-5 h-5 text-blue-500" />
+                            <span>Informasi</span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            Perubahan pada pengaturan ini akan berdampak pada seluruh halaman website (Frontend).
+                            Pastikan warna yang dipilih memiliki kontras yang cukup agar tulisan tetap terbaca.
+                        </p>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="w-full bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            <span>Simpan Perubahan</span>
+                        </button>
                     </div>
                 </div>
             </div>

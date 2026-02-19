@@ -97,7 +97,7 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [], trendingN
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                         <div className="flex items-center space-x-2">
-                            <TrendingUp className="w-4 h-4 text-[#990000]" />
+                            <TrendingUp className="w-4 h-4 text-primary" />
                             <h3 className="text-sm font-black uppercase tracking-wide text-gray-900">Trending Now</h3>
                         </div>
                         <span className="text-[9px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
@@ -114,11 +114,11 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [], trendingN
                                     className="block p-4 hover:bg-gray-50 transition-colors group"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <span className={`text-2xl font-black italic text-[#990000] leading-none -mt-1 group-hover:scale-110 transition-transform`}>
+                                        <span className={`text-2xl font-black italic text-primary leading-none -mt-1 group-hover:scale-110 transition-transform`}>
                                             0{idx + 1}
                                         </span>
                                         <div className="flex-1 space-y-1">
-                                            <h4 className="text-sm font-black text-black leading-tight line-clamp-2 group-hover:text-[#990000] transition-colors">
+                                            <h4 className="text-sm font-black text-black leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                                                 {article.title}
                                             </h4>
                                             <div className="flex items-center text-[9px] font-bold text-gray-400 uppercase tracking-wider">

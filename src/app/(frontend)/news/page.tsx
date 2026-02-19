@@ -8,8 +8,8 @@ import NewsSidebar from '@/components/news/NewsSidebar'
 import AdRenderer from '@/components/news/AdRenderer'
 
 export const metadata = {
-    title: 'Berita Terbaru - Newslan.id',
-    description: 'Kumpulan berita terbaru dan terhangat dari Newslan.id',
+    title: 'Berita Terbaru',
+    description: 'Kumpulan berita terbaru dan terhangat.',
 }
 
 export default async function NewsIndexPage({ searchParams }: { searchParams: { page?: string } }) {

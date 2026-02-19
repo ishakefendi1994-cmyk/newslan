@@ -53,11 +53,11 @@ export default async function RelatedArticlesContainer({
 
                         {/* Content Right (~70%) */}
                         <div className="flex-1 flex flex-col justify-start space-y-3">
-                            <span className="bg-[#990000] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white inline-block w-fit">
+                            <span className="bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white inline-block w-fit">
                                 {item.categories?.name || 'BERITA'}
                             </span>
                             <Link href={`/news/${item.slug}`} className="block">
-                                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-black leading-snug hover:text-[#990000] transition-colors">
+                                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-black leading-snug hover:text-primary transition-colors">
                                     {item.title}
                                 </h3>
                             </Link>

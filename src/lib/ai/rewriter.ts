@@ -28,7 +28,8 @@ interface RewriteResult {
 export async function rewriteArticle(
     title: string,
     content: string,
-    sourceName: string
+    sourceName: string,
+    language: string = 'id'
 ): Promise<RewriteResult> {
     console.log(`[AI Rewriter] Starting rewrite with Groq (Llama 3.3)`)
     console.log(`[AI Rewriter] Original title:`, title)
@@ -59,12 +60,11 @@ STRICT MANDATORY INSTRUCTIONS (NON-NEGOTIABLE):
     - *Forbidden:* Following the "Intro -> Pros -> Cons -> Conclusion" pattern if that's what the source did.
     - *Required:* Start with a "Market Context", "Expert Analysis", or "Future Trend" angle.
 
-57: **LANGUAGE & TRANSLATION (CRITICAL)**:
+62: **LANGUAGE & TRANSLATION (CRITICAL)**:
     - **AUTO-DETECT SOURCE LANGUAGE**:
-      - If source is ENGLISH: **TRANSLATE ID FIRST** -> Then REWRITE.
-      - If source is INDONESIAN: Directly REWRITE.
-    - **OUTPUT MUST BE 100% INDONESIAN**. No mixed languages.
-    - Translate idioms/terms contextually (e.g., "Bear Market" -> "Pasar Lesu", not "Pasar Beruang").
+      - If source is NOT ${language === 'en' ? 'ENGLISH' : 'INDONESIAN'}: **TRANSLATE TO ${language === 'en' ? 'ENGLISH' : 'INDONESIAN'} FIRST** -> Then REWRITE.
+    - **OUTPUT MUST BE 100% ${language === 'en' ? 'ENGLISH' : 'INDONESIAN'}**. No mixed languages.
+    - Translate idioms/terms contextually based on the target language.
 
 2.  **NEW ANGLE & FRAMING**:
     - Choose ONE specific angle:

@@ -1,4 +1,8 @@
-export default function PrivacyPolicyPage() {
+import { getSiteSettings } from "@/lib/settings";
+
+export default async function PrivacyPolicyPage() {
+    const settings = await getSiteSettings();
+    const siteName = settings.site_name;
     const sections = [
         { id: 'pendahuluan', title: '1. Pendahuluan' },
         { id: 'data-dikumpulkan', title: '2. Data yang Kami Kumpulkan' },
@@ -53,7 +57,7 @@ export default function PrivacyPolicyPage() {
                                 <p className="text-sm font-medium text-gray-700 leading-relaxed">
                                     Jika Anda memiliki pertanyaan mengenai privasi Anda, jangan ragu untuk menghubungi tim legal kami.
                                 </p>
-                                <a href="mailto:legal@newslan.id" className="inline-block text-xs font-black uppercase tracking-widest text-black border-b-2 border-primary hover:text-primary transition-colors pb-1">
+                                <a href={`mailto:redaksi@${siteName.toLowerCase()}`} className="inline-block text-xs font-black uppercase tracking-widest text-black border-b-2 border-primary hover:text-primary transition-colors pb-1">
                                     Email Redaksi &rarr;
                                 </a>
                             </div>
@@ -67,10 +71,10 @@ export default function PrivacyPolicyPage() {
                             <section id="pendahuluan" className="scroll-mt-32">
                                 <h2>1. Pendahuluan</h2>
                                 <p>
-                                    Selamat datang di <strong>NEWSLAN.ID</strong>. Kami sangat menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat Anda mengakses situs web kami.
+                                    Selamat datang di <strong>{siteName.toUpperCase()}</strong>. Kami sangat menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat Anda mengakses situs web kami.
                                 </p>
                                 <p>
-                                    Dengan menggunakan layanan NEWSLAN.ID, Anda menyetujui praktik data yang dijelaskan dalam pernyataan ini sesuai dengan Undang-Undang Perlindungan Data Pribadi (UU PDP) yang berlaku di Republik Indonesia.
+                                    Dengan menggunakan layanan {siteName.toUpperCase()}, Anda menyetujui praktik data yang dijelaskan dalam pernyataan ini sesuai dengan Undang-Undang Perlindungan Data Pribadi (UU PDP) yang berlaku di Republik Indonesia.
                                 </p>
                             </section>
 
@@ -120,7 +124,7 @@ export default function PrivacyPolicyPage() {
                             <section id="kebijakan-cookie" className="scroll-mt-32 mt-16">
                                 <h2>6. Kebijakan Cookie</h2>
                                 <p>
-                                    NEWSLAN.ID menggunakan cookie untuk meningkatkan pengalaman navigasi Anda. Cookie adalah file kecil yang disimpan di perangkat Anda saat Anda mengunjungi situs kami. Kami menggunakan cookie fungsional untuk mengingat preferensi Anda dan cookie analitik untuk memantau performa situs.
+                                    {siteName.toUpperCase()} menggunakan cookie untuk meningkatkan pengalaman navigasi Anda. Cookie adalah file kecil yang disimpan di perangkat Anda saat Anda mengunjungi situs kami. Kami menggunakan cookie fungsional untuk mengingat preferensi Anda dan cookie analitik untuk memantau performa situs.
                                 </p>
                                 <p>
                                     Anda dapat mengatur browser Anda untuk menolak cookie, namun hal ini mungkin akan mempengaruhi fungsi tertentu dari situs web kami.
@@ -130,7 +134,7 @@ export default function PrivacyPolicyPage() {
                             <section id="perubahan-kebijakan" className="scroll-mt-32 mt-16">
                                 <h2>7. Perubahan Kebijakan</h2>
                                 <p>
-                                    NEWSLAN.ID dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Setiap perubahan akan kami umumkan dengan memperbarui "Tanggal Terakhir Diperbarui" di bagian atas halaman ini. Kami menyarankan Anda untuk meninjau halaman ini secara berkala.
+                                    {siteName.toUpperCase()} dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Setiap perubahan akan kami umumkan dengan memperbarui "Tanggal Terakhir Diperbarui" di bagian atas halaman ini. Kami menyarankan Anda untuk meninjau halaman ini secara berkala.
                                 </p>
                             </section>
 
@@ -140,8 +144,8 @@ export default function PrivacyPolicyPage() {
                                     Jika Anda memiliki pertanyaan mendalam atau keluhan mengenai kebijakan privasi ini, silakan hubungi kami melalui:
                                 </p>
                                 <div className="bg-gray-50 p-8 rounded-none border-l-4 border-primary">
-                                    <p className="m-0 font-bold text-black">Redaksi NEWSLAN.ID</p>
-                                    <p className="m-0">Email: legal@newslan.id</p>
+                                    <p className="m-0 font-bold text-black">Redaksi {siteName.toUpperCase()}</p>
+                                    <p className="m-0">Email: redaksi@{siteName.toLowerCase()}</p>
                                     <p className="m-0">WhatsApp: +62 823-7886-5775</p>
                                     <p className="m-0">Alamat: [Jalan Lintas Sumatera Km 27 Dusun Talang Lindung Rt 08 Rw 04 Desa Muara Belengo Kecamatan Pamenang Kabupaten Merangin Provinsi Jambi, 37352]</p>
                                 </div>

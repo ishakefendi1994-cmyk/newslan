@@ -8,23 +8,43 @@ import Link from "next/link"
 import NextImage from "next/image"
 import WhatsAppButton from "../ui/WhatsAppButton"
 
-// ... imports
-
 interface LayoutWrapperProps {
     children: React.ReactNode
     categories: any[]
     navLinks: any[]
     headerAd: any
     skinAds: { left: any, right: any }
+    siteName?: string
+    logoType?: 'text' | 'image'
+    siteLogoUrl?: string
 }
 
-export default function LayoutWrapper({ children, categories, navLinks, headerAd, skinAds }: LayoutWrapperProps) {
-    // ... code
+export default function LayoutWrapper({
+    children,
+    categories,
+    navLinks,
+    headerAd,
+    skinAds,
+    siteName = 'NEWSLAN.ID',
+    logoType = 'text',
+    siteLogoUrl = '/logo.png'
+}: LayoutWrapperProps) {
+    const pathname = usePathname()
+    const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
+
+    if (isAdmin) return <>{children}</>
 
     return (
         <>
             <SkinAds skinAds={skinAds} />
-            <Navbar categories={categories} navLinks={navLinks} headerAd={headerAd} />
+            <Navbar
+                categories={categories}
+                navLinks={navLinks}
+                headerAd={headerAd}
+                siteName={siteName}
+                logoType={logoType}
+                siteLogoUrl={siteLogoUrl}
+            />
             <div className="boxed-container transition-all duration-300">
                 <main className="min-h-screen pb-20 lg:pb-0">
                     {children}
@@ -33,18 +53,24 @@ export default function LayoutWrapper({ children, categories, navLinks, headerAd
             </div>
             <footer className="bg-[#0f0f0f] text-white border-t border-white/5 py-20 mt-10">
                 <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Footer content */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                         <div className="space-y-6">
-                            <Link href="/">
-                                <NextImage
-                                    src="/logo.png"
-                                    alt="NEWSLAN.ID Logo"
-                                    width={400}
-                                    height={140}
-                                    className="h-12 w-auto object-contain brightness-0 invert"
-                                    quality={100}
-                                />
+                            <Link href="/" className="flex flex-col items-start brightness-0 invert opacity-80">
+                                {logoType === 'image' && siteLogoUrl ? (
+                                    <div className="relative h-12 w-48 transition-all">
+                                        <NextImage
+                                            src={siteLogoUrl}
+                                            alt={siteName}
+                                            fill
+                                            className="object-contain object-left"
+                                        />
+                                    </div>
+                                ) : (
+                                    <span className="text-3xl font-black italic tracking-tighter text-white uppercase leading-none">
+                                        {siteName.split('.')[0]}
+                                        {siteName.includes('.') && <span className="text-primary">.{siteName.split('.')[1]}</span>}
+                                    </span>
+                                )}
                             </Link>
                             <p className="text-sm text-gray-400 leading-relaxed font-medium">
                                 Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.
@@ -74,14 +100,14 @@ export default function LayoutWrapper({ children, categories, navLinks, headerAd
                             <h4 className="text-xs font-black uppercase tracking-widest text-primary">Kontak Kami</h4>
                             <div className="space-y-2 text-sm text-gray-400 font-medium">
                                 <p>WhatsApp: +62 823-7886-5775</p>
-                                <p>Email: redaksi@newslan.id</p>
+                                <p>Email: redaksi@{siteName.toLowerCase()}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="pt-10 border-t border-white/5 text-center">
                         <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                            &copy; {new Date().getFullYear()} NEWSLAN.ID - Edukasi, Investigasi dan Terpercaya. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
+                            &copy; {new Date().getFullYear()} {siteName.toUpperCase()} - Edukasi, Investigasi dan Terpercaya. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
                         </p>
                     </div>
                 </div>

@@ -6,7 +6,7 @@ import { generateImagePrompt, generateImage } from '@/lib/ai/image-generator'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { theme, category, style, model, generateImage: shouldGenerateImage = true } = body
+        const { theme, category, style, model, language = 'id', generateImage: shouldGenerateImage = true } = body
 
         if (!theme || !category) {
             return NextResponse.json(
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         console.log(`[AI Writer API] Generating article about "${theme}" (${style}/${model})`)
 
         // 1. Generate Article Text
-        const article = await generateArticleFromScratch(theme, category, style as NewsStyle, model as NewsModel)
+        const article = await generateArticleFromScratch(theme, category, style as NewsStyle, model as NewsModel, language)
 
         // 2. Generate Image (Optional/Default True)
         let imageUrl = null

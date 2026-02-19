@@ -18,13 +18,17 @@ export async function generateArticleFromScratch(
     theme: string,
     category: string,
     style: NewsStyle = 'Formal',
-    model: NewsModel = 'Breaking News'
+    model: NewsModel = 'Breaking News',
+    language: string = 'id'
 ): Promise<GenerationResult> {
     if (!GROQ_API_KEY) {
         throw new Error('GROQ_API_KEY is missing')
     }
 
+    const languageName = language === 'en' ? 'English' : 'Bahasa Indonesia'
     const systemPrompt = `You are a Senior Journalist at "Newslan". Write a high-quality news article based on the theme.
+    
+    OUTPUT LANGUAGE: ${languageName}
 
     **ARTICLE PARAMETERS**:
     - **Theme**: ${theme}
@@ -45,7 +49,7 @@ export async function generateArticleFromScratch(
 
     PENTING: JANGAN PERNAH memulai "content" dengan <h2>. Baris pertama isi berita WAJIB berupa paragraf <p>.`
 
-    const userPrompt = `Tulis artikel ${model} mendalam tentang "${theme}" dalam Bahasa Indonesia. Sertakan minimal 3 sub-judul menggunakan tag <h2>.`
+    const userPrompt = `Tulis artikel ${model} mendalam tentang "${theme}" dalam ${languageName}. Sertakan minimal 3 sub-judul menggunakan tag <h2>.`
 
     try {
         const response = await fetch(GROQ_API_URL, {

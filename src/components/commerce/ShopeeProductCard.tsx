@@ -49,7 +49,7 @@ export function ShopeeProductCard({ id, name, priceRange, image, storeNames = []
                 )}
 
                 {/* Refined Sale Badge */}
-                <div className="absolute top-3 left-3 bg-[#990000] text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest italic z-10">
+                <div className="absolute top-3 left-3 bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg border border-white/20 uppercase tracking-widest italic z-10">
                     Hot Deal
                 </div>
             </div>
@@ -65,12 +65,12 @@ export function ShopeeProductCard({ id, name, priceRange, image, storeNames = []
                     )}
 
                     {/* Title (Clean Typography) */}
-                    <h3 className="text-[13px] font-bold text-gray-800 line-clamp-2 leading-tight mb-2 group-hover:text-[#990000] transition-colors">
+                    <h3 className="text-[13px] font-bold text-gray-800 line-clamp-2 leading-tight mb-2 group-hover:text-primary transition-colors">
                         {name}
                     </h3>
 
                     {/* Price - Elegant & Bold */}
-                    <div className="text-[#990000] font-black text-base tracking-tighter mb-4">
+                    <div className="text-primary font-black text-base tracking-tighter mb-4">
                         {formatRupiah(priceRange)}
                     </div>
                 </div>
@@ -87,7 +87,7 @@ export function ShopeeProductCard({ id, name, priceRange, image, storeNames = []
             </div>
 
             {/* Discrete Modern Detail Indicator */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#990000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
         </Link>
     )
 }

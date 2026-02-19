@@ -16,10 +16,10 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     if (!category) return { title: 'Category Not Found' }
 
     return {
-        title: `${category.name} - Berita Terbaru & Terlengkap | Newslan.id`,
-        description: `Kumpulan berita terbaru dan terlengkap di kategori ${category.name}. Baca informasi terkini hanya di Newslan.id.`,
+        title: `${category.name} - Berita Terbaru & Terlengkap`,
+        description: `Kumpulan berita terbaru dan terlengkap di kategori ${category.name}.`,
         openGraph: {
-            title: `${category.name} - Newslan.id`,
+            title: `${category.name}`,
             description: `Kumpulan berita terbaru dan terlengkap di kategori ${category.name}.`,
             url: `/category/${slug}`,
             type: 'website',

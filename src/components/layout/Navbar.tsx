@@ -10,11 +10,21 @@ interface NavbarProps {
     categories: any[]
     navLinks: any[]
     headerAd: any
+    siteName?: string
+    logoType?: 'text' | 'image'
+    siteLogoUrl?: string
 }
 
 import { useRouter } from 'next/navigation'
 
-export default function Navbar({ categories = [], navLinks = [], headerAd }: NavbarProps) {
+export default function Navbar({
+    categories = [],
+    navLinks = [],
+    headerAd,
+    siteName = 'NEWSLAN.ID',
+    logoType = 'text',
+    siteLogoUrl = '/logo.png'
+}: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
     const [searchQuery, setSearchQuery] = useState('')
@@ -66,16 +76,27 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                             {/* Logo */}
                             <div className="flex-1 flex justify-start">
                                 <Link href="/" className="flex items-center shrink-0">
-                                    <NextImage
-                                        src="/logo.png?v=2"
-                                        alt="NEWSLAN.ID Logo"
-                                        width={400}
-                                        height={100}
-                                        className={`w-auto object-contain transition-all duration-300 ${isScrolled ? 'h-7' : 'h-10'}`}
-                                        priority
-                                        quality={100}
-                                        unoptimized
-                                    />
+                                    <div className="flex flex-col items-start">
+                                        {logoType === 'image' && siteLogoUrl ? (
+                                            <div className="relative h-10 w-40 md:h-12 md:w-48 transition-all">
+                                                <NextImage
+                                                    src={siteLogoUrl}
+                                                    alt={siteName}
+                                                    fill
+                                                    className="object-contain object-left"
+                                                    priority
+                                                />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <span className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase leading-none">
+                                                    {siteName.split('.')[0]}
+                                                    {siteName.includes('.') && <span className="text-primary">.{siteName.split('.')[1]}</span>}
+                                                </span>
+                                                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-0.5 pl-0.5">Portal Berita Terpercaya</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </Link>
                             </div>
 
@@ -102,9 +123,9 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                                 {!isScrolled && (
                                     <Link
                                         href="/subscribe"
-                                        className="hidden sm:flex bg-[#0087c9] hover:bg-[#0077b3] text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-colors items-center"
+                                        className="hidden sm:flex bg-primary hover:opacity-90 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded transition-all items-center"
                                     >
-                                        Newslan+
+                                        {siteName.split('.')[0]}+
                                     </Link>
                                 )}
 
@@ -140,7 +161,7 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                 <div className="hidden lg:block bg-white w-full border-b border-black">
                     <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
-                            <Link href="/" className="text-[11px] font-bold uppercase tracking-widest text-[#990000] hover:text-black transition-colors whitespace-nowrap">
+                            <Link href="/" className="text-[11px] font-bold uppercase tracking-widest text-primary hover:text-black transition-colors whitespace-nowrap">
                                 Home
                             </Link>
                             {categories.slice(0, 8).map((cat) => (
@@ -193,7 +214,7 @@ export default function Navbar({ categories = [], navLinks = [], headerAd }: Nav
                                     className="block w-full text-center bg-[#0087c9] text-white py-3 rounded font-bold uppercase tracking-widest text-xs"
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    Langganan Newslan+
+                                    Langganan {siteName.split('.')[0]}+
                                 </Link>
                                 <Link
                                     href="/auth/login"

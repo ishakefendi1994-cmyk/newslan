@@ -19,6 +19,7 @@ export default function AIWriterPage() {
         categoryId: '',
         style: 'Formal',
         model: 'Breaking News',
+        language: 'id',
         generateImage: true
     })
 
@@ -75,6 +76,7 @@ export default function AIWriterPage() {
                     category: selectedCategory.name,
                     style: formData.style,
                     model: formData.model,
+                    language: formData.language,
                     generateImage: formData.generateImage
                 })
             })
@@ -189,6 +191,18 @@ export default function AIWriterPage() {
                                     {NEWS_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
                                 </select>
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block text-purple-900 border-l-4 border-purple-600 pl-3">Target Bahasa</label>
+                            <select
+                                value={formData.language}
+                                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                className="w-full px-4 py-3 border border-purple-200 bg-purple-50 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
+                            >
+                                <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                <option value="en">🇺🇸 Bahasa Inggris (English)</option>
+                            </select>
                         </div>
 
                         <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-100">

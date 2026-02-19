@@ -24,6 +24,7 @@ export default function RSSManagerPage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
     const [isPublished, setIsPublished] = useState<boolean>(true)
     const [useAIThumbnail, setUseAIThumbnail] = useState<boolean>(false)
+    const [language, setLanguage] = useState<string>('id')
 
     // Custom RSS URL input
     const [customRssUrl, setCustomRssUrl] = useState<string>('')
@@ -122,7 +123,8 @@ export default function RSSManagerPage() {
                     title: extractedContent.title,
                     content: extractedContent.content,
                     sourceName: selectedArticle.source,
-                    useAIThumbnail: useAIThumbnail
+                    useAIThumbnail: useAIThumbnail,
+                    language: language
                 })
             })
 
@@ -359,6 +361,18 @@ export default function RSSManagerPage() {
                                     <Sparkles className="w-4 h-4 text-purple-600" />
                                     Generate AI Thumbnail (Replicate)
                                 </label>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-blue-600 pl-3">Target Bahasa AI</label>
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value)}
+                                    className="w-full px-4 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-600 font-bold"
+                                >
+                                    <option value="id">🇮🇩 Bahasa Indonesia</option>
+                                    <option value="en">🇺🇸 Bahasa Inggris (English)</option>
+                                </select>
                             </div>
 
                             <button
