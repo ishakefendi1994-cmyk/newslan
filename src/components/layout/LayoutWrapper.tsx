@@ -7,6 +7,7 @@ import SkinAds from "./SkinAds"
 import Link from "next/link"
 import NextImage from "next/image"
 import WhatsAppButton from "../ui/WhatsAppButton"
+import { BreakingNewsTicker } from "./BreakingNewsTicker"
 
 interface LayoutWrapperProps {
     children: React.ReactNode
@@ -21,6 +22,7 @@ interface LayoutWrapperProps {
     contactEmail?: string
     site_favicon_url?: string
     site_url?: string
+    siteDescription?: string
 }
 
 export default function LayoutWrapper({
@@ -34,7 +36,8 @@ export default function LayoutWrapper({
     siteLogoUrl = '/logo.png',
     contactWhatsapp = '+62 823-7886-5775',
     contactEmail = 'redaksi@newslan.id',
-    site_url = ''
+    site_url = '',
+    siteDescription = 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.'
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
@@ -44,6 +47,7 @@ export default function LayoutWrapper({
     return (
         <>
             <SkinAds skinAds={skinAds} />
+            <BreakingNewsTicker siteName={siteName} />
             <Navbar
                 categories={categories}
                 navLinks={navLinks}
@@ -51,6 +55,7 @@ export default function LayoutWrapper({
                 siteName={siteName}
                 logoType={logoType}
                 siteLogoUrl={siteLogoUrl}
+                siteDescription={siteDescription}
             />
             <div className="boxed-container transition-all duration-300">
                 <main className="min-h-screen pb-20 lg:pb-0">
@@ -80,7 +85,7 @@ export default function LayoutWrapper({
                                 )}
                             </Link>
                             <p className="text-sm text-gray-400 leading-relaxed font-medium">
-                                Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.
+                                {siteDescription}
                             </p>
                         </div>
 
@@ -126,7 +131,7 @@ export default function LayoutWrapper({
 
                     <div className="pt-10 border-t border-white/5 text-center">
                         <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                            &copy; {new Date().getFullYear()} {siteName.toUpperCase()} - Edukasi, Investigasi dan Terpercaya. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
+                            &copy; {new Date().getFullYear()} {siteName.toUpperCase()} - {siteDescription.split('.')[0]}. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
                         </p>
                     </div>
                 </div>

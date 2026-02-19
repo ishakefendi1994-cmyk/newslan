@@ -2,7 +2,7 @@ import { getTrendingProducts } from '@/lib/data'
 import { ShopeeProductCard } from './ShopeeProductCard'
 import { Star } from 'lucide-react'
 
-export default async function TrendingProductsContainer({ currentProductId }: { currentProductId?: string }) {
+export default async function TrendingProductsContainer({ currentProductId, siteName = 'NEWSLAN.ID' }: { currentProductId?: string, siteName?: string }) {
     const products = await getTrendingProducts(8)
 
     // Filter out current product
@@ -22,7 +22,7 @@ export default async function TrendingProductsContainer({ currentProductId }: { 
                             <div className="w-12 h-[2px] bg-primary"></div>
                             <h2 className="text-3xl font-black uppercase tracking-tighter italic">Trending <span className="text-primary text-stroke-thin">Offers</span></h2>
                         </div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Pilihan Terbaik Minggu Ini di Newslan.id</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Pilihan Terbaik Minggu Ini di {siteName}</p>
                     </div>
                 </div>
                 <div className="hidden md:block">

@@ -21,6 +21,7 @@ import RelatedArticlesContainer from '@/components/news/RelatedArticlesContainer
 import SkeletonSidebar from '@/components/ui/SkeletonSidebar'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
+import TrendingProductsContainer from '@/components/commerce/TrendingProductsContainer'
 
 // Generate Metadata for SEO and Social Sharing
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -240,7 +241,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                             {/* Bottom Meta */}
                             <div className="flex flex-col md:flex-row md:items-center text-xs md:text-sm font-bold border-t border-white/20 pt-6 mt-auto space-y-2 md:space-y-0 text-white/90">
                                 <div className="flex items-center space-x-3">
-                                    <span className="uppercase">{article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Newslan.id'}`}</span>
+                                    <span className="uppercase">{article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Portal Berita'}`}</span>
                                 </div>
                                 <span className="hidden md:inline mx-3">•</span>
                                 <span>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>
@@ -317,6 +318,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                     url={currentUrl}
                                     title={article.title}
                                     description={article.excerpt || ''}
+                                    siteName={siteSettings.site_name}
                                 />
                             </div>
 
@@ -362,6 +364,11 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                         </div>
                     }>
                         <RelatedArticlesContainer currentArticleId={article.id} categoryId={article.categories?.id} />
+                    </Suspense>
+
+                    {/* Trending Products */}
+                    <Suspense fallback={null}>
+                        <TrendingProductsContainer siteName={siteSettings.site_name} />
                     </Suspense>
                 </div>
             </div>

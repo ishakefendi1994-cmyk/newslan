@@ -8,14 +8,15 @@ interface SocialShareProps {
     title: string
     description?: string
     variant?: 'default' | 'minimal-white'
+    siteName?: string
 }
 
-export default function SocialShare({ url, title, description = '', variant = 'default' }: SocialShareProps) {
+export default function SocialShare({ url, title, description = '', variant = 'default', siteName = 'NEWSLAN.ID' }: SocialShareProps) {
     const [copied, setCopied] = useState(false)
 
     const encodedUrl = encodeURIComponent(url)
     const encodedTitle = encodeURIComponent(title)
-    const encodedText = encodeURIComponent(`${title}\n\n${description}\n\nSelengkapnya di Newslan.id: `)
+    const encodedText = encodeURIComponent(`${title}\n\n${description}\n\nSelengkapnya di ${siteName}: `)
 
     const shareLinks = {
         whatsapp: `https://api.whatsapp.com/send?text=${encodedText}${encodedUrl}`,
@@ -24,7 +25,7 @@ export default function SocialShare({ url, title, description = '', variant = 'd
     }
 
     const copyToClipboard = () => {
-        const textToCopy = `${title}\n\n${description}\n\nSelengkapnya di Newslan.id: ${url}`
+        const textToCopy = `${title}\n\n${description}\n\nSelengkapnya di ${siteName}: ${url}`
         navigator.clipboard.writeText(textToCopy)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)

@@ -4,13 +4,14 @@ import { Zap } from 'lucide-react'
 
 interface BreakingNewsTickerProps {
     news?: string[]
+    siteName?: string
 }
 
-export function BreakingNewsTicker({ news = [] }: BreakingNewsTickerProps) {
+export function BreakingNewsTicker({ news = [], siteName = 'NEWSLAN.ID' }: BreakingNewsTickerProps) {
     // Fallback news if none provided
     const displayNews = news.length > 0 ? news : [
-        "Terpercaya, Newslan.id - Edukasi, Investigasi dan Terpercaya",
-        "Ikuti terus perkembangan berita terbaru hanya di NEWSLAN.ID",
+        `Terpercaya, ${siteName} - Berita & Investigasi`,
+        `Ikuti terus perkembangan berita terbaru hanya di ${siteName.toUpperCase()}`,
     ]
 
     return (

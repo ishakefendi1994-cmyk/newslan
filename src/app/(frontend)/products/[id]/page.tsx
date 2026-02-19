@@ -193,7 +193,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
                                     <div
                                         className="prose prose-sm prose-slate max-w-none prose-p:text-gray-600 prose-p:leading-relaxed"
-                                        dangerouslySetInnerHTML={{ __html: product.description || 'Pilihan produk terbaik yang telah melewati proses kurasi tim Editorial Newslan.id untuk menjamin kualitas bagi pelanggan kami.' }}
+                                        dangerouslySetInnerHTML={{ __html: product.description || `Pilihan produk terbaik yang telah melewati proses kurasi tim Editorial ${settings.site_name} untuk menjamin kualitas bagi pelanggan kami.` }}
                                     />
                                 </div>
                             </div>
@@ -202,7 +202,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                             <div className="mt-12 space-y-6">
                                 <div className="space-y-1">
                                     <h3 className="text-xl font-black uppercase italic tracking-tighter text-gray-900">Dapatkan Sekarang</h3>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Pilih marketplace resmi Newslan network di bawah ini</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Pilih marketplace resmi {settings.site_name} network di bawah ini</p>
                                 </div>
 
                                 <div className="flex flex-wrap gap-4">
@@ -259,7 +259,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         <p className="text-[10px] font-black uppercase tracking-widest">Menemukan Rekomendasi Terkait...</p>
                     </div>
                 }>
-                    <TrendingProductsContainer currentProductId={product.id} />
+                    <TrendingProductsContainer currentProductId={product.id} siteName={settings.site_name} />
                 </Suspense>
             </div>
 

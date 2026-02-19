@@ -75,12 +75,6 @@ export default function SettingsPage() {
             setSaving(true)
             setMessage(null)
 
-            const updates = [
-                { setting_key: 'site_name', setting_value: settings.site_name },
-                { setting_key: 'theme_color', setting_color: settings.theme_color }, // Note: actual schema uses setting_value, but checking if I should use value
-                { setting_key: 'site_description', setting_value: settings.site_description }
-            ]
-
             // Re-checking schema from full_schema_migration.sql: setting_value text NOT NULL
             const finalUpdates = [
                 { setting_key: 'site_name', setting_value: settings.site_name },

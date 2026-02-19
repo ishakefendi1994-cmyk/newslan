@@ -13,6 +13,7 @@ interface NavbarProps {
     siteName?: string
     logoType?: 'text' | 'image'
     siteLogoUrl?: string
+    siteDescription?: string
 }
 
 import { useRouter } from 'next/navigation'
@@ -23,7 +24,8 @@ export default function Navbar({
     headerAd,
     siteName = 'NEWSLAN.ID',
     logoType = 'text',
-    siteLogoUrl = '/logo.png'
+    siteLogoUrl = '/logo.png',
+    siteDescription = 'Portal Berita Terpercaya'
 }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
@@ -93,7 +95,7 @@ export default function Navbar({
                                                     {siteName.split('.')[0]}
                                                     {siteName.includes('.') && <span className="text-primary">.{siteName.split('.')[1]}</span>}
                                                 </span>
-                                                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-0.5 pl-0.5">Portal Berita Terpercaya</span>
+                                                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-0.5 pl-0.5">{siteDescription.split('.')[0]}</span>
                                             </>
                                         )}
                                     </div>
