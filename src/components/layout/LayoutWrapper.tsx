@@ -6,7 +6,6 @@ import BottomNav from "./BottomNav"
 import SkinAds from "./SkinAds"
 import Link from "next/link"
 import NextImage from "next/image"
-import WhatsAppButton from "../ui/WhatsAppButton"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
 
 interface LayoutWrapperProps {
@@ -136,7 +135,6 @@ export default function LayoutWrapper({
                     </div>
                 </div>
             </footer>
-            <WhatsAppButton />
         </>
     )
 }
