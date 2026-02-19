@@ -15,6 +15,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `${settings.site_name} | Portal Berita Terpercaya`,
     description: settings.description,
+    icons: {
+      icon: settings.site_favicon_url || '/favicon.ico',
+      shortcut: settings.site_favicon_url || '/favicon.ico',
+      apple: settings.site_favicon_url || '/favicon.ico',
+    },
+    verification: {
+      google: 'u8cZGQ1OYtYad-py6DebKVpaUCdxNH2HuSQfzjCipoU',
+    }
   }
 }
 

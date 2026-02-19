@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Parser from 'rss-parser'
+import { getSiteSettings } from '@/lib/settings'
 
 /**
  * RSS Auto-Job Cron Trigger
@@ -60,13 +61,16 @@ export async function GET(
 
         console.log(`[RSS Cron] 🚀 Starting job: ${job.name}`)
 
-        // 3. Update job status to 'running'
         await supabase
             .from('rss_auto_jobs')
             .update({ last_run_status: 'running' })
             .eq('id', job.id)
 
-        // 4. Fetch RSS feed
+        // 3.1 Fetch Site Settings (using service role client)
+        const settings = await getSiteSettings(supabase)
+        const hasReplicate = !!(settings.replicate_api_token || process.env.REPLICATE_API_TOKEN)
+
+        // 4. Fetch RSS feed (Skip if smart_trend)
         const parser = new Parser({
             timeout: 15000,
             headers: {
@@ -74,151 +78,520 @@ export async function GET(
             }
         })
 
-        let feed
-        try {
-            feed = await parser.parseURL(job.rss_url)
-        } catch (err: any) {
-            console.error('[RSS Cron] Failed to fetch feed:', err.message)
-            await supabase
-                .from('rss_auto_jobs')
-                .update({
-                    last_run_at: new Date().toISOString(),
-                    last_run_status: 'failed',
-                    last_run_articles: 0,
-                    total_runs: job.total_runs + 1
-                })
-                .eq('id', job.id)
+        let feed: any = { items: [] }
+        if (job.job_type === 'standard') {
+            try {
+                feed = await parser.parseURL(job.rss_url)
+            } catch (err: any) {
+                console.error('[RSS Cron] Failed to fetch feed:', err.message)
+                await supabase
+                    .from('rss_auto_jobs')
+                    .update({
+                        last_run_at: new Date().toISOString(),
+                        last_run_status: 'failed',
+                        last_run_articles: 0,
+                        total_runs: job.total_runs + 1
+                    })
+                    .eq('id', job.id)
 
-            return NextResponse.json(
-                { success: false, error: 'Failed to fetch RSS feed: ' + err.message },
-                { status: 500 }
-            )
+                return NextResponse.json(
+                    { success: false, error: 'Failed to fetch RSS feed: ' + err.message },
+                    { status: 500 }
+                )
+            }
         }
 
-        // 5. Process articles (limit to max_articles_per_run)
-        const articlesToProcess = feed.items.slice(0, job.max_articles_per_run)
-        const results = []
+        // 5. Process articles
+        const results: any[] = []
         let publishedCount = 0
+        let articlesToProcess: any[] = []
 
-        for (const item of articlesToProcess) {
-            try {
-                // Extract content
-                const extractRes = await fetch(`${request.nextUrl.origin}/api/rss/extract`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: item.link })
-                })
-                const extractData = await extractRes.json()
+        if (job.job_type === 'keyword_watcher' || (job.job_type === 'smart_trend' && !job.rss_url)) {
+            const keyword = job.job_type === 'keyword_watcher' ? job.search_keyword : null
+            console.log(`[RSS Cron] 🌟 Processing ${job.job_type === 'keyword_watcher' ? 'Keyword' : 'Trend'} Job: ${job.name} (Keyword: ${keyword || 'Auto-Trend'})`)
 
-                if (!extractData.success) {
-                    results.push({ title: item.title, status: 'extract_failed', error: extractData.error })
-                    continue
+            let sourceItems: any[] = []
+
+            // Dynamic Targeting Config
+            const region = job.trend_region || 'local'
+            const niche = job.trend_niche || 'any'
+            const isWestern = region === 'western'
+            const googleConfig = isWestern
+                ? { hl: 'en', gl: 'US', ceid: 'US:en' }
+                : { hl: 'id', gl: 'ID', ceid: 'ID:id' }
+
+            if (job.job_type === 'keyword_watcher') {
+                // 1. Search Google News for the specific keyword (Reliable & Comprehensive)
+                // Added &tbs=qdr:d to ensure only news from the last 24 hours
+                let searchKeyword = keyword || ''
+
+                // INTENT-BASED PRODUCT RESEARCH: Enrich keyword if niche is 'products'
+                if (niche === 'products' && !isWestern) {
+                    searchKeyword = `spesifikasi lengkap harga terbaru review ${searchKeyword} resmi indonesia`
+                } else if (niche === 'products' && isWestern) {
+                    searchKeyword = `full specs official price review ${searchKeyword} deals buys`
                 }
 
-                // AI Rewrite
-                const rewriteRes = await fetch(`${request.nextUrl.origin}/api/rss/rewrite`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: extractData.data.title,
-                        content: extractData.data.content,
-                        sourceName: feed.title || 'RSS Feed',
-                        language: job.target_language || 'id'
-                    })
-                })
-                const rewriteData = await rewriteRes.json()
+                const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchKeyword)}${niche !== 'any' && niche !== 'products' ? '+' + encodeURIComponent(niche) : ''}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
 
-                if (!rewriteData.success) {
-                    results.push({ title: item.title, status: 'rewrite_failed', error: rewriteData.error })
-                    continue
+                console.log(`[RSS Cron] 🔍 Searching Google News (${region}) for: ${searchKeyword} ${niche !== 'any' ? '(' + niche + ')' : ''}`)
+
+                try {
+                    const googleNewsParser = new Parser()
+                    const searchFeed = await googleNewsParser.parseURL(searchUrl)
+
+                    // Sort by newest first before taking top results
+                    const sortedItems = [...searchFeed.items].sort((a, b) =>
+                        new Date(b.isoDate || b.pubDate || 0).getTime() - new Date(a.isoDate || a.pubDate || 0).getTime()
+                    )
+
+                    // Take top 5 results for diverse synthesis
+                    sourceItems = sortedItems.slice(0, 5).map(item => ({
+                        ...item,
+                        sourceName: item.source?.title || (isWestern ? 'Global Media' : 'Media Lokal')
+                    }))
+
+                    console.log(`[RSS Cron] ✅ Found ${sourceItems.length} matches on Google News Search`)
+                } catch (err: any) {
+                    console.error(`[RSS Cron] Google News Search failed: ${err.message}`)
                 }
 
-                // AI IMAGE GENERATION (Replicate)
-                // If Replicate token exists AND job setting is ON, try to generate a custom thumbnail
-                let finalImageUrl = extractData.data.image
-                if (process.env.REPLICATE_API_TOKEN && job.use_ai_image) {
-                    try {
-                        // 1. Generate Prompt
-                        const { generateImagePrompt, generateImage } = await import('@/lib/ai/image-generator')
-                        const imagePrompt = await generateImagePrompt(rewriteData.data.title, rewriteData.data.content)
+                // 2. If Google search fails or is empty, fallback to scanning some local feeds (Only for local region)
+                if (sourceItems.length === 0 && !isWestern) {
+                    console.log(`[RSS Cron] ⚠️ Google Search empty. Falling back to local RSS scan...`)
+                    const { RSS_FEEDS } = await import('@/lib/rss/feeds')
+                    const candidateFeeds = RSS_FEEDS.filter(f => f.category === 'Berita Terkini' || f.category === 'Teknologi').slice(0, 10)
 
-                        // 2. Generate Image
-                        const replicateUrl = await generateImage(imagePrompt)
+                    for (const candidate of candidateFeeds) {
+                        try {
+                            const cFeed = await parser.parseURL(candidate.url)
+                            const matches = cFeed.items.filter(item =>
+                                item.title?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                                (item.content || '').toLowerCase().includes(searchKeyword.toLowerCase())
+                            ).slice(0, 1)
 
-                        if (replicateUrl) {
-                            console.log('[RSS Cron] AI Image generated:', replicateUrl)
-                            // 3. Upload to Cloudinary (Optimization)
-                            // We use the same upload function, it handles URL downloads
-                            // But usually uploadRSSImageToCloudinary expects a URL.
-                            // Replicate URL is public for a short time, so we must upload it.
-                            /* 
-                               Wait, uploadRSSImageToCloudinary expects a URL string. 
-                               So we can just pass the replicateUrl.
-                               However, we don't have direct access to that function here unless we import it?
-                               Ah, the SAVE route does the uploading! 
-                               
-                               Wait, if we pass `image: replicateUrl` to the SAVE route, 
-                               the SAVE route will call `uploadRSSImageToCloudinary`.
-                               So we just need to replace `finalImageUrl` with `replicateUrl`.
-                            */
-                            finalImageUrl = replicateUrl
-                        }
-                    } catch (imgErr) {
-                        console.error('[RSS Cron] AI Image Gen failed:', imgErr)
-                        // Fallback to original image
+                            if (matches.length > 0) {
+                                sourceItems.push(...matches.map(m => ({ ...m, sourceName: candidate.name })))
+                            }
+                            if (sourceItems.length >= 3) break
+                        } catch (e) { }
                     }
                 }
 
-                // Check for duplicates (basic title match)
-                const { data: existing } = await supabase
-                    .from('articles')
-                    .select('id')
-                    .ilike('title', `%${rewriteData.data.title.substring(0, 50)}%`)
-                    .limit(1)
+                articlesToProcess = sourceItems.slice(0, 1)
+            } else {
+                // Get Top Trends from Google News (Dynamic Region & Niche)
+                // Freshness Filter: &tbs=qdr:d (past 24h)
+                let trendUrl = `https://news.google.com/rss?hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
 
-                if (existing && existing.length > 0) {
-                    results.push({ title: item.title, status: 'duplicate', articleId: existing[0].id })
-                    continue
+                // If niche is specified, use the section URL
+                if (niche !== 'any') {
+                    const topicMap: Record<string, string> = {
+                        technology: 'TECHNOLOGY',
+                        business: 'BUSINESS',
+                        sports: 'SPORTS',
+                        entertainment: 'ENTERTAINMENT',
+                        science: 'SCIENCE',
+                        health: 'HEALTH'
+                    }
+                    const topic = topicMap[niche]
+                    if (topic) {
+                        trendUrl = `https://news.google.com/rss/headlines/section/topic/${topic}?hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                    } else if (niche === 'products') {
+                        // SHOPEE RADAR & VIRAL PRODUCTS: Combine product research with viral trends
+                        const productSearch = isWestern
+                            ? 'viral products trending gadgets best buy deals review'
+                            : 'produk viral shopee haul rekomendasi harga terbaru unik'
+                        trendUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(productSearch)}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                    } else {
+                        trendUrl = `https://news.google.com/rss/headlines/section/topic/WORLD?hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                    }
                 }
 
-                // Save article
-                const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: rewriteData.data.title,
-                        content: rewriteData.data.content,
-                        excerpt: rewriteData.data.excerpt,
-                        image: finalImageUrl || null,
-                        sourceUrl: item.link,
-                        sourceName: feed.title || 'RSS Feed',
-                        categoryId: job.category_id,
-                        isPublished: job.is_published, // Use job's publish setting
-                        showSourceAttribution: job.show_source_attribution
+                console.log(`[RSS Cron] 📈 Fetching Autonomous Trends (${region} / ${niche})`)
+
+                const googleNewsParser = new Parser()
+                const googleFeed = await googleNewsParser.parseURL(trendUrl)
+
+                // Sort by newest first
+                const sortedTrends = [...googleFeed.items].sort((a, b) =>
+                    new Date(b.isoDate || b.pubDate || 0).getTime() - new Date(a.isoDate || a.pubDate || 0).getTime()
+                )
+
+                sourceItems = sortedTrends.slice(0, Math.min(3, job.max_articles_per_run)).map(item => ({ ...item, sourceName: isWestern ? 'International Press' : 'Media Nasional' }))
+                articlesToProcess = sourceItems
+            }
+
+            // Process the collected items (Trends or Keyword matches)
+            if (job.job_type === 'keyword_watcher' && sourceItems.length > 0) {
+                // Synthesis Mode for Keyword Watcher
+                try {
+                    const extractedContents = []
+                    for (const item of sourceItems.slice(0, 5)) { // Use up to 5 sources
+                        try {
+                            // Check if source item link is already in articles table (Robust duplicate detection)
+                            const { data: existingSource } = await supabase
+                                .from('articles')
+                                .select('id')
+                                .eq('source_url', item.link)
+                                .limit(1)
+
+                            if (existingSource && existingSource.length > 0) {
+                                console.log(`[RSS Cron] ⏭️ Skipping already processed source: ${item.link}`)
+                                continue
+                            }
+
+                            const exRes = await fetch(`${request.nextUrl.origin}/api/rss/extract`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ url: item.link })
+                            })
+                            const exData = await exRes.json()
+
+                            if (exData.success && exData.data.content.length > 200) {
+                                extractedContents.push({
+                                    title: (exData.data.title || item.title || 'Untitled').toString(),
+                                    content: exData.data.content.toString(),
+                                    image: exData.data.image,
+                                    sourceName: (item.sourceName || 'Google Search').toString()
+                                })
+                            } else {
+                                // Fallback to snippet if extraction fails or is too short
+                                const fallbackContent = item.contentSnippet || item.content || item.description || ''
+                                if (fallbackContent.length > 50) {
+                                    extractedContents.push({
+                                        title: (item.title || 'Untitled').toString(),
+                                        content: fallbackContent.toString(),
+                                        sourceName: (item.sourceName || 'Google Search').toString()
+                                    })
+                                }
+                            }
+                        } catch (e) {
+                            console.error(`[RSS Cron] Extraction failed for ${item.link}:`, e)
+                        }
+                    }
+
+                    if (extractedContents.length > 0) {
+                        const { synthesizeFromMultipleSources } = await import('@/lib/ai/rewriter')
+                        const synthesis = await synthesizeFromMultipleSources(
+                            extractedContents,
+                            job.target_language || 'id',
+                            job.writing_style || 'Professional',
+                            job.article_model || 'Straight News'
+                        )
+
+                        // Final duplicate check by title for synthesized article
+                        const { data: existingTitle } = await supabase
+                            .from('articles')
+                            .select('id')
+                            .ilike('title', `%${synthesis.title.substring(0, 30)}%`)
+                            .limit(1)
+
+                        if (existingTitle && existingTitle.length > 0) {
+                            console.log(`[RSS Cron] ⏭️ Skipping synthesized duplicate: ${synthesis.title}`)
+                        } else {
+                            // AI IMAGE GENERATION (Replicate) for Synthesis
+                            let finalImageUrl = extractedContents.find(c => c.image)?.image || null
+                            const priority = job.thumbnail_priority || 'ai_priority'
+
+                            if (hasReplicate && job.use_ai_image && priority !== 'source_only') {
+                                const shouldTryAI = priority === 'ai_priority' || (priority === 'source_priority' && !finalImageUrl)
+
+                                if (shouldTryAI) {
+                                    try {
+                                        const { generateImagePrompt, generateImage } = await import('@/lib/ai/image-generator')
+                                        const imagePrompt = await generateImagePrompt(synthesis.title, synthesis.content)
+                                        const replicateUrl = await generateImage(imagePrompt)
+                                        if (replicateUrl) finalImageUrl = replicateUrl
+                                    } catch (imgErr: any) {
+                                        console.error(`[RSS Cron] AI Image failed, using fallback: ${imgErr.message}`)
+                                    }
+                                }
+                            }
+
+                            const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    title: synthesis.title,
+                                    content: synthesis.content,
+                                    excerpt: synthesis.excerpt,
+                                    image: finalImageUrl,
+                                    sourceUrl: sourceItems[0].link,
+                                    sourceName: `${job.search_keyword || 'Smart'} Synthesized Report`,
+                                    categoryId: job.category_id,
+                                    isPublished: job.is_published,
+                                    showSourceAttribution: job.show_source_attribution
+                                })
+                            })
+                            const saveData = await saveRes.json()
+                            if (saveData.success) {
+                                publishedCount++
+                                results.push({ title: synthesis.title, status: 'synthesized', articleId: saveData.article.id })
+                            }
+                        }
+                    }
+                } catch (synErr: any) {
+                    console.error(`[RSS Cron] Synthesis failed: ${synErr.message}`)
+                }
+            } else if (job.job_type === 'smart_trend') {
+                // Autonomous Trend Synthesis
+                for (const trend of sourceItems) {
+                    try {
+                        if (!trend.title) continue
+
+                        // Check if trend link already exists
+                        const { data: existingTrend } = await supabase
+                            .from('articles')
+                            .select('id')
+                            .eq('source_url', trend.link)
+                            .limit(1)
+
+                        if (existingTrend && existingTrend.length > 0) {
+                            console.log(`[RSS Cron] ⏭️ Skipping processed trend: ${trend.title}`)
+                            continue
+                        }
+
+                        console.log(`[RSS Cron] 📈 Processing Autonomous Trend: ${trend.title}`)
+
+                        // Clean title: Strip " - Source Name" suffix (e.g., " - MSN" or " - Kompas.com")
+                        const cleanTitle = trend.title.replace(/\s-\s[^-]+$/, '').substring(0, 100)
+
+                        // 1. Search Google News for this specific trend headline to get diverse sources
+                        // We EXCLUDE the niche filter here because the trend item itself already matches the niche.
+                        // Adding the niche again for diversity search often makes the query too restrictive (0 results).
+                        const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(cleanTitle)}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                        const googleNewsParser = new Parser()
+                        const searchFeed = await googleNewsParser.parseURL(searchUrl)
+                        let trendSources = searchFeed.items.slice(0, 5) // Get top 5 sources for this specific trend
+
+                        // FALLBACK: If diversity search returns 0 results, use the original trend item itself as the sole source
+                        if (trendSources.length === 0) {
+                            console.log(`[RSS Cron] ⚠️ No diverse sources found for trend, falling back to original item.`)
+                            trendSources = [trend]
+                        }
+
+                        console.log(`[RSS Cron] 🔎 Found ${trendSources.length} potential source(s) for trend: ${cleanTitle}`)
+
+                        // 2. Extract content from these sources
+                        const extractedContents = []
+                        for (const item of trendSources) {
+                            try {
+                                const exRes = await fetch(`${request.nextUrl.origin}/api/rss/extract`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ url: item.link })
+                                })
+                                const exData = await exRes.json()
+
+                                if (exData.success && exData.data.content.length > 200) {
+                                    extractedContents.push({
+                                        title: (exData.data.title || item.title || 'Untitled').toString(),
+                                        content: exData.data.content.toString(),
+                                        image: exData.data.image,
+                                        sourceName: (item.source?.title || 'Google News').toString()
+                                    })
+                                } else {
+                                    const fallback = item.contentSnippet || item.description || ''
+                                    if (fallback.length > 50) {
+                                        extractedContents.push({
+                                            title: (item.title || 'Untitled').toString(),
+                                            content: fallback.toString(),
+                                            sourceName: (item.source?.title || 'Google News').toString()
+                                        })
+                                    }
+                                }
+                                if (extractedContents.length >= 3) break
+                            } catch (e) { }
+                        }
+
+                        if (extractedContents.length > 0) {
+                            console.log(`[RSS Cron] 🤖 Synthesizing ${extractedContents.length} sources for trend: ${trend.title}`)
+                            // 3. Synthesize
+                            const { synthesizeFromMultipleSources } = await import('@/lib/ai/rewriter')
+                            const synthesis = await synthesizeFromMultipleSources(
+                                extractedContents,
+                                job.target_language || 'id',
+                                job.writing_style || 'Professional',
+                                job.article_model || 'Straight News'
+                            )
+
+                            // Final duplicate check by title for trend synthesis
+                            const { data: existingTitle } = await supabase
+                                .from('articles')
+                                .select('id')
+                                .ilike('title', `%${synthesis.title.substring(0, 30)}%`)
+                                .limit(1)
+
+                            if (existingTitle && existingTitle.length > 0) {
+                                console.log(`[RSS Cron] ⏭️ Skipping synthesized trend duplicate: ${synthesis.title}`)
+                                continue
+                            }
+
+                            // AI Image Generation
+                            let finalImageUrl = extractedContents.find(c => c.image)?.image || null
+                            const priority = job.thumbnail_priority || 'ai_priority'
+
+                            if (hasReplicate && priority !== 'source_only') {
+                                const shouldTryAI = priority === 'ai_priority' || (priority === 'source_priority' && !finalImageUrl)
+
+                                if (shouldTryAI) {
+                                    try {
+                                        const { generateImagePrompt, generateImage } = await import('@/lib/ai/image-generator')
+                                        const imagePrompt = await generateImagePrompt(synthesis.title, synthesis.content)
+                                        const replicateUrl = await generateImage(imagePrompt)
+                                        if (replicateUrl) finalImageUrl = replicateUrl
+                                    } catch (imgErr: any) {
+                                        console.error(`[RSS Cron] AI Image failed for trend, using fallback: ${imgErr.message}`)
+                                    }
+                                }
+                            }
+
+                            // 4. Save
+                            const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    title: synthesis.title,
+                                    content: synthesis.content,
+                                    excerpt: synthesis.excerpt,
+                                    image: finalImageUrl,
+                                    sourceUrl: trend.link,
+                                    sourceName: 'Autonomous Google Trends Synthesis',
+                                    categoryId: job.category_id,
+                                    isPublished: job.is_published,
+                                    showSourceAttribution: job.show_source_attribution
+                                })
+                            })
+                            const saveData = await saveRes.json()
+                            if (saveData.success) {
+                                publishedCount++
+                                results.push({ title: trend.title, status: 'synthesized', articleId: saveData.article.id })
+                            }
+                        }
+                    } catch (err: any) {
+                        console.error(`[RSS Cron] Trend synthesis failed: ${err.message}`)
+                    }
+                }
+            }
+        } else {
+            // STANDARD RSS JOB (Original Logic)
+            articlesToProcess = feed.items.slice(0, job.max_articles_per_run)
+
+            for (const item of articlesToProcess) {
+                try {
+                    // Check if source URL already exists
+                    const { data: existingSource } = await supabase
+                        .from('articles')
+                        .select('id')
+                        .eq('source_url', item.link)
+                        .limit(1)
+
+                    if (existingSource && existingSource.length > 0) {
+                        console.log(`[RSS Cron] ⏭️ Skipping already processed source: ${item.link}`)
+                        results.push({ title: item.title, status: 'duplicate', articleId: existingSource[0].id })
+                        continue
+                    }
+
+                    // Extract content
+                    const extractRes = await fetch(`${request.nextUrl.origin}/api/rss/extract`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: item.link })
                     })
-                })
-                const saveData = await saveRes.json()
+                    const extractData = await extractRes.json()
 
-                if (saveData.success) {
-                    publishedCount++
-                    results.push({
-                        title: item.title,
-                        status: job.is_published ? 'published' : 'draft',
-                        articleId: saveData.article.id
+                    if (!extractData.success) {
+                        results.push({ title: item.title, status: 'extract_failed', error: extractData.error })
+                        continue
+                    }
+
+                    // AI Rewrite
+                    const rewriteRes = await fetch(`${request.nextUrl.origin}/api/rss/rewrite`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: extractData.data.title,
+                            content: extractData.data.content,
+                            sourceName: feed.title || 'RSS Feed',
+                            language: job.target_language || 'id',
+                            writingStyle: job.writing_style || 'Professional',
+                            articleModel: job.article_model || 'Straight News'
+                        })
                     })
-                } else {
-                    results.push({ title: item.title, status: 'save_failed', error: saveData.error })
-                }
+                    const rewriteData = await rewriteRes.json()
 
-                // 6. Rate Limit Handling
-                // User confirmed paid account - removing 12s hard wait.
-                // Replicate should handle higher limits now.
-                // We add a tiny 1s buffer just to be safe and polite to their API.
-                if (process.env.REPLICATE_API_TOKEN) {
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    if (!rewriteData.success) {
+                        results.push({ title: item.title, status: 'rewrite_failed', error: rewriteData.error })
+                        continue
+                    }
+
+                    // AI IMAGE GENERATION (Replicate)
+                    let finalImageUrl = extractData.data.image
+                    const priority = job.thumbnail_priority || 'ai_priority'
+
+                    if (hasReplicate && priority !== 'source_only') {
+                        const shouldTryAI = priority === 'ai_priority' || (priority === 'source_priority' && !finalImageUrl)
+
+                        if (shouldTryAI) {
+                            try {
+                                const { generateImagePrompt, generateImage } = await import('@/lib/ai/image-generator')
+                                const imagePrompt = await generateImagePrompt(rewriteData.data.title, rewriteData.data.content)
+                                const replicateUrl = await generateImage(imagePrompt)
+                                if (replicateUrl) finalImageUrl = replicateUrl
+                            } catch (imgErr: any) {
+                                console.error(`[RSS Cron] AI Image failed for standard job, using fallback: ${imgErr.message}`)
+                            }
+                        }
+                    }
+
+                    // Check for duplicates
+                    const { data: existing } = await supabase
+                        .from('articles')
+                        .select('id')
+                        .ilike('title', `%${rewriteData.data.title.substring(0, 50)}%`)
+                        .limit(1)
+
+                    if (existing && existing.length > 0) {
+                        results.push({ title: item.title, status: 'duplicate', articleId: existing[0].id })
+                        continue
+                    }
+
+                    // Save article
+                    const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: rewriteData.data.title,
+                            content: rewriteData.data.content,
+                            excerpt: rewriteData.data.excerpt,
+                            image: finalImageUrl || null,
+                            sourceUrl: item.link,
+                            sourceName: feed.title || 'RSS Feed',
+                            categoryId: job.category_id,
+                            isPublished: job.is_published,
+                            showSourceAttribution: job.show_source_attribution
+                        })
+                    })
+                    const saveData = await saveRes.json()
+
+                    if (saveData.success) {
+                        publishedCount++
+                        results.push({
+                            title: item.title,
+                            status: job.is_published ? 'published' : 'draft',
+                            articleId: saveData.article.id
+                        })
+                    } else {
+                        results.push({ title: item.title, status: 'save_failed', error: saveData.error })
+                    }
+
+                    if (hasReplicate) {
+                        await new Promise(resolve => setTimeout(resolve, 1000))
+                    }
+                } catch (err: any) {
+                    results.push({ title: item.title, status: 'error', error: err.message })
                 }
-            } catch (err: any) {
-                results.push({ title: item.title, status: 'error', error: err.message })
             }
         }
 
@@ -244,7 +617,7 @@ export async function GET(
             articlesPublished: publishedCount,
             publishStatus: job.is_published ? 'published' : 'draft',
             executionTime: `${executionTime}s`,
-            details: results
+            results
         })
 
     } catch (error: any) {

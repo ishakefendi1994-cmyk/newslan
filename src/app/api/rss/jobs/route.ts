@@ -31,6 +31,13 @@ export async function GET() {
         total_runs,
         total_articles_published,
         target_language,
+        writing_style,
+        article_model,
+        job_type,
+        search_keyword,
+        trend_region,
+        trend_niche,
+        thumbnail_priority,
         created_at
       `)
             .order('created_at', { ascending: false })
@@ -61,12 +68,19 @@ export async function POST(request: NextRequest) {
             showSourceAttribution = true,
             useAIImage = false,
             maxArticlesPerRun = 3,
-            targetLanguage = 'id'
+            targetLanguage = 'id',
+            writingStyle = 'Professional',
+            articleModel = 'Straight News',
+            jobType = 'standard',
+            searchKeyword = '',
+            trendRegion = 'local',
+            trendNiche = 'any',
+            thumbnailPriority = 'ai_priority'
         } = body
 
-        if (!name || !rssUrl) {
+        if (!name || (jobType === 'standard' && !rssUrl) || (jobType === 'keyword_watcher' && !searchKeyword)) {
             return NextResponse.json(
-                { success: false, error: 'Name and RSS URL are required' },
+                { success: false, error: 'Name and RSS URL (or Keyword) are required' },
                 { status: 400 }
             )
         }
@@ -86,6 +100,13 @@ export async function POST(request: NextRequest) {
                 use_ai_image: useAIImage,
                 max_articles_per_run: maxArticlesPerRun,
                 target_language: targetLanguage,
+                writing_style: writingStyle,
+                article_model: articleModel,
+                job_type: jobType,
+                search_keyword: searchKeyword,
+                trend_region: trendRegion,
+                trend_niche: trendNiche,
+                thumbnail_priority: thumbnailPriority,
                 is_active: true
             })
             .select()
@@ -117,18 +138,24 @@ export async function PATCH(request: NextRequest) {
         const supabase = await createClient()
         const body = await request.json()
 
-        const { id, showSourceAttribution, targetLanguage, ...otherUpdates } = body
-
-        const updates: any = { ...otherUpdates, updated_at: new Date().toISOString() }
-        if (showSourceAttribution !== undefined) {
-            updates.show_source_attribution = showSourceAttribution
-        }
-        if (body.useAIImage !== undefined) {
-            updates.use_ai_image = body.useAIImage
-        }
-        if (targetLanguage) {
-            updates.target_language = targetLanguage
-        }
+        const {
+            id,
+            name,
+            rssUrl,
+            categoryId,
+            isPublished,
+            showSourceAttribution,
+            useAIImage,
+            maxArticlesPerRun,
+            targetLanguage,
+            writingStyle,
+            articleModel,
+            jobType,
+            searchKeyword,
+            trendRegion,
+            trendNiche,
+            thumbnailPriority
+        } = body
 
         if (!id) {
             return NextResponse.json(
@@ -136,6 +163,24 @@ export async function PATCH(request: NextRequest) {
                 { status: 400 }
             )
         }
+
+        const updates: any = { updated_at: new Date().toISOString() }
+
+        if (name !== undefined) updates.name = name
+        if (rssUrl !== undefined) updates.rss_url = rssUrl
+        if (categoryId !== undefined) updates.category_id = categoryId || null
+        if (isPublished !== undefined) updates.is_published = isPublished
+        if (showSourceAttribution !== undefined) updates.show_source_attribution = showSourceAttribution
+        if (useAIImage !== undefined) updates.use_ai_image = useAIImage
+        if (maxArticlesPerRun !== undefined) updates.max_articles_per_run = maxArticlesPerRun
+        if (targetLanguage !== undefined) updates.target_language = targetLanguage
+        if (writingStyle !== undefined) updates.writing_style = writingStyle
+        if (articleModel !== undefined) updates.article_model = articleModel
+        if (jobType !== undefined) updates.job_type = jobType
+        if (searchKeyword !== undefined) updates.search_keyword = searchKeyword
+        if (trendRegion !== undefined) updates.trend_region = trendRegion
+        if (trendNiche !== undefined) updates.trend_niche = trendNiche
+        if (thumbnailPriority !== undefined) updates.thumbnail_priority = thumbnailPriority
 
         const { data: job, error } = await supabase
             .from('rss_auto_jobs')

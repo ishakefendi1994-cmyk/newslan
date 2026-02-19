@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rewriteArticle } from '@/lib/ai/rewriter'
+import { getSiteSettings } from '@/lib/settings'
 
 /**
  * API endpoint to test AI rewriting
@@ -8,7 +9,7 @@ import { rewriteArticle } from '@/lib/ai/rewriter'
  */
 export async function POST(request: NextRequest) {
     try {
-        const { title, content, sourceName, useAIThumbnail, language = 'id' } = await request.json()
+        const { title, content, sourceName, useAIThumbnail, language = 'id', writingStyle = 'Professional', articleModel = 'Straight News' } = await request.json()
 
         if (!title || !content) {
             return NextResponse.json(
@@ -23,13 +24,18 @@ export async function POST(request: NextRequest) {
             title,
             content,
             sourceName || 'Unknown Source',
-            language
+            language,
+            writingStyle,
+            articleModel
         )
 
         // MANUAL AI IMAGE GENERATION
         // If useAIThumbnail is true, generate an image and attach it to the result
+        const settings = await getSiteSettings()
+        const hasReplicate = !!(settings.replicate_api_token || process.env.REPLICATE_API_TOKEN)
+
         let aiImageUrl = null
-        if (useAIThumbnail && process.env.REPLICATE_API_TOKEN) {
+        if (useAIThumbnail && hasReplicate) {
             try {
                 console.log('[API] Generating AI Thumbnail for Manual Rewrite...')
                 // Dynamic import to avoid loading if not needed

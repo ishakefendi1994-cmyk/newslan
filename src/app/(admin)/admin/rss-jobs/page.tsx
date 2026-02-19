@@ -1,7 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Play, Pause, Copy, Trash2, Plus, Loader2, CheckCircle, AlertCircle, ExternalLink, Sparkles } from 'lucide-react'
+import {
+    Plus,
+    Trash2,
+    RefreshCw,
+    ExternalLink,
+    Check,
+    Play,
+    Pause,
+    AlertCircle,
+    Globe,
+    ChevronRight,
+    Copy,
+    Sparkles,
+    Search,
+    Loader2,
+    Pencil,
+    X
+} from 'lucide-react'
 import { RSS_FEEDS } from '@/lib/rss/feeds'
 
 interface RSSJob {
@@ -22,6 +39,13 @@ interface RSSJob {
     total_runs: number
     total_articles_published: number
     target_language: string
+    writing_style: string
+    article_model: string
+    job_type: string
+    search_keyword: string | null
+    trend_region: string
+    trend_niche: string
+    thumbnail_priority: string
     created_at: string
 }
 
@@ -41,9 +65,17 @@ export default function RSSJobsPage() {
         showSourceAttribution: true,
         useAIImage: false,
         maxArticlesPerRun: 3,
-        targetLanguage: 'id'
+        targetLanguage: 'id',
+        writingStyle: 'Professional',
+        articleModel: 'Straight News',
+        jobType: 'standard',
+        searchKeyword: '',
+        trendRegion: 'local',
+        trendNiche: 'any',
+        thumbnailPriority: 'ai_priority'
     })
     const [creating, setCreating] = useState(false)
+    const [editingJobId, setEditingJobId] = useState<string | null>(null)
     const [newJobUrl, setNewJobUrl] = useState<string | null>(null)
 
     useEffect(() => {
@@ -77,50 +109,75 @@ export default function RSSJobsPage() {
         }
     }
 
-    const handleCreateJob = async () => {
+    const handleSubmitJob = async () => {
         const effectiveRssUrl = formData.manualRssUrl || formData.rssUrl
+        const isNoRssRequirement = formData.jobType === 'smart_trend' || formData.jobType === 'keyword_watcher'
 
-        if (!formData.name || !effectiveRssUrl) {
+        if (!formData.name || (!isNoRssRequirement && !effectiveRssUrl)) {
             alert('Nama job dan RSS URL wajib diisi!')
+            return
+        }
+
+        if (formData.jobType === 'keyword_watcher' && !formData.searchKeyword) {
+            alert('Kata kunci wajib diisi untuk Keyword Watcher!')
             return
         }
 
         setCreating(true)
         const payload = {
             ...formData,
+            id: editingJobId,
             rssUrl: formData.manualRssUrl || formData.rssUrl
         }
 
         try {
             const res = await fetch('/api/rss/jobs', {
-                method: 'POST',
+                method: editingJobId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
 
             const data = await res.json()
             if (data.success) {
-                setNewJobUrl(data.job.triggerUrl)
+                if (!editingJobId) {
+                    setNewJobUrl(data.job.triggerUrl)
+                } else {
+                    alert('✅ Job updated successfully!')
+                    setEditingJobId(null)
+                    setShowCreateForm(false)
+                }
+
                 fetchJobs()
-                setFormData({
-                    name: '',
-                    rssUrl: '',
-                    manualRssUrl: '',
-                    categoryId: '',
-                    isPublished: true,
-                    showSourceAttribution: true,
-                    useAIImage: false,
-                    maxArticlesPerRun: 3,
-                    targetLanguage: 'id'
-                })
+                resetForm()
             } else {
                 alert('Error: ' + data.error)
             }
         } catch (err: any) {
-            alert('Failed to create job: ' + err.message)
+            alert(`Failed to ${editingJobId ? 'update' : 'create'} job: ` + err.message)
         } finally {
             setCreating(false)
         }
+    }
+
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            rssUrl: '',
+            manualRssUrl: '',
+            categoryId: '',
+            isPublished: true,
+            showSourceAttribution: true,
+            useAIImage: false,
+            maxArticlesPerRun: 3,
+            targetLanguage: 'id',
+            writingStyle: 'Professional',
+            articleModel: 'Straight News',
+            jobType: 'standard',
+            searchKeyword: '',
+            trendRegion: 'local',
+            trendNiche: 'any',
+            thumbnailPriority: 'ai_priority'
+        })
     }
 
     const copyUrl = (taskKey: string) => {
@@ -180,6 +237,36 @@ export default function RSSJobsPage() {
         }
     }
 
+    const handleEditClick = (job: RSSJob) => {
+        setEditingJobId(job.id)
+        setFormData({
+            name: job.name,
+            rssUrl: job.rss_url,
+            manualRssUrl: job.rss_url, // Populate both just in case
+            categoryId: job.category_id || '',
+            isPublished: job.is_published,
+            showSourceAttribution: job.show_source_attribution,
+            useAIImage: job.use_ai_image,
+            maxArticlesPerRun: job.max_articles_per_run,
+            targetLanguage: job.target_language,
+            writingStyle: job.writing_style,
+            articleModel: job.article_model,
+            jobType: job.job_type,
+            searchKeyword: job.search_keyword || '',
+            trendRegion: job.trend_region,
+            trendNiche: job.trend_niche,
+            thumbnailPriority: job.thumbnail_priority
+        })
+        setShowCreateForm(true)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    const handleCancelEdit = () => {
+        setEditingJobId(null)
+        resetForm()
+        setShowCreateForm(false)
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -189,11 +276,17 @@ export default function RSSJobsPage() {
                     <p className="text-gray-600">Automated RSS article publishing with cron triggers</p>
                 </div>
                 <button
-                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    onClick={() => {
+                        if (editingJobId) {
+                            handleCancelEdit()
+                        } else {
+                            setShowCreateForm(!showCreateForm)
+                        }
+                    }}
                     className="px-4 py-2 bg-[#990000] text-white font-bold rounded-lg hover:bg-[#990000]/90 flex items-center gap-2"
                 >
-                    <Plus className="w-5 h-5" />
-                    New Job
+                    {showCreateForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                    {showCreateForm ? 'Close Form' : 'New Job'}
                 </button>
             </div>
 
@@ -203,46 +296,91 @@ export default function RSSJobsPage() {
                     <h2 className="text-xl font-bold mb-4">Create New Auto-Job</h2>
 
                     <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Job Name</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="e.g., CNN Tech Auto-Publisher"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block">Job Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="e.g., CNN Tech Auto-Publisher"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block text-blue-700">Jenis Job (Automation Level)</label>
+                                <select
+                                    value={formData.jobType}
+                                    onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
+                                    className="w-full px-4 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-600 font-bold"
+                                >
+                                    <option value="standard">📄 Standard RSS (Satu Sumber)</option>
+                                    <option value="smart_trend">🌟 Smart Trend Tracker (Auto-Trend)</option>
+                                    <option value="keyword_watcher">🔍 Keyword Watcher (Multi-Sumber via Kata Kunci)</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">RSS Feed URL</label>
-                            <select
-                                value={formData.rssUrl}
-                                onChange={(e) => setFormData({ ...formData, rssUrl: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
-                            >
-                                <option value="">-- Select RSS Feed --</option>
-                                {RSS_FEEDS.map(feed => (
-                                    <option key={feed.id} value={feed.url}>
-                                        {feed.name} ({feed.category})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {formData.jobType === 'keyword_watcher' && (
+                            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
+                                <label className="text-sm font-bold text-purple-800 flex items-center gap-2">
+                                    <Search className="w-4 h-4" /> Kata Kunci Utama (Trigger)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.searchKeyword}
+                                    onChange={(e) => setFormData({ ...formData, searchKeyword: e.target.value })}
+                                    placeholder="Contoh: Arsenal vs MU, Kenaikan Harga Beras, IKN"
+                                    className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
+                                />
+                                <p className="text-xs text-purple-600 italic">
+                                    Sistem akan mencari kata kunci ini di 200+ media dan menggabungkan hasilnya menjadi satu berita lengkap.
+                                </p>
+                            </div>
+                        )}
 
-                        <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block text-red-700">Atau Input Manual RSS URL (Prioritas)</label>
-                            <input
-                                type="url"
-                                value={formData.manualRssUrl}
-                                onChange={(e) => setFormData({ ...formData, manualRssUrl: e.target.value })}
-                                placeholder="https://example.com/rss atau kosongkan"
-                                className="w-full px-4 py-2 border border-red-200 bg-red-50 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
-                            />
-                            <p className="text-xs text-red-600 mt-1 italic">
-                                *Jika bagian ini diisi, maka pilihan drop-down di atas akan diabaikan.
-                            </p>
-                        </div>
+                        {formData.jobType === 'smart_trend' && (
+                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p className="text-sm text-blue-800 flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-blue-600" />
+                                    <strong>Smart Mode Aktif:</strong> Sistem akan otomatis memantau tren di Google News dan mencari referensi dari 200+ sumber media terintegrasi. Anda tidak perlu memasukkan URL.
+                                </p>
+                            </div>
+                        )}
+
+                        {formData.jobType === 'standard' && (
+                            <>
+                                <div>
+                                    <label className="text-sm font-bold text-gray-700 mb-2 block">RSS Feed URL</label>
+                                    <select
+                                        value={formData.rssUrl}
+                                        onChange={(e) => setFormData({ ...formData, rssUrl: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
+                                    >
+                                        <option value="">-- Select RSS Feed --</option>
+                                        {RSS_FEEDS.map(feed => (
+                                            <option key={feed.id} value={feed.url}>
+                                                {feed.name} ({feed.category})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-bold text-gray-700 mb-2 block text-red-700">Atau Input Manual RSS URL (Prioritas)</label>
+                                    <input
+                                        type="url"
+                                        value={formData.manualRssUrl}
+                                        onChange={(e) => setFormData({ ...formData, manualRssUrl: e.target.value })}
+                                        placeholder="https://example.com/rss atau kosongkan"
+                                        className="w-full px-4 py-2 border border-red-200 bg-red-50 rounded-lg focus:ring-2 focus:ring-[#990000]/20 focus:border-[#990000]"
+                                    />
+                                    <p className="text-xs text-red-600 mt-1 italic">
+                                        *Jika bagian ini diisi, maka pilihan drop-down di atas akan diabaikan.
+                                    </p>
+                                </div>
+                            </>
+                        )}
 
                         <div>
                             <label className="text-sm font-bold text-gray-700 mb-2 block">Category</label>
@@ -297,23 +435,27 @@ export default function RSSJobsPage() {
                                     Tampilkan "Sumber: [Nama RSS]" di bawah artikel?
                                 </label>
                             </div>
-
-                            <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
-                                <input
-                                    type="checkbox"
-                                    id="useAIImage"
-                                    checked={formData.useAIImage}
-                                    onChange={(e) => setFormData({ ...formData, useAIImage: e.target.checked })}
-                                    className="w-4 h-4 text-[#990000] border-gray-300 rounded focus:ring-[#990000]"
-                                />
-                                <label htmlFor="useAIImage" className="text-sm text-gray-700 font-medium cursor-pointer flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-purple-600" />
-                                    Gunakan AI untuk Thumbnail? (Replicate)
-                                </label>
-                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
+                            <label className="text-sm font-bold text-purple-800 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4" /> Thumbnail & Image Strategy
+                            </label>
+                            <select
+                                value={formData.thumbnailPriority}
+                                onChange={(e) => setFormData({ ...formData, thumbnailPriority: e.target.value })}
+                                className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
+                            >
+                                <option value="ai_priority">✨ AI Priority (Generated first, source as fallback)</option>
+                                <option value="source_priority">📸 Source Priority (Original first, AI as fallback)</option>
+                                <option value="source_only">🔍 Source Only (Original "Real Pict" Only - No AI)</option>
+                            </select>
+                            <p className="text-xs text-purple-600 italic">
+                                *Pilih <strong>Source Only</strong> jika Anda ingin artikel selalu menggunakan gambar asli dari berita sumber (Penting untuk review produk).
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-blue-600 pl-3">Target Bahasa AI</label>
                                 <select
@@ -325,29 +467,108 @@ export default function RSSJobsPage() {
                                     <option value="en">🇺🇸 Bahasa Inggris (English)</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-purple-600 pl-3">Gaya Penulisan</label>
+                                <select
+                                    value={formData.writingStyle}
+                                    onChange={(e) => setFormData({ ...formData, writingStyle: e.target.value })}
+                                    className="w-full px-4 py-2 border border-purple-200 bg-purple-50 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
+                                >
+                                    <option value="Professional">👔 Professional</option>
+                                    <option value="Casual">☕ Casual / Santai</option>
+                                    <option value="Investigative">🔍 Investigative</option>
+                                    <option value="Educational">🎓 Educational / Edukasi</option>
+                                </select>
+                            </div>
                         </div>
 
+                        <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block border-l-4 border-amber-600 pl-3">Model Berita (Struktur)</label>
+                            <select
+                                value={formData.articleModel}
+                                onChange={(e) => setFormData({ ...formData, articleModel: e.target.value })}
+                                className="w-full px-4 py-2 border border-amber-200 bg-amber-50 rounded-lg focus:ring-2 focus:ring-amber-200 focus:border-amber-600 font-bold"
+                            >
+                                <option value="Straight News">📰 Straight News (Lugas & Cepat)</option>
+                                <option value="Feature/Narasi">📖 Feature / Narasi (Bercerita)</option>
+                                <option value="Opinion/Analisis">🧠 Opinion / Analisis (Mendalam)</option>
+                                <option value="Deep Analysis">🏗️ Deep Analysis (Komprehensif)</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    {(formData.jobType === 'smart_trend' || formData.jobType === 'keyword_watcher') && (
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div>
+                                <label className="text-sm font-bold text-orange-800 mb-2 block flex items-center gap-2">
+                                    <Globe className="w-4 h-4" /> Target Media Region
+                                </label>
+                                <select
+                                    value={formData.trendRegion}
+                                    onChange={(e) => setFormData({ ...formData, trendRegion: e.target.value })}
+                                    className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-600 font-bold"
+                                >
+                                    <option value="local">🇮🇩 Media Lokal (Indonesia)</option>
+                                    <option value="western">🇺🇸 Media Barat (English/US)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-orange-800 mb-2 block flex items-center gap-2">
+                                    <ChevronRight className="w-4 h-4" /> Fokus Niche (Kategori)
+                                </label>
+                                <select
+                                    value={formData.trendNiche}
+                                    onChange={(e) => setFormData({ ...formData, trendNiche: e.target.value })}
+                                    className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-600 font-bold"
+                                >
+                                    <option value="any">🌐 Semua (General News)</option>
+                                    <option value="products">📦 Produk (Viral/Shopping)</option>
+                                    <option value="technology">💻 Technology</option>
+                                    <option value="business">💰 Business / Finance</option>
+                                    <option value="sports">⚽ Sports</option>
+                                    <option value="entertainment">🎬 Entertainment</option>
+                                    <option value="science">🧪 Science</option>
+                                    <option value="health">🏥 Health</option>
+                                </select>
+                            </div>
+                            <p className="col-span-2 text-xs text-orange-700 italic">
+                                *Pilihan ini menentukan dari media mana sistem akan mencari sumber referensi untuk sintesis berita.
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="flex gap-4">
                         <button
-                            onClick={handleCreateJob}
+                            onClick={handleSubmitJob}
                             disabled={creating}
-                            className="w-full px-6 py-3 bg-[#990000] text-white font-bold rounded-lg hover:bg-[#990000]/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-1 px-6 py-3 bg-[#990000] text-white font-bold rounded-lg hover:bg-[#990000]/90 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {creating ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Creating...
+                                    {editingJobId ? 'Saving...' : 'Creating...'}
                                 </>
                             ) : (
                                 <>
-                                    <Plus className="w-5 h-5" />
-                                    Create Job
+                                    {editingJobId ? <RefreshCw className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                    {editingJobId ? 'Save Changes' : 'Create Job'}
                                 </>
                             )}
                         </button>
+                        {editingJobId && (
+                            <button
+                                onClick={handleCancelEdit}
+                                className="px-6 py-3 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 flex items-center justify-center gap-2"
+                            >
+                                <X className="w-5 h-5" />
+                                Cancel
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
-
             {/* Success Modal */}
             {newJobUrl && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -398,6 +619,19 @@ export default function RSSJobsPage() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-1">
                                             <h3 className="text-lg font-bold">{job.name}</h3>
+                                            {job.job_type === 'keyword_watcher' ? (
+                                                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded flex items-center gap-1">
+                                                    <Search className="w-3 h-3" /> Keyword: {job.search_keyword}
+                                                </span>
+                                            ) : job.job_type === 'smart_trend' ? (
+                                                <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded flex items-center gap-1">
+                                                    <Sparkles className="w-3 h-3" /> Smart Trend
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
+                                                    📄 Standard
+                                                </span>
+                                            )}
                                             {job.is_active ? (
                                                 <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">
                                                     🟢 Active
@@ -414,11 +648,30 @@ export default function RSSJobsPage() {
                                         <p className="text-sm text-gray-600">
                                             Category: {job.categories?.name || 'Default'} •
                                             Max: {job.max_articles_per_run} articles/run •
+                                            Style: <span className="text-purple-700 font-bold">{job.writing_style}</span> •
+                                            Model: <span className="text-amber-700 font-bold">{job.article_model}</span> •
                                             Language: {job.target_language === 'en' ? '🇺🇸 English' : '🇮🇩 Local'}
+                                            {(job.job_type === 'smart_trend' || job.job_type === 'keyword_watcher') && (
+                                                <>
+                                                    <br />
+                                                    <span className="text-orange-700 text-xs font-bold uppercase tracking-wider">
+                                                        🎯 Target: {job.trend_region === 'western' ? 'Media Barat' : 'Media Lokal'} •
+                                                        Niche: {job.trend_niche === 'any' ? 'General' : job.trend_niche} •
+                                                        Img: {job.thumbnail_priority === 'ai_priority' ? 'AI first' : job.thumbnail_priority === 'source_priority' ? 'Source first' : 'Source only'}
+                                                    </span>
+                                                </>
+                                            )}
                                         </p>
                                     </div>
 
                                     <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleEditClick(job)}
+                                            className="p-2 hover:bg-blue-100 rounded text-blue-600"
+                                            title="Edit Job"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
                                         <button
                                             onClick={() => toggleJobStatus(job.id, job.is_active)}
                                             className="p-2 hover:bg-gray-200 rounded"
@@ -482,6 +735,6 @@ export default function RSSJobsPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }

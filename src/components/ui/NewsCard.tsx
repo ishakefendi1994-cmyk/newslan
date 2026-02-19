@@ -20,6 +20,8 @@ interface NewsCardProps {
     date?: string
 }
 
+const DEFAULT_NEWS_IMAGE = 'https://images.unsplash.com/photo-1585829365234-78d2b94a6d50?q=80&w=800&auto=format&fit=crop'
+
 export function NewsCard({
     title,
     slug,
@@ -30,7 +32,7 @@ export function NewsCard({
     isPremium,
     isDark,
     variant = 'default',
-    author = 'Newslan Team',
+    author = 'Team',
     date = 'Just now'
 }: NewsCardProps) {
     const textColor = isDark ? 'text-white' : 'text-black'
@@ -38,6 +40,8 @@ export function NewsCard({
     const borderColor = isDark ? 'border-white/10' : 'border-gray-100'
     const hoverBg = isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'
     const router = useRouter()
+
+    const finalImage = image || DEFAULT_NEWS_IMAGE
 
     const handlePrefetch = () => {
         router.prefetch(`/news/${slug}`)
@@ -48,7 +52,7 @@ export function NewsCard({
         return (
             <div className="group relative w-full h-[500px] md:h-[600px] overflow-hidden bg-black" onMouseEnter={handlePrefetch}>
                 <Image
-                    src={optimizeCloudinaryUrl(image)}
+                    src={optimizeCloudinaryUrl(finalImage)}
                     alt={title}
                     fill
                     className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
@@ -101,7 +105,7 @@ export function NewsCard({
                 </div>
                 <div className="relative w-32 h-24 md:w-48 md:h-32 shrink-0 overflow-hidden bg-gray-100">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover"
@@ -145,7 +149,7 @@ export function NewsCard({
                 {/* Large Image */}
                 <div className="md:w-3/5 relative aspect-[2/1] h-[200px] md:h-auto overflow-hidden">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -182,7 +186,7 @@ export function NewsCard({
             <div className="group flex flex-col space-y-4 pb-6 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 rounded-none border border-black/5">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -229,7 +233,7 @@ export function NewsCard({
             <div className="group flex flex-col space-y-6" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-black/10">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -261,7 +265,7 @@ export function NewsCard({
             <div className="group flex flex-row items-start gap-5 py-6 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="relative w-32 md:w-48 h-24 md:h-32 shrink-0 overflow-hidden border border-black/5">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -288,7 +292,7 @@ export function NewsCard({
             <div className="group flex flex-row items-center gap-4 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors px-2 rounded-xl" onMouseEnter={handlePrefetch}>
                 <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-gray-50">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -314,7 +318,7 @@ export function NewsCard({
             <div className={`group flex flex-col h-full rounded-none overflow-hidden shadow-sm hover:shadow-md transition-shadow`} onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-video w-full overflow-hidden">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -346,7 +350,7 @@ export function NewsCard({
             <div className="group flex flex-col h-full space-y-3" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-none border border-black/5">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -373,7 +377,7 @@ export function NewsCard({
             <div className={`group flex flex-col space-y-3 pb-6 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`} onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
                     <Image
-                        src={image}
+                        src={finalImage}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -403,7 +407,7 @@ export function NewsCard({
         return (
             <div className="group relative aspect-[16/9] w-full overflow-hidden bg-black border-4 border-black" onMouseEnter={handlePrefetch}>
                 <Image
-                    src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 1200 })}
+                    src={optimizeCloudinaryUrl(finalImage, { quality: 'auto', width: 1200 })}
                     alt={title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -433,7 +437,7 @@ export function NewsCard({
             <div className="group flex flex-col space-y-4" onMouseEnter={handlePrefetch}>
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100 border-2 border-black/10">
                     <Image
-                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 600 })}
+                        src={optimizeCloudinaryUrl(finalImage, { quality: 'auto', width: 600 })}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -460,7 +464,7 @@ export function NewsCard({
             <div className="group flex flex-row items-start gap-3 py-3 border-b border-gray-100 last:border-0" onMouseEnter={handlePrefetch}>
                 <div className="relative w-20 h-20 shrink-0 overflow-hidden bg-gray-100">
                     <Image
-                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 200 })}
+                        src={optimizeCloudinaryUrl(finalImage, { quality: 'auto', width: 200 })}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -484,7 +488,7 @@ export function NewsCard({
             <div className="group flex flex-col md:flex-row gap-6 py-8 border-b border-gray-100 last:border-0 items-center" onMouseEnter={handlePrefetch}>
                 <div className="relative md:w-1/3 aspect-video overflow-hidden">
                     <Image
-                        src={optimizeCloudinaryUrl(image, { quality: 'auto', width: 600 })}
+                        src={optimizeCloudinaryUrl(finalImage, { quality: 'auto', width: 600 })}
                         alt={title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -513,7 +517,7 @@ export function NewsCard({
         <div className={`group flex flex-col space-y-4 pb-8 border-b border-gray-100 last:border-0 ${isDark ? 'bg-transparent border-white/10' : 'bg-white'}`} onMouseEnter={handlePrefetch}>
             <div className="relative aspect-[2/1] w-full overflow-hidden bg-gray-100">
                 <Image
-                    src={image}
+                    src={finalImage}
                     alt={title}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"

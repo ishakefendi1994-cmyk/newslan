@@ -126,7 +126,7 @@ export const getTrendingNews = unstable_cache(
             .select('*, categories(name, bg_color)')
             .eq('is_published', true)
             .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
-            .order('created_at', { ascending: false }) // Fallback since no views column
+            .order('views_count', { ascending: false })
             .limit(7)
         return data
     },

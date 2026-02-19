@@ -11,10 +11,17 @@ export default function VideoGalleryPage() {
     const [shorts, setShorts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedVideo, setSelectedVideo] = useState<any>(null)
+    const [siteName, setSiteName] = useState('Newslan')
 
     useEffect(() => {
         fetchShorts()
+        fetchSettings()
     }, [])
+
+    async function fetchSettings() {
+        const { data } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'site_name').single()
+        if (data?.setting_value) setSiteName(data.setting_value.replace('.id', '').replace('.ID', ''))
+    }
 
     async function fetchShorts() {
         try {
@@ -55,9 +62,9 @@ export default function VideoGalleryPage() {
         <div className="min-h-screen bg-gray-50 pb-20">
             {/* Header / Brand */}
             <div className="bg-black text-white px-6 py-12 md:py-20 text-center">
-                <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-4">Newslan <span className="text-primary">TV</span></h1>
+                <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-4">{siteName} <span className="text-primary">TV</span></h1>
                 <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto font-medium">
-                    Tonton berita investigasi, edukasi, dan informasi terpercaya dalam format video eksklusif dari redaksi Newslan.id.
+                    Tonton berita investigasi, edukasi, dan informasi terpercaya dalam format video eksklusif dari redaksi {siteName}.id.
                 </p>
             </div>
 

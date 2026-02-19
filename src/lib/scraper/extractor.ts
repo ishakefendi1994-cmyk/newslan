@@ -46,14 +46,45 @@ export async function extractArticleContent(url: string): Promise<{
             $('meta[property="og:title"]').attr('content') ||
             $('title').text().trim()
 
-        // 3. Extract Image
-        let image =
-            $('meta[property="og:image"]').attr('content') ||
-            $('.detail__media-image img').attr('src') || // Detik specific
-            $('.photo__img img').attr('src') || // Kompas specific
-            $('article img').first().attr('src') ||
-            $('.article-img img').first().attr('src') ||
-            $('img').first().attr('src') // Fallback
+        // 3. Extract Image (with Lazy-Load support)
+        const imageSelectors = [
+            'meta[property="og:image"]',
+            'meta[name="twitter:image"]',
+            'meta[itemprop="image"]',
+            '.detail__media-image img', // Detik
+            '.photo__img img', // Kompas
+            'article img',
+            '.article-img img',
+            'img'
+        ]
+
+        let image: string | undefined = undefined
+        for (const selector of imageSelectors) {
+            const $img = $(selector).first()
+            if ($img.length > 0) {
+                // Check multiple possible source attributes for lazy loading
+                const attrVal =
+                    $img.attr('content') || // For meta tags
+                    $img.attr('data-src') ||
+                    $img.attr('data-lazy-src') ||
+                    $img.attr('data-original') ||
+                    $img.attr('data-src-retina') ||
+                    $img.attr('src')
+
+                if (attrVal && !attrVal.includes('pixel.gif') && !attrVal.includes('placeholder')) {
+                    image = attrVal
+                    break
+                }
+            }
+        }
+
+        // Resolve relative URL
+        if (image && !image.startsWith('http')) {
+            try {
+                const baseUrl = new URL(url).origin
+                image = new URL(image, baseUrl).toString()
+            } catch (e) { }
+        }
 
         // 4. Extract Author
         let author =
@@ -91,22 +122,32 @@ export async function extractArticleContent(url: string): Promise<{
             $contentContainer = $('body')
         }
 
-        // 6. Iterate over Paragraphs to Preserve Structure
+        // 6. Iterate over Paragraphs & Lists to Preserve Technical Data
         let paragraphs: string[] = []
 
-        // Look for p tags inside the container
-        $contentContainer.find('p').each((_, el) => {
-            const text = $(el).text().trim()
+        // Look for content tags (p, li, tr) inside the container
+        $contentContainer.find('p, li, tr').each((_, el) => {
+            const $el = $(el)
+            const text = $el.text().trim()
 
             // Filter out junk paragraphs
             if (
-                text.length > 20 && // Too short
+                text.length > 5 && // Shorter limit for technical data
                 !text.toLowerCase().includes('baca juga') &&
                 !text.toLowerCase().includes('copyright') &&
                 !text.toLowerCase().includes('halaman selanjutnya') &&
                 !text.toLowerCase().includes('scroll to continue')
             ) {
-                paragraphs.push(text)
+                // If it's a list item or table row, prefix with bullet to help AI
+                if (el.name === 'li') {
+                    paragraphs.push(`- ${text}`)
+                } else if (el.name === 'tr') {
+                    // Extract all cell values in the row
+                    const cells = $el.find('td, th').map((i, cell) => $(cell).text().trim()).get().join(': ')
+                    if (cells.length > 5) paragraphs.push(cells)
+                } else {
+                    paragraphs.push(text)
+                }
             }
         })
 

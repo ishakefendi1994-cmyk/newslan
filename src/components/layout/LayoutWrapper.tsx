@@ -17,6 +17,8 @@ interface LayoutWrapperProps {
     siteName?: string
     logoType?: 'text' | 'image'
     siteLogoUrl?: string
+    contactWhatsapp?: string
+    contactEmail?: string
 }
 
 export default function LayoutWrapper({
@@ -27,7 +29,9 @@ export default function LayoutWrapper({
     skinAds,
     siteName = 'NEWSLAN.ID',
     logoType = 'text',
-    siteLogoUrl = '/logo.png'
+    siteLogoUrl = '/logo.png',
+    contactWhatsapp = '+62 823-7886-5775',
+    contactEmail = 'redaksi@newslan.id'
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
@@ -80,10 +84,22 @@ export default function LayoutWrapper({
                         <div className="space-y-6">
                             <h4 className="text-xs font-black uppercase tracking-widest text-primary">Informasi</h4>
                             <ul className="space-y-3 text-sm font-bold">
-                                <li><Link href="/redaksi" className="text-gray-300 hover:text-white transition-colors">Redaksi</Link></li>
-                                <li><Link href="/company-profile" className="text-gray-300 hover:text-white transition-colors">Company Profile</Link></li>
-                                <li><Link href="/pedoman-media-siber" className="text-gray-300 hover:text-white transition-colors">Pedoman Media Siber</Link></li>
-                                <li><Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Kebijakan Privasi</Link></li>
+                                {navLinks.filter(l => l.is_footer).length > 0 ? (
+                                    navLinks.filter(l => l.is_footer).map((link: any) => (
+                                        <li key={link.id}>
+                                            <Link href={link.href} className="text-gray-300 hover:text-white transition-colors">
+                                                {link.title}
+                                            </Link>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <>
+                                        <li><Link href="/p/redaksi" className="text-gray-300 hover:text-white transition-colors">Redaksi</Link></li>
+                                        <li><Link href="/p/company-profile" className="text-gray-300 hover:text-white transition-colors">Company Profile</Link></li>
+                                        <li><Link href="/p/pedoman-media-siber" className="text-gray-300 hover:text-white transition-colors">Pedoman Media Siber</Link></li>
+                                        <li><Link href="/p/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Kebijakan Privasi</Link></li>
+                                    </>
+                                )}
                             </ul>
                         </div>
 
@@ -99,8 +115,8 @@ export default function LayoutWrapper({
                         <div className="space-y-6">
                             <h4 className="text-xs font-black uppercase tracking-widest text-primary">Kontak Kami</h4>
                             <div className="space-y-2 text-sm text-gray-400 font-medium">
-                                <p>WhatsApp: +62 823-7886-5775</p>
-                                <p>Email: redaksi@{siteName.toLowerCase()}</p>
+                                <p>WhatsApp: {contactWhatsapp}</p>
+                                <p>Email: {contactEmail}</p>
                             </div>
                         </div>
                     </div>

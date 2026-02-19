@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateArticleFromScratch, NewsStyle, NewsModel } from '@/lib/ai/writer'
 import { generateImagePrompt, generateImage } from '@/lib/ai/image-generator'
+import { getSiteSettings } from '@/lib/settings'
 
 /**
  * AI Auto-Job Cron Trigger
@@ -56,11 +57,14 @@ export async function GET(
 
         console.log(`[AI Cron] 🚀 Starting generation for: ${job.name}`)
 
-        // 3. Update status to 'generating'
         await supabase
             .from('ai_auto_jobs')
             .update({ last_run_status: 'generating' })
             .eq('id', job.id)
+
+        // 3.1 Fetch Site Settings
+        const settings = await getSiteSettings(supabase)
+        const hasReplicate = !!(settings.replicate_api_token || process.env.REPLICATE_API_TOKEN)
 
         // 4. Fetch Category Name
         const { data: category } = await supabase
@@ -104,7 +108,7 @@ export async function GET(
 
                 // Generate Image
                 let imageUrl = null
-                if (job.generate_image && process.env.REPLICATE_API_TOKEN) {
+                if (job.generate_image && hasReplicate) {
                     try {
                         console.log(`[AI Cron] Generating thumbnail ${i + 1}...`)
                         const imagePrompt = await generateImagePrompt(article.title, article.content)

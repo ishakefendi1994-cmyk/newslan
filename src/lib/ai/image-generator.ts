@@ -1,8 +1,9 @@
 
 import { forceHtmlFormatting } from '@/lib/utils/format-html'
+import { getSiteSettings } from '../settings'
 
-const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN
-const GROQ_API_KEY = process.env.GROQ_API_KEY
+const DEFAULT_REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN
+const DEFAULT_GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 // Replicate Models
@@ -13,8 +14,11 @@ const MODEL_FLUX_SCHNELL = "black-forest-labs/flux-schnell"
  * Generate a Stable Diffusion friendly prompt based on article content
  */
 export async function generateImagePrompt(title: string, content: string): Promise<string> {
-    if (!GROQ_API_KEY) {
-        throw new Error('GROQ_API_KEY is missing')
+    const settings = await getSiteSettings()
+    const groqKey = settings.groq_api_key || DEFAULT_GROQ_API_KEY
+
+    if (!groqKey) {
+        throw new Error('GROQ_API_KEY is missing (neither in settings nor ENV)')
     }
 
     try {
@@ -22,7 +26,7 @@ export async function generateImagePrompt(title: string, content: string): Promi
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
+                'Authorization': `Bearer ${groqKey}`
             },
             body: JSON.stringify({
                 model: 'llama-3.3-70b-versatile',
@@ -64,7 +68,10 @@ export async function generateImagePrompt(title: string, content: string): Promi
  * Returns the URL of the generated image
  */
 export async function generateImage(prompt: string): Promise<string | null> {
-    if (!REPLICATE_API_TOKEN) {
+    const settings = await getSiteSettings()
+    const replicateToken = settings.replicate_api_token || DEFAULT_REPLICATE_API_TOKEN
+
+    if (!replicateToken) {
         console.warn('[AI Image] REPLICATE_API_TOKEN is missing. Skipping image generation.')
         return null
     }
@@ -79,7 +86,7 @@ export async function generateImage(prompt: string): Promise<string | null> {
         const predictionReq = await fetch(modelUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+                'Authorization': `Token ${replicateToken}`,
                 'Content-Type': 'application/json',
                 'Prefer': 'wait'
             },

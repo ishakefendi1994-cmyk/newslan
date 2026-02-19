@@ -19,7 +19,12 @@ export default function SettingsPage() {
         default_homepage: '/',
         logo_type: 'text',
         site_logo_url: '',
-        default_ai_language: 'id'
+        default_ai_language: 'id',
+        groq_api_key: '',
+        replicate_api_token: '',
+        contact_whatsapp: '',
+        contact_email: '',
+        site_favicon_url: ''
     })
     const [categories, setCategories] = useState<any[]>([])
 
@@ -49,6 +54,11 @@ export default function SettingsPage() {
                 if (item.setting_key === 'logo_type') s.logo_type = item.setting_value
                 if (item.setting_key === 'site_logo_url') s.site_logo_url = item.setting_value
                 if (item.setting_key === 'default_ai_language') s.default_ai_language = item.setting_value
+                if (item.setting_key === 'groq_api_key') s.groq_api_key = item.setting_value
+                if (item.setting_key === 'replicate_api_token') s.replicate_api_token = item.setting_value
+                if (item.setting_key === 'contact_whatsapp') s.contact_whatsapp = item.setting_value
+                if (item.setting_key === 'contact_email') s.contact_email = item.setting_value
+                if (item.setting_key === 'site_favicon_url') s.site_favicon_url = item.setting_value
             })
             setSettings(s)
         } catch (error) {
@@ -77,7 +87,12 @@ export default function SettingsPage() {
                 { setting_key: 'default_homepage', setting_value: settings.default_homepage },
                 { setting_key: 'logo_type', setting_value: settings.logo_type },
                 { setting_key: 'site_logo_url', setting_value: settings.site_logo_url },
-                { setting_key: 'default_ai_language', setting_value: settings.default_ai_language }
+                { setting_key: 'default_ai_language', setting_value: settings.default_ai_language },
+                { setting_key: 'groq_api_key', setting_value: settings.groq_api_key },
+                { setting_key: 'replicate_api_token', setting_value: settings.replicate_api_token },
+                { setting_key: 'contact_whatsapp', setting_value: settings.contact_whatsapp },
+                { setting_key: 'contact_email', setting_value: settings.contact_email },
+                { setting_key: 'site_favicon_url', setting_value: settings.site_favicon_url }
             ]
 
             for (const update of finalUpdates) {
@@ -231,6 +246,65 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
+                    {/* Favicon Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <ImageIcon className="w-5 h-5 text-indigo-500" />
+                            <span>Pengaturan Favicon</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-[10px] text-slate-500 italic">Favicon adalah ikon kecil yang muncul di tab browser. Gunakan gambar persegi (1:1) untuk hasil terbaik.</p>
+
+                            {settings.site_favicon_url ? (
+                                <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-100 group bg-slate-50">
+                                    <img src={settings.site_favicon_url} alt="Favicon Preview" className="w-full h-full object-contain p-2" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1">
+                                        <label className="bg-white text-black p-1.5 rounded-lg cursor-pointer hover:bg-gray-100 shadow-sm">
+                                            <Upload className="w-3 h-3" />
+                                            <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                                if (!e.target.files || e.target.files.length === 0) return
+                                                try {
+                                                    setUploading(true)
+                                                    const url = await uploadImage(e.target.files[0])
+                                                    setSettings({ ...settings, site_favicon_url: url })
+                                                    setMessage({ type: 'success', text: 'Favicon berhasil diunggah!' })
+                                                } catch (err: any) {
+                                                    setMessage({ type: 'error', text: err.message })
+                                                } finally {
+                                                    setUploading(false)
+                                                }
+                                            }} disabled={uploading} />
+                                        </label>
+                                        <button
+                                            onClick={() => setSettings({ ...settings, site_favicon_url: '' })}
+                                            className="bg-white text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 shadow-sm"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <label className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 transition-all">
+                                    {uploading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Upload className="w-4 h-4" />}
+                                    <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                        if (!e.target.files || e.target.files.length === 0) return
+                                        try {
+                                            setUploading(true)
+                                            const url = await uploadImage(e.target.files[0])
+                                            setSettings({ ...settings, site_favicon_url: url })
+                                            setMessage({ type: 'success', text: 'Favicon berhasil diunggah!' })
+                                        } catch (err: any) {
+                                            setMessage({ type: 'error', text: err.message })
+                                        } finally {
+                                            setUploading(false)
+                                        }
+                                    }} disabled={uploading} />
+                                </label>
+                            )}
+                        </div>
+                    </div>
+
                     {/* AI Settings */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                         <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
@@ -247,9 +321,74 @@ export default function SettingsPage() {
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm appearance-none cursor-pointer"
                                 >
                                     <option value="id">🇮🇩 Bahasa Indonesia</option>
-                                    <option value="en">🇺🇸 Bahasa Inggris (English)</option>
                                 </select>
                                 <p className="text-[10px] text-slate-400 mt-1 italic">Tentukan bahasa utama yang digunakan AI saat menulis atau menerjemahkan artikel secara otomatis.</p>
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                        Groq API Key
+                                        {settings.groq_api_key ? <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Configured</span> : <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Using ENV</span>}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={settings.groq_api_key}
+                                        onChange={(e) => setSettings({ ...settings, groq_api_key: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                        placeholder="gsk_..."
+                                    />
+                                    <p className="text-[10px] text-slate-400 italic">Dibutuhkan untuk penulisan dan penulisan ulang artikel.</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                        Replicate API Token
+                                        {settings.replicate_api_token ? <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Configured</span> : <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Using ENV</span>}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={settings.replicate_api_token}
+                                        onChange={(e) => setSettings({ ...settings, replicate_api_token: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                        placeholder="r8_..."
+                                    />
+                                    <p className="text-[10px] text-slate-400 italic">Dibutuhkan untuk membuat gambar artikel otomatis.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Contact & Footer Settings */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Info className="w-5 h-5 text-emerald-500" />
+                            <span>Kontak & Informasi Footer</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Utama</label>
+                                <input
+                                    type="text"
+                                    value={settings.contact_whatsapp}
+                                    onChange={(e) => setSettings({ ...settings, contact_whatsapp: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                    placeholder="+62 823..."
+                                />
+                                <p className="text-[10px] text-slate-400 italic">Muncul di bagian footer website.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Utama</label>
+                                <input
+                                    type="email"
+                                    value={settings.contact_email}
+                                    onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                    placeholder="redaksi@..."
+                                />
+                                <p className="text-[10px] text-slate-400 italic">Muncul di bagian footer website.</p>
                             </div>
                         </div>
                     </div>

@@ -54,6 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Articles', href: '/admin/articles', icon: FileText },
         { name: 'Categories', href: '/admin/categories', icon: Folder },
         { name: 'Menus', href: '/admin/menus', icon: Menu },
+        { name: 'Static Pages', href: '/admin/pages', icon: FileText },
         { name: 'Advertisements', href: '/admin/ads', icon: Megaphone },
         { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
         { name: 'Products', href: '/admin/products', icon: ShoppingBag },

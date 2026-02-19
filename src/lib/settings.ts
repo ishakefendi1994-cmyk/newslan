@@ -8,6 +8,11 @@ export interface SiteSettings {
     logo_type: 'text' | 'image'
     site_logo_url: string
     default_ai_language: string
+    groq_api_key?: string
+    replicate_api_token?: string
+    contact_whatsapp: string
+    contact_email: string
+    site_favicon_url: string
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -17,17 +22,23 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     default_homepage: '/',
     logo_type: 'text',
     site_logo_url: '',
-    default_ai_language: 'id'
+    default_ai_language: 'id',
+    groq_api_key: '',
+    replicate_api_token: '',
+    contact_whatsapp: '+62 823-7886-5775',
+    contact_email: 'redaksi@newslan.id',
+    site_favicon_url: '/favicon.ico'
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+export async function getSiteSettings(supabaseClient?: any): Promise<SiteSettings> {
     try {
-        const supabase = await createClient()
+        const supabase = supabaseClient || await createClient()
         const { data, error } = await supabase
             .from('site_settings')
             .select('setting_key, setting_value')
 
         if (error || !data) {
+            console.warn('Using default settings due to error:', error)
             return DEFAULT_SETTINGS
         }
 
@@ -39,6 +50,12 @@ export async function getSiteSettings(): Promise<SiteSettings> {
             if (item.setting_key === 'default_homepage') settings.default_homepage = item.setting_value
             if (item.setting_key === 'logo_type') settings.logo_type = item.setting_value as any
             if (item.setting_key === 'site_logo_url') settings.site_logo_url = item.setting_value
+            if (item.setting_key === 'groq_api_key') settings.groq_api_key = item.setting_value
+            if (item.setting_key === 'replicate_api_token') settings.replicate_api_token = item.setting_value
+            if (item.setting_key === 'default_ai_language') settings.default_ai_language = item.setting_value
+            if (item.setting_key === 'contact_whatsapp') settings.contact_whatsapp = item.setting_value
+            if (item.setting_key === 'contact_email') settings.contact_email = item.setting_value
+            if (item.setting_key === 'site_favicon_url') settings.site_favicon_url = item.setting_value
         })
 
         return settings

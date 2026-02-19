@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateArticleFromScratch, NewsStyle, NewsModel } from '@/lib/ai/writer'
 import { generateImagePrompt, generateImage } from '@/lib/ai/image-generator'
+import { getSiteSettings } from '@/lib/settings'
 
 export async function POST(request: NextRequest) {
     try {
@@ -21,8 +22,11 @@ export async function POST(request: NextRequest) {
         const article = await generateArticleFromScratch(theme, category, style as NewsStyle, model as NewsModel, language)
 
         // 2. Generate Image (Optional/Default True)
+        const settings = await getSiteSettings()
+        const hasReplicate = !!(settings.replicate_api_token || process.env.REPLICATE_API_TOKEN)
+
         let imageUrl = null
-        if (shouldGenerateImage && process.env.REPLICATE_API_TOKEN) {
+        if (shouldGenerateImage && hasReplicate) {
             try {
                 console.log('[AI Writer API] Generating AI Thumbnail...')
                 const imagePrompt = await generateImagePrompt(article.title, article.content)

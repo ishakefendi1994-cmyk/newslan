@@ -176,7 +176,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
             dateModified: article.updated_at || article.created_at,
             author: [{
                 '@type': 'Person',
-                name: article.profiles?.full_name || 'Redaksi Newslan',
+                name: article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Newslan.id'}`,
                 url: `${process.env.NEXT_PUBLIC_SITE_URL}/redaksi`,
             }],
             publisher: {
@@ -237,7 +237,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                             {/* Bottom Meta */}
                             <div className="flex flex-col md:flex-row md:items-center text-xs md:text-sm font-bold border-t border-white/20 pt-6 mt-auto space-y-2 md:space-y-0 text-white/90">
                                 <div className="flex items-center space-x-3">
-                                    <span className="uppercase">{article.profiles?.full_name || 'Redaksi Newslan'}</span>
+                                    <span className="uppercase">{article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Newslan.id'}`}</span>
                                 </div>
                                 <span className="hidden md:inline mx-3">•</span>
                                 <span>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>

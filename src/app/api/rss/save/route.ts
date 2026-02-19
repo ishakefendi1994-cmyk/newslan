@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
             featured_image: cloudinaryImageUrl, // Use Cloudinary URL (or null)
             category_id: finalCategoryId,
             author_id: user?.id || null,
+            source_url: sourceUrl || null, // Store original source for duplicate detection
             is_published: isPublished,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()

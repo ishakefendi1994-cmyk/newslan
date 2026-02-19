@@ -4,7 +4,8 @@
  */
 
 // Groq Configuration
-const GROQ_API_KEY = process.env.GROQ_API_KEY!
+import { getSiteSettings } from '../settings'
+const DEFAULT_GROQ_API_KEY = process.env.GROQ_API_KEY!
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.3-70b-versatile' // Fast and high quality model for Indonesian
 
@@ -29,8 +30,13 @@ export async function rewriteArticle(
     title: string,
     content: string,
     sourceName: string,
-    language: string = 'id'
+    language: string = 'id',
+    writingStyle: string = 'Professional',
+    articleModel: string = 'Straight News'
 ): Promise<RewriteResult> {
+    const settings = await getSiteSettings()
+    const apiKey = settings.groq_api_key || DEFAULT_GROQ_API_KEY
+
     console.log(`[AI Rewriter] Starting rewrite with Groq (Llama 3.3)`)
     console.log(`[AI Rewriter] Original title:`, title)
 
@@ -73,14 +79,24 @@ STRICT MANDATORY INSTRUCTIONS (NON-NEGOTIABLE):
       c) **Practical Utility**: How this actually affects the daily user.
     - Write the ENTIRE article from this chosen perspective.
 
-3.  **JOURNALISTIC VOICE**:
-    - Use "National Media" style (Tempo/Kompas style). Professional, analytical, fluid.
+3.  **JOURNALISTIC VOICE & STYLE**:
+    - **STYLE: ${writingStyle}**
+    - Apply the selected style consistently throughout the article.
+    - Professional: Analytical, formal, objective.
+    - Casual: Conversational, engaging, uses more accessible language.
+    - Investigative: Skeptical, focused on facts/evidence, questioning.
+    - Educational: Explanatory, instructive, uses "How-to" or "What-is" context.
     - Variation in sentence length: Mix short punchy sentences with longer analytical ones.
-    - **Smooth Transitions**: Use paragraphs that flow naturally without needing "Adapun", "Selain itu". Avoid listicles/bullets unless absolutely necessary.
 
-4.  **EXPANSION & DEEPENING**:
+4.  **ARTICLE MODEL: ${articleModel} (STRUCTURE)**:
+    - **Straight News**: Traditional inverted pyramid. Most important facts first. Concise and direct.
+    - **Feature/Narasi**: Story-driven. Start with a scene/anecdote. More descriptive and flowy.
+    - **Opinion/Analisis**: Heavy on "Why" and "What it means". Analytical, provides context and future prediction.
+    - **Deep Analysis**: Comprehensive, deep dive into the subject. Use longer paragraphs for complexity.
+
+5.  **EXPANSION & DEEPENING**:
     - The result MUST be equal length or LONGER than the original.
-    - Add *general* context to explain *why* facts matter (e.g., "This price drop reflects the broader instability in...").
+    - Add *general* context based on the **Model** and **Style** selected.
     - **No Hallucinations**: Do not invent numbers or quotes. Use general knowledge for context only.
 
 5.  **UNIQUENESS CHECK**:
@@ -126,7 +142,7 @@ Rewrite this article following the instructions above. Return ONLY the tagged fo
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
                     model: MODEL,
@@ -285,4 +301,133 @@ Rewrite this article following the instructions above. Return ONLY the tagged fo
 
     // Should not reach here, but TypeScript needs it
     throw new Error('Unexpected error in rewriteArticle')
+}
+
+/**
+ * Synthesize a new article from multiple sources
+ * @param sources - Array of original articles { title, content, sourceName }
+ * @param language - Target language
+ * @param writingStyle - Tone of voice
+ * @param articleModel - Structure of report
+ */
+export async function synthesizeFromMultipleSources(
+    sources: Array<{ title: string, content: string, sourceName: string }>,
+    language: string = 'id',
+    writingStyle: string = 'Professional',
+    articleModel: string = 'Straight News'
+): Promise<RewriteResult> {
+    const settings = await getSiteSettings()
+    const apiKey = settings.groq_api_key || DEFAULT_GROQ_API_KEY
+
+    console.log(`[AI Synthesizer] Starting synthesis from ${sources.length} sources`)
+
+    const sourceData = sources.map((s, i) => `--- SOURCE ${i + 1} (${s.sourceName}) ---\nTitle: ${s.title}\nContent:\n${s.content}`).join('\n\n')
+
+    const systemPrompt = `You are a Senior Editor-in-Chief at a premier news agency. 
+    Your task is to SYNTHESIZE multiple news reports into ONE comprehensive, unique, and authoritative article.
+
+    CRITICAL IDENTITY:
+    - You are an INVESTIGATIVE DATA-JOURNALIST.
+    - Do NOT just summarize. You must MERGE facts, detect contradictions, and provide a COMPLETE picture.
+    - Your goal: Create the "Ultimate Report" on this topic that makes all other sources redundant. Focus on DATA DENSITY.
+
+    FLEXIBILITY & DATA INTEGRITY:
+    - **Priority on Hard Data**: If sources contain specific numbers, prices (e.g., "Rp 5.000.000"), or technical specifications (e.g., "RAM 8GB", "Snapdragon 8 Gen 3"), you MUST include them exactly. Do NOT generalize them.
+    - **Structure Requirement**: You MUST include a dedicated section (under an <h2> like 'Spesifikasi Lengkap' or 'Daftar Harga Terbaru') using <ul> or <table> to clearly list the technical details found.
+    - **No Hallucinations**: Do NOT invent prices or specs. Use the sources as the ground truth.
+    - **Cut the Fluff**: Avoid "ngambang" (vague/floaty) sentences like "harganya kompetitif" or "spesifikasinya menarik". Replace them with "Harganya Rp X" or "Layar 6.7 inci AMOLED".
+
+    2. **STYLE & MODEL**:
+       - **STYLE: ${writingStyle}**
+       - **MODEL: ${articleModel}**
+       - *Special Intent*: If the topic is a product, prioritize a "Review/Buying Guide" tone.
+
+    3. **JOURNALISTIC INTEGRITY**:
+       - Language: 100% ${language === 'en' ? 'ENGLISH' : 'INDONESIAN'}.
+       - Output must be unique, professional, and dense with information. Aim for 400-600 words.
+
+    4. **OUTPUT FORMAT (STRICT TAGS)**:
+        [TITLE]
+        (Authoritative, catchy, unique title)
+        [/TITLE]
+        
+        [EXCERPT]
+        (Punchy summary, max 160 chars)
+        [/EXCERPT]
+        
+        [CONTENT]
+        (HTML content with <p> and <h2>. You MAY use <ul> and <li> for technical specs to make them readable.)
+        [/CONTENT]`
+
+    const userPrompt = `Synthesize these ${sources.length} sources into a high-quality article in ${language === 'en' ? 'English' : 'Indonesian'}.
+
+SOURCES:
+${sourceData}
+
+Return ONLY the tagged format.`
+
+    // Reuse the logic from rewriteArticle for the API call and parsing
+    // But since it's a different function, let's copy the call part
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await fetch(GROQ_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.1, // Set to 0.1 for maximum factual accuracy and data retention
+                    max_tokens: 4000
+                })
+            })
+
+            if (!response.ok) {
+                if (response.status === 429 && attempt < MAX_RETRIES) {
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+                    continue
+                }
+                throw new Error(`Groq API error: ${response.status}`)
+            }
+
+            const data = await response.json()
+            const aiResponse = data.choices[0].message.content
+
+            // Parse Tag-Based Response (Abstracted Regex logic)
+            const titleMatch = aiResponse.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/i)
+            const excerptMatch = aiResponse.match(/\[EXCERPT\]([\s\S]*?)\[\/EXCERPT\]/i)
+            const contentMatch = aiResponse.match(/\[CONTENT\]([\s\S]*?)\[\/CONTENT\]/i)
+
+            let parsedTitle = titleMatch ? titleMatch[1].trim() : 'Synthesis Result'
+            let parsedExcerpt = excerptMatch ? excerptMatch[1].trim() : parsedTitle.substring(0, 160)
+            let parsedContent = contentMatch ? contentMatch[1].trim() : ''
+
+            if (!parsedContent) {
+                parsedContent = aiResponse // Fallback
+            }
+
+            // Ensure HTML
+            if (!parsedContent.includes('<p>')) {
+                parsedContent = parsedContent.split('\n\n').filter((p: string) => p.trim()).map((p: string) => `<p>${p.trim()}</p>`).join('')
+            }
+
+            return {
+                title: parsedTitle,
+                content: parsedContent,
+                excerpt: parsedExcerpt
+            }
+
+        } catch (error: any) {
+            if (attempt === MAX_RETRIES) throw error
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+        }
+    }
+
+    throw new Error('Unexpected synthesis error')
 }

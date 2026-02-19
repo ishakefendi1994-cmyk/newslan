@@ -1,5 +1,6 @@
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY
+import { getSiteSettings } from '../settings'
+const DEFAULT_GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 export type NewsStyle = 'Formal' | 'Santai' | 'Investigatif' | 'Provokatif' | 'Inspiratif'
@@ -21,8 +22,11 @@ export async function generateArticleFromScratch(
     model: NewsModel = 'Breaking News',
     language: string = 'id'
 ): Promise<GenerationResult> {
-    if (!GROQ_API_KEY) {
-        throw new Error('GROQ_API_KEY is missing')
+    const settings = await getSiteSettings()
+    const apiKey = settings.groq_api_key || DEFAULT_GROQ_API_KEY
+
+    if (!apiKey) {
+        throw new Error('GROQ_API_KEY is missing (neither in settings nor ENV)')
     }
 
     const languageName = language === 'en' ? 'English' : 'Bahasa Indonesia'
@@ -56,7 +60,7 @@ export async function generateArticleFromScratch(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: 'llama-3.3-70b-versatile',
