@@ -14,6 +14,7 @@ export interface SiteSettings {
     contact_email: string
     site_favicon_url: string
     site_url: string
+    header_scripts: string
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -29,7 +30,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     contact_whatsapp: '',
     contact_email: 'admin@cryptotechnews.net',
     site_favicon_url: '/favicon.ico',
-    site_url: 'https://cryptotechnews.net'
+    site_url: 'https://cryptotechnews.net',
+    header_scripts: ''
 }
 
 export async function getSiteSettings(supabaseClient?: any): Promise<SiteSettings> {
@@ -59,6 +61,7 @@ export async function getSiteSettings(supabaseClient?: any): Promise<SiteSetting
             if (item.setting_key === 'contact_email') settings.contact_email = item.setting_value
             if (item.setting_key === 'site_favicon_url') settings.site_favicon_url = item.setting_value
             if (item.setting_key === 'site_url') settings.site_url = item.setting_value
+            if (item.setting_key === 'header_scripts') settings.header_scripts = item.setting_value
         })
 
         return settings

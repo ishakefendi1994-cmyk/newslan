@@ -36,6 +36,13 @@ export default async function RootLayout({
   return (
     <html lang="id" style={{ '--site-primary-color': settings.theme_color } as React.CSSProperties}>
       <body className={`${inter.className} ${merriweather.variable} antialiased selection:bg-primary/20`}>
+        {settings.header_scripts && (
+          <div
+            id="header-scripts-injection"
+            style={{ display: 'none' }}
+            dangerouslySetInnerHTML={{ __html: settings.header_scripts }}
+          />
+        )}
         {children}
       </body>
     </html>

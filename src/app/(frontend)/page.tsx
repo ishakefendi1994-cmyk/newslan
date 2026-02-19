@@ -101,8 +101,6 @@ export default async function HomePage({
 
   return (
     <div className="flex flex-col bg-[#F8F9FA]">
-      {/* Hide Breaking News on page 2+ to keep focus on content */}
-      {currentPage === 1 && <BreakingNewsTicker news={breakingTitles} />}
 
       {/* Banner & Ultimate Grid - Only on Page 1 */}
       {currentPage === 1 && (
