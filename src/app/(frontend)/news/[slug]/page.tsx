@@ -180,12 +180,15 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                     elements.push(<div key={`text-prod-${i}`} className={proseClasses} dangerouslySetInnerHTML={{ __html: currentContent.join('') }} />)
                     currentContent = []
                     elements.push(
-                        <div key="middle-products" className="my-16 not-prose border-y-4 border-black py-10 space-y-8 bg-gray-50/50 px-6 -mx-6 md:mx-0 md:px-0 md:bg-transparent md:border-x-0">
-                            <div className="flex items-center space-x-3">
-                                <div className="h-4 w-4 bg-primary rotate-45" />
-                                <h2 className="text-xl font-black uppercase tracking-tighter italic">Rekomendasi Produk Terkait</h2>
+                        <div key="middle-products" className="my-16 not-prose border-y border-gray-100 py-12 space-y-8 bg-slate-50/40 px-6 -mx-6 md:mx-0 md:px-0 md:bg-transparent md:border-x-0 relative">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                    <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Rekomendasi Terkait</h2>
+                                </div>
+                                <div className="h-[1px] flex-1 bg-gray-100 ml-4 hidden md:block" />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6">
                                 {products.map((product: any, idx: number) => (
                                     <ProductCard
                                         key={idx}
@@ -379,12 +382,15 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
                     {/* Products Section - Full Width (Only shown if placement is 'after') */}
                     {products.length > 0 && article.product_placement === 'after' && (
-                        <div className="mt-20 pt-10 border-t-4 border-black space-y-8">
-                            <div className="flex items-center space-x-3">
-                                <div className="h-4 w-4 bg-primary rotate-45" />
-                                <h2 className="text-2xl font-black uppercase tracking-tighter italic">Rekomendasi Produk Terkait</h2>
+                        <div className="mt-20 pt-16 border-t border-gray-100 space-y-10">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-gray-900">Mungkin Anda Suka</h2>
+                                </div>
+                                <div className="h-[2px] flex-1 bg-gray-50 ml-6 hidden md:block" />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                                 {products.map((product: any, i: number) => (
                                     <ProductCard
                                         key={i}
