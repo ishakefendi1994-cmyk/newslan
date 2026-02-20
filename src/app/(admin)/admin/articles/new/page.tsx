@@ -28,6 +28,7 @@ export default function NewArticlePage() {
     const [isPublished, setIsPublished] = useState(false)
     const [productPlacement, setProductPlacement] = useState<'middle' | 'after'>('after')
     const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
+    const [focusKeyword, setFocusKeyword] = useState('')
 
     const [categories, setCategories] = useState<any[]>([])
     const [allProducts, setAllProducts] = useState<any[]>([])
@@ -98,6 +99,7 @@ export default function NewArticlePage() {
                 is_premium: isPremium,
                 is_published: isPublished,
                 product_placement: productPlacement,
+                focus_keyword: focusKeyword,
                 author_id: user?.id
             }).select().single()
 
@@ -194,6 +196,45 @@ export default function NewArticlePage() {
 
                 {/* Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
+                    {/* SEO & Configuration */}
+                    <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-slate-100 shadow-sm space-y-8">
+                        <div className="flex items-center space-x-3 mb-2">
+                            <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                <SettingsIcon className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight italic uppercase italic tracking-tighter italic">SEO & Konfigurasi</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2 group">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 group-focus-within:text-primary transition-colors">Keyword Utama (SEO)</label>
+                                <input
+                                    type="text"
+                                    value={focusKeyword}
+                                    onChange={(e) => setFocusKeyword(e.target.value)}
+                                    placeholder="Contoh: Harga iPhone 15 Pro"
+                                    className="w-full text-base font-bold border-none underline-offset-8 decoration-slate-200 focus:ring-0 p-0 text-slate-700 bg-transparent placeholder:text-slate-200"
+                                />
+                            </div>
+                            <div className="space-y-4">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Status Artikel</label>
+                                <div className="flex items-center space-x-6">
+                                    <button
+                                        onClick={() => setIsPublished(false)}
+                                        className={`py-3 rounded-2xl text-xs font-bold border transition-all ${!isPublished ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-100'}`}
+                                    >
+                                        Konsep
+                                    </button>
+                                    <button
+                                        onClick={() => setIsPublished(true)}
+                                        className={`py-3 rounded-2xl text-xs font-bold border transition-all ${isPublished ? 'bg-[#990000] text-white border-[#990000]' : 'bg-white text-gray-600 border-gray-100'}`}
+                                    >
+                                        Publik
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6 sticky top-24">
                         <h3 className="font-bold flex items-center space-x-2">
                             <SettingsIcon className="w-4 h-4 text-primary" />

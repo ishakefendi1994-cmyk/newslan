@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return {
         title: `${title} - ${settings.site_name}`,
         description,
+        keywords: article.focus_keyword || undefined,
         metadataBase: new URL(siteUrl || 'http://localhost:3000'),
         alternates: {
             canonical: `/news/${slug}`,
