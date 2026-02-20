@@ -5,9 +5,9 @@ export const revalidate = 1800 // 30 minutes cache
 
 export async function GET(
     request: Request,
-    { params }: { params: { page: string } }
+    { params }: { params: Promise<{ page: string }> }
 ) {
-    const pageStr = params.page
+    const { page: pageStr } = await params
     const page = parseInt(pageStr)
 
     if (isNaN(page) || page < 1) {
