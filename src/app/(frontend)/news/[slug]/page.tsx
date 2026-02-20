@@ -140,30 +140,74 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         const middleAd = pageAds?.find(a => a.placement === 'article_middle')
         const afterAd = pageAds?.find(a => a.placement === 'article_after')
 
-        // Function to inject middle ad
-        const renderContentWithAds = (content: string) => {
-            // Updated Prose Classes for a cleaner, premium look
+        // Function to inject middle ad and products
+        const renderContentWithInjections = (content: string) => {
             const proseClasses = `prose prose-lg md:prose-xl max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-headings:text-gray-900 prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b-4 prose-h2:border-primary/10 prose-h2:pb-2 prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-4 prose-strong:text-black prose-strong:font-bold prose-img:rounded-2xl prose-img:shadow-xl`
 
-            if (!middleAd) return <div className={proseClasses} dangerouslySetInnerHTML={{ __html: content }} />
-
             const paragraphs = content.split('</p>')
+
+            // If content is too short, just render it
             if (paragraphs.length < 3) return <div className={proseClasses} dangerouslySetInnerHTML={{ __html: content }} />
 
             const middleIndex = Math.floor(paragraphs.length / 2)
-            const firstHalf = paragraphs.slice(0, middleIndex).join('</p>') + '</p>'
-            const secondHalf = paragraphs.slice(middleIndex).join('</p>')
+            const quarterIndex = Math.floor(paragraphs.length / 4)
+            const threeQuarterIndex = Math.floor(paragraphs.length * 3 / 4)
 
-            return (
-                <div className="article-content">
-                    <div className={proseClasses} dangerouslySetInnerHTML={{ __html: firstHalf }} />
-                    <div className="my-14 not-prose clear-both">
-                        <AdRenderer ad={middleAd} />
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] text-center block mt-3">- Advertisement -</span>
-                    </div>
-                    <div className={proseClasses} dangerouslySetInnerHTML={{ __html: secondHalf }} />
-                </div>
-            )
+            // Injection Points
+            const adPoint = middleIndex
+            const productPoint = (article.product_placement === 'middle' && products.length > 0) ? (middleAd ? threeQuarterIndex : middleIndex) : -1
+
+            const elements = []
+            let currentContent = []
+
+            for (let i = 0; i < paragraphs.length; i++) {
+                currentContent.push(paragraphs[i] + '</p>')
+
+                // Inject Ad
+                if (i === adPoint && middleAd) {
+                    elements.push(<div key={`text-${i}`} className={proseClasses} dangerouslySetInnerHTML={{ __html: currentContent.join('') }} />)
+                    currentContent = []
+                    elements.push(
+                        <div key="middle-ad" className="my-14 not-prose clear-both">
+                            <AdRenderer ad={middleAd} />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em] text-center block mt-3">- Advertisement -</span>
+                        </div>
+                    )
+                }
+
+                // Inject Products
+                if (i === productPoint) {
+                    elements.push(<div key={`text-prod-${i}`} className={proseClasses} dangerouslySetInnerHTML={{ __html: currentContent.join('') }} />)
+                    currentContent = []
+                    elements.push(
+                        <div key="middle-products" className="my-16 not-prose border-y-4 border-black py-10 space-y-8 bg-gray-50/50 px-6 -mx-6 md:mx-0 md:px-0 md:bg-transparent md:border-x-0">
+                            <div className="flex items-center space-x-3">
+                                <div className="h-4 w-4 bg-primary rotate-45" />
+                                <h2 className="text-xl font-black uppercase tracking-tighter italic">Rekomendasi Produk Terkait</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {products.map((product: any, idx: number) => (
+                                    <ProductCard
+                                        key={idx}
+                                        name={product.name}
+                                        description={product.description}
+                                        image={product.image_url}
+                                        priceRange={product.price_range}
+                                        links={product.links}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )
+                }
+            }
+
+            // Push remaining content
+            if (currentContent.length > 0) {
+                elements.push(<div key="text-final" className={proseClasses} dangerouslySetInnerHTML={{ __html: currentContent.join('') }} />)
+            }
+
+            return <div className="article-content">{elements}</div>
         }
 
 
@@ -301,7 +345,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                         </div>
                                     </>
                                 ) : (
-                                    renderContentWithAds(article.content)
+                                    renderContentWithInjections(article.content)
                                 )}
 
                                 {afterAd && (
@@ -333,8 +377,8 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
                     </div>
 
-                    {/* Products Section - Full Width */}
-                    {products.length > 0 && (
+                    {/* Products Section - Full Width (Only shown if placement is 'after') */}
+                    {products.length > 0 && article.product_placement === 'after' && (
                         <div className="mt-20 pt-10 border-t-4 border-black space-y-8">
                             <div className="flex items-center space-x-3">
                                 <div className="h-4 w-4 bg-primary rotate-45" />

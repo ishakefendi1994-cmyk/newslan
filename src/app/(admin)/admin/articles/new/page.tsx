@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, ChevronLeft, Image as ImageIcon, Plus, Settings as SettingsIcon, Loader2, Check, AlertCircle } from 'lucide-react'
+import { Save, ChevronLeft, Image as ImageIcon, Plus, Settings as SettingsIcon, Loader2, Check, AlertCircle, ShoppingBag, Search, X, Layout } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -26,19 +26,29 @@ export default function NewArticlePage() {
     const [featuredImage, setFeaturedImage] = useState('')
     const [isPremium, setIsPremium] = useState(false)
     const [isPublished, setIsPublished] = useState(false)
+    const [productPlacement, setProductPlacement] = useState<'middle' | 'after'>('after')
+    const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
 
     const [categories, setCategories] = useState<any[]>([])
+    const [allProducts, setAllProducts] = useState<any[]>([])
+    const [productSearchTerm, setProductSearchTerm] = useState('')
     const [loading, setLoading] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
     useEffect(() => {
         fetchCategories()
+        fetchProducts()
     }, [])
 
     async function fetchCategories() {
         const { data } = await supabase.from('categories').select('*').order('name')
         if (data) setCategories(data)
+    }
+
+    async function fetchProducts() {
+        const { data } = await supabase.from('products').select('id, name').order('name')
+        if (data) setAllProducts(data)
     }
 
     // Auto-generate slug from title
@@ -78,7 +88,7 @@ export default function NewArticlePage() {
 
             const { data: { user } } = await supabase.auth.getUser()
 
-            const { error } = await supabase.from('articles').insert({
+            const { data, error } = await supabase.from('articles').insert({
                 title,
                 slug,
                 excerpt,
@@ -87,10 +97,23 @@ export default function NewArticlePage() {
                 featured_image: featuredImage,
                 is_premium: isPremium,
                 is_published: isPublished,
+                product_placement: productPlacement,
                 author_id: user?.id
-            })
+            }).select().single()
 
             if (error) throw error
+            const newArticleId = data.id
+
+            // Insert article_products
+            if (selectedProductIds.length > 0 && newArticleId) {
+                const { error: productError } = await supabase.from('article_products').insert(
+                    selectedProductIds.map(productId => ({
+                        article_id: newArticleId,
+                        product_id: productId
+                    }))
+                )
+                if (productError) throw productError
+            }
 
             setStatus({ type: 'success', message: 'Artikel berhasil dipublikasikan!' })
             setTimeout(() => router.push('/admin/articles'), 2000)
@@ -249,6 +272,74 @@ export default function NewArticlePage() {
                                         <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
                                     </label>
                                 )}
+                            </div>
+
+                            {/* Related Products Selector */}
+                            <div className="space-y-4 pt-4 border-t border-gray-100">
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                                    <span>Produk Terkait</span>
+                                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px]">{selectedProductIds.length} terpilih</span>
+                                </label>
+
+                                <div className="space-y-2">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Cari produk..."
+                                            value={productSearchTerm}
+                                            onChange={(e) => setProductSearchTerm(e.target.value)}
+                                            className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-100 text-sm focus:ring-2 focus:ring-primary outline-none"
+                                        />
+                                    </div>
+
+                                    <div className="max-h-[200px] overflow-y-auto border border-gray-100 rounded-2xl p-2 space-y-1 scrollbar-hide">
+                                        {allProducts
+                                            .filter(p => p.name.toLowerCase().includes(productSearchTerm.toLowerCase()))
+                                            .map(product => {
+                                                const isSelected = selectedProductIds.includes(product.id)
+                                                return (
+                                                    <button
+                                                        key={product.id}
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setSelectedProductIds(selectedProductIds.filter(pid => pid !== product.id))
+                                                            } else {
+                                                                setSelectedProductIds([...selectedProductIds, product.id])
+                                                            }
+                                                        }}
+                                                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${isSelected ? 'bg-primary text-white' : 'hover:bg-gray-50 text-gray-600'}`}
+                                                    >
+                                                        <span className="truncate pr-2">{product.name}</span>
+                                                        {isSelected && <Check className="w-3 h-3 flex-shrink-0" />}
+                                                    </button>
+                                                )
+                                            })
+                                        }
+                                        {allProducts.length === 0 && <p className="text-[10px] text-gray-400 text-center py-4">Belum ada produk.</p>}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center space-x-2">
+                                        <Layout className="w-3 h-3" />
+                                        <span>Lokasi Rekomendasi</span>
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => setProductPlacement('middle')}
+                                            className={`py-2 rounded-xl text-[10px] font-bold border transition-all ${productPlacement === 'middle' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200'}`}
+                                        >
+                                            Tengah Artikel
+                                        </button>
+                                        <button
+                                            onClick={() => setProductPlacement('after')}
+                                            className={`py-2 rounded-xl text-[10px] font-bold border transition-all ${productPlacement === 'after' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200'}`}
+                                        >
+                                            Bawah Artikel
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
