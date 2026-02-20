@@ -20,7 +20,7 @@ export default function AdminProductsPage() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('products')
-                .select('*, affiliate_links(*)')
+                .select('*, product_categories(name), affiliate_links(*)')
                 .order('created_at', { ascending: false })
 
             if (error) throw error
@@ -152,7 +152,15 @@ export default function AdminProductsPage() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900 tracking-tight">{p.name}</p>
-                                                <p className="text-xs text-slate-500 font-medium mt-0.5">{p.price_range || 'Hubungi untuk harga'}</p>
+                                                <div className="flex items-center space-x-2 mt-0.5">
+                                                    <p className="text-xs text-slate-500 font-medium">{p.price_range || 'Hubungi untuk harga'}</p>
+                                                    {p.product_categories?.name && (
+                                                        <>
+                                                            <span className="text-slate-300">•</span>
+                                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{p.product_categories.name}</span>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>

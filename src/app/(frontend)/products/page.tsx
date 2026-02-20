@@ -22,7 +22,7 @@ export default function ProductsPage() {
         const fetchProducts = async () => {
             try {
                 const [pRes, cRes] = await Promise.all([
-                    supabase.from('products').select('*, affiliate_links(*)').order('created_at', { ascending: false }),
+                    supabase.from('products').select('*, product_categories(name), affiliate_links(*)').order('created_at', { ascending: false }),
                     supabase.from('product_categories').select('*').order('name', { ascending: true })
                 ])
 
@@ -52,7 +52,7 @@ export default function ProductsPage() {
         let result = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
             const matchesStore = selectedStore === 'Semua' || p.affiliate_links?.some((l: any) => l.store_name === selectedStore)
-            const matchesCategory = selectedCategory === 'Semua' || p.category === selectedCategory
+            const matchesCategory = selectedCategory === 'Semua' || p.product_categories?.name === selectedCategory
             return matchesSearch && matchesStore && matchesCategory
         })
 

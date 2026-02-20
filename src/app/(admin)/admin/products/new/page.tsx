@@ -16,7 +16,7 @@ export default function NewProductPage() {
     const [priceRange, setPriceRange] = useState('')
     const [imageUrl, setImageUrl] = useState('')
     const [links, setLinks] = useState([{ store_name: 'Shopee', url: '' }])
-    const [category, setCategory] = useState('')
+    const [categoryId, setCategoryId] = useState('')
     const [productCategories, setProductCategories] = useState<any[]>([])
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export default function NewProductPage() {
             // 1. Create Product
             const { data: product, error: pError } = await supabase
                 .from('products')
-                .insert({ name, description, image_url: imageUrl, price_range: priceRange, category })
+                .insert({ name, description, image_url: imageUrl, price_range: priceRange, category_id: categoryId })
                 .select()
                 .single()
 
@@ -153,13 +153,13 @@ export default function NewProductPage() {
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Kategori</label>
                             <select
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
+                                value={categoryId}
+                                onChange={(e) => setCategoryId(e.target.value)}
                                 className="w-full text-sm font-bold border-none focus:ring-0 p-0 text-slate-700 bg-transparent cursor-pointer"
                             >
                                 <option value="">Pilih Kategori</option>
                                 {productCategories.map(cat => (
-                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 ))}
                             </select>
                         </div>

@@ -158,6 +158,7 @@ export const getArticleBySlug = unstable_cache(
                 article_products(
                     products(
                         *,
+                        product_categories(name),
                         affiliate_links(*)
                     )
                 )
@@ -197,7 +198,7 @@ export const getProductById = unstable_cache(
         const supabase = createPublicClient()
         const { data } = await supabase
             .from('products')
-            .select('*, affiliate_links(*)')
+            .select('*, product_categories(name), affiliate_links(*)')
             .eq('id', id)
             .single()
         return data
@@ -211,7 +212,7 @@ export const getTrendingProducts = unstable_cache(
         const supabase = createPublicClient()
         const { data } = await supabase
             .from('products')
-            .select('*, affiliate_links(*)')
+            .select('*, product_categories(name), affiliate_links(*)')
             .order('created_at', { ascending: false })
             .limit(limit)
         return data
