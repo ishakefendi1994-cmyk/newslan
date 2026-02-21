@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
             sourceUrl,
             sourceName,
             categoryId,
+            focusKeyword,
             isPublished = false,
             showSourceAttribution = true
         } = await request.json()
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
             excerpt: fullExcerpt,
             featured_image: cloudinaryImageUrl, // Use Cloudinary URL (or null)
             category_id: finalCategoryId,
+            focus_keyword: focusKeyword || null,
             author_id: user?.id || null,
             source_url: sourceUrl || null, // Store original source for duplicate detection
             is_published: isPublished,

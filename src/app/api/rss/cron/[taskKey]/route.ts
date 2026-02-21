@@ -321,6 +321,7 @@ export async function GET(
                                     sourceUrl: sourceItems[0].link,
                                     sourceName: `${job.search_keyword || 'Smart'} Synthesized Report`,
                                     categoryId: job.category_id,
+                                    focusKeyword: job.search_keyword,
                                     isPublished: job.is_published,
                                     showSourceAttribution: job.show_source_attribution
                                 })
@@ -462,6 +463,7 @@ export async function GET(
                                     sourceUrl: trendSources[0].link,
                                     sourceName: 'Hybrid Trend Synthesis (Pytrends + News)',
                                     categoryId: job.category_id,
+                                    focusKeyword: trendKeyword,
                                     isPublished: job.is_published,
                                     showSourceAttribution: job.show_source_attribution
                                 })
@@ -572,6 +574,7 @@ export async function GET(
                             sourceUrl: item.link,
                             sourceName: feed.title || 'RSS Feed',
                             categoryId: job.category_id,
+                            focusKeyword: job.search_keyword,
                             isPublished: job.is_published,
                             showSourceAttribution: job.show_source_attribution
                         })

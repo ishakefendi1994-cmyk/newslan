@@ -70,10 +70,22 @@ def get_trending_keywords(geo='ID', category=0, hl='id-ID'):
 if __name__ == "__main__":
     # Default parameters
     geo = sys.argv[1] if len(sys.argv) > 1 else 'ID'
-    niche = sys.argv[2] if len(sys.argv) > 2 else 'any'
+    niche_str = sys.argv[2] if len(sys.argv) > 2 else 'any'
     
-    # Map niche to category IDs if needed, but for trending_searches pn is usually enough
-    # For now, let's keep it simple as trending_searches is broad
+    # Map niche to category IDs
+    # 0: all, 16: tech, 12: business, 17: sports, 18: entertainment, 15: science, 7: health
+    niche_map = {
+        'any': 0,
+        'technology': 16,
+        'business': 12,
+        'sports': 17,
+        'entertainment': 18,
+        'science': 15,
+        'health': 7,
+        'products': 0 # Products often falls under general trends or multiple categories
+    }
     
-    trends = get_trending_keywords(geo=geo)
+    category = niche_map.get(niche_str.lower(), 0)
+    
+    trends = get_trending_keywords(geo=geo, category=category)
     print(json.dumps(trends))

@@ -314,9 +314,9 @@ export default function RSSJobsPage() {
                                     onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
                                     className="w-full px-4 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-600 font-bold"
                                 >
-                                    <option value="standard">📄 Standard RSS (Satu Sumber)</option>
-                                    <option value="smart_trend">🌟 Smart Trend Tracker (Auto-Trend)</option>
-                                    <option value="keyword_watcher">🔍 Keyword Watcher (Multi-Sumber via Kata Kunci)</option>
+                                    <option value="standard">📄 Standard RSS (Feed URL Tunggal)</option>
+                                    <option value="smart_trend">🤖 Trigger Otomatis (Riset Tren Sesuai Niche)</option>
+                                    <option value="keyword_watcher">🔍 Trigger Manual (Search via Kata Kunci)</option>
                                 </select>
                             </div>
                         </div>
@@ -334,7 +334,7 @@ export default function RSSJobsPage() {
                                     className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-600 font-bold"
                                 />
                                 <p className="text-xs text-purple-600 italic">
-                                    Sistem akan mencari kata kunci ini di 200+ media dan menggabungkan hasilnya menjadi satu berita lengkap.
+                                    Sistem akan mencari kata kunci ini secara spesifik di Google News dan media lokal untuk membuat laporan berita orisinal.
                                 </p>
                             </div>
                         )}
@@ -343,7 +343,7 @@ export default function RSSJobsPage() {
                             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <p className="text-sm text-blue-800 flex items-center gap-2">
                                     <Sparkles className="w-5 h-5 text-blue-600" />
-                                    <strong>Smart Mode Aktif:</strong> Sistem akan otomatis memantau tren di Google News dan mencari referensi dari 200+ sumber media terintegrasi. Anda tidak perlu memasukkan URL.
+                                    <strong>Mode Otomatis Aktif:</strong> Sistem akan melakukan riset kata kunci populer secara otomatis berdasarkan <strong>Niche</strong> dan <strong>Region</strong> yang Anda pilih di bawah. Anda tidak perlu memasukkan kata kunci manual.
                                 </p>
                             </div>
                         )}
