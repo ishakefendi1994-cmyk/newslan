@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Parser from 'rss-parser'
 import { getSiteSettings } from '@/lib/settings'
+import { getTrendingKeywords } from '@/lib/trends/pytrends'
 
 /**
  * RSS Auto-Job Cron Trigger
@@ -335,45 +336,70 @@ export async function GET(
                     console.error(`[RSS Cron] Synthesis failed: ${synErr.message}`)
                 }
             } else if (job.job_type === 'smart_trend') {
-                // Autonomous Trend Synthesis
-                for (const trend of sourceItems) {
-                    try {
-                        if (!trend.title) continue
+                // HYBRID TREND DISCOVERY: Google Trends (Pytrends) + Google News Headlines
+                console.log(`[RSS Cron] 🤖 Initializing Hybrid Trend Discovery for job: ${job.name}`)
 
-                        // Check if trend link already exists
+                // 1. Fetch from Google Trends (Pytrends)
+                const pytrendsKeywords = await getTrendingKeywords(region, niche)
+                console.log(`[RSS Cron] 🔥 Pytrends Keywords:`, pytrendsKeywords)
+
+                // 2. Fetch from Google News Headlines
+                let trendUrl = `https://news.google.com/rss?hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                if (niche !== 'any') {
+                    const topicMap: Record<string, string> = {
+                        technology: 'TECHNOLOGY',
+                        business: 'BUSINESS',
+                        sports: 'SPORTS',
+                        entertainment: 'ENTERTAINMENT',
+                        science: 'SCIENCE',
+                        health: 'HEALTH'
+                    }
+                    const topic = topicMap[niche]
+                    if (topic) {
+                        trendUrl = `https://news.google.com/rss/headlines/section/topic/${topic}?hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
+                    }
+                }
+
+                const googleNewsParser = new Parser()
+                const googleFeed = await googleNewsParser.parseURL(trendUrl)
+                const gNewsKeywords = googleFeed.items.slice(0, 5).map(item =>
+                    item.title?.replace(/\s-\s[^-]+$/, '').substring(0, 60) || ''
+                ).filter(k => k.length > 0)
+
+                console.log(`[RSS Cron] 📰 Google News Headlines:`, gNewsKeywords)
+
+                // 3. Combine and Deduplicate to create "Super Trends"
+                const superTrends = Array.from(new Set([...pytrendsKeywords, ...gNewsKeywords])).slice(0, job.max_articles_per_run || 3)
+                console.log(`[RSS Cron] 🚀 Super Trends for Synthesis:`, superTrends)
+
+                // 4. Process each Super Trend
+                for (const trendKeyword of superTrends) {
+                    try {
+                        console.log(`[RSS Cron] 📈 Processing Super Trend: ${trendKeyword}`)
+
+                        // Final check for duplicate title (Fuzzy)
                         const { data: existingTrend } = await supabase
                             .from('articles')
                             .select('id')
-                            .eq('source_url', trend.link)
+                            .ilike('title', `%${trendKeyword.substring(0, 20)}%`)
                             .limit(1)
 
                         if (existingTrend && existingTrend.length > 0) {
-                            console.log(`[RSS Cron] ⏭️ Skipping processed trend: ${trend.title}`)
+                            console.log(`[RSS Cron] ⏭️ Skipping processed trend keyword: ${trendKeyword}`)
                             continue
                         }
 
-                        console.log(`[RSS Cron] 📈 Processing Autonomous Trend: ${trend.title}`)
-
-                        // Clean title: Strip " - Source Name" suffix (e.g., " - MSN" or " - Kompas.com")
-                        const cleanTitle = trend.title.replace(/\s-\s[^-]+$/, '').substring(0, 100)
-
-                        // 1. Search Google News for this specific trend headline to get diverse sources
-                        // We EXCLUDE the niche filter here because the trend item itself already matches the niche.
-                        // Adding the niche again for diversity search often makes the query too restrictive (0 results).
-                        const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(cleanTitle)}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
-                        const googleNewsParser = new Parser()
+                        // Search for diverse sources for this trend
+                        const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(trendKeyword)}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
                         const searchFeed = await googleNewsParser.parseURL(searchUrl)
-                        let trendSources = searchFeed.items.slice(0, 5) // Get top 5 sources for this specific trend
+                        let trendSources = searchFeed.items.slice(0, 5)
 
-                        // FALLBACK: If diversity search returns 0 results, use the original trend item itself as the sole source
                         if (trendSources.length === 0) {
-                            console.log(`[RSS Cron] ⚠️ No diverse sources found for trend, falling back to original item.`)
-                            trendSources = [trend]
+                            console.log(`[RSS Cron] ⚠️ No sources found for trend: ${trendKeyword}`)
+                            continue
                         }
 
-                        console.log(`[RSS Cron] 🔎 Found ${trendSources.length} potential source(s) for trend: ${cleanTitle}`)
-
-                        // 2. Extract content from these sources
+                        // Extract content from top 3 sources
                         const extractedContents = []
                         for (const item of trendSources) {
                             try {
@@ -391,23 +417,13 @@ export async function GET(
                                         image: exData.data.image,
                                         sourceName: (item.source?.title || 'Google News').toString()
                                     })
-                                } else {
-                                    const fallback = item.contentSnippet || item.description || ''
-                                    if (fallback.length > 50) {
-                                        extractedContents.push({
-                                            title: (item.title || 'Untitled').toString(),
-                                            content: fallback.toString(),
-                                            sourceName: (item.source?.title || 'Google News').toString()
-                                        })
-                                    }
                                 }
                                 if (extractedContents.length >= 3) break
                             } catch (e) { }
                         }
 
                         if (extractedContents.length > 0) {
-                            console.log(`[RSS Cron] 🤖 Synthesizing ${extractedContents.length} sources for trend: ${trend.title}`)
-                            // 3. Synthesize
+                            console.log(`[RSS Cron] 🤖 Synthesizing ${extractedContents.length} sources for super trend: ${trendKeyword}`)
                             const { synthesizeFromMultipleSources } = await import('@/lib/ai/rewriter')
                             const synthesis = await synthesizeFromMultipleSources(
                                 extractedContents,
@@ -416,25 +432,12 @@ export async function GET(
                                 job.article_model || 'Straight News'
                             )
 
-                            // Final duplicate check by title for trend synthesis
-                            const { data: existingTitle } = await supabase
-                                .from('articles')
-                                .select('id')
-                                .ilike('title', `%${synthesis.title.substring(0, 30)}%`)
-                                .limit(1)
-
-                            if (existingTitle && existingTitle.length > 0) {
-                                console.log(`[RSS Cron] ⏭️ Skipping synthesized trend duplicate: ${synthesis.title}`)
-                                continue
-                            }
-
                             // AI Image Generation
                             let finalImageUrl = extractedContents.find(c => c.image)?.image || null
                             const priority = job.thumbnail_priority || 'ai_priority'
 
                             if (hasReplicate && priority !== 'source_only') {
                                 const shouldTryAI = priority === 'ai_priority' || (priority === 'source_priority' && !finalImageUrl)
-
                                 if (shouldTryAI) {
                                     try {
                                         const { generateImagePrompt, generateImage } = await import('@/lib/ai/image-generator')
@@ -442,12 +445,12 @@ export async function GET(
                                         const replicateUrl = await generateImage(imagePrompt)
                                         if (replicateUrl) finalImageUrl = replicateUrl
                                     } catch (imgErr: any) {
-                                        console.error(`[RSS Cron] AI Image failed for trend, using fallback: ${imgErr.message}`)
+                                        console.error(`[RSS Cron] AI Image failed for trend: ${imgErr.message}`)
                                     }
                                 }
                             }
 
-                            // 4. Save
+                            // Save Article
                             const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -456,8 +459,8 @@ export async function GET(
                                     content: synthesis.content,
                                     excerpt: synthesis.excerpt,
                                     image: finalImageUrl,
-                                    sourceUrl: trend.link,
-                                    sourceName: 'Autonomous Google Trends Synthesis',
+                                    sourceUrl: trendSources[0].link,
+                                    sourceName: 'Hybrid Trend Synthesis (Pytrends + News)',
                                     categoryId: job.category_id,
                                     isPublished: job.is_published,
                                     showSourceAttribution: job.show_source_attribution
@@ -466,11 +469,11 @@ export async function GET(
                             const saveData = await saveRes.json()
                             if (saveData.success) {
                                 publishedCount++
-                                results.push({ title: trend.title, status: 'synthesized', articleId: saveData.article.id })
+                                results.push({ title: trendKeyword, status: 'synthesized', articleId: saveData.article.id })
                             }
                         }
                     } catch (err: any) {
-                        console.error(`[RSS Cron] Trend synthesis failed: ${err.message}`)
+                        console.error(`[RSS Cron] Super trend synthesis failed for ${trendKeyword}: ${err.message}`)
                     }
                 }
             }
