@@ -136,10 +136,18 @@ export async function GET(
                 const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchKeyword)}${niche !== 'any' && niche !== 'products' ? '+' + encodeURIComponent(niche) : ''}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
 
                 console.log(`[RSS Cron] 🔍 Searching Google News (${region}) for: ${searchKeyword} ${niche !== 'any' ? '(' + niche + ')' : ''}`)
+                console.log(`[RSS Cron] Search URL: ${searchUrl}`)
 
                 try {
                     const googleNewsParser = new Parser()
-                    const searchFeed = await googleNewsParser.parseURL(searchUrl)
+                    let searchFeed = await googleNewsParser.parseURL(searchUrl)
+
+                    // FALLBACK: If 24h search is empty, try without time filter
+                    if (searchFeed.items.length === 0) {
+                        const broaderUrl = searchUrl.replace('&tbs=qdr:d', '')
+                        console.log(`[RSS Cron] ⚠️ No results in 24h. Trying broader search: ${broaderUrl}`)
+                        searchFeed = await googleNewsParser.parseURL(broaderUrl)
+                    }
 
                     // Sort by newest first before taking top results
                     const sortedItems = [...searchFeed.items].sort((a, b) =>
@@ -179,7 +187,9 @@ export async function GET(
                     }
                 }
 
+                // Keyword Watcher typically synthesizes ONE comprehensive article from multiple sources
                 articlesToProcess = sourceItems.slice(0, 1)
+                console.log(`[RSS Cron] Keyword Watcher: processing 1 synthesis article from ${sourceItems.length} sources`)
             } else {
                 // Get Top Trends from Google News (Dynamic Region & Niche)
                 // Freshness Filter: &tbs=qdr:d (past 24h)
@@ -371,7 +381,7 @@ export async function GET(
 
                 // 3. Combine and Deduplicate to create "Super Trends"
                 const superTrends = Array.from(new Set([...pytrendsKeywords, ...gNewsKeywords])).slice(0, job.max_articles_per_run || 3)
-                console.log(`[RSS Cron] 🚀 Super Trends for Synthesis:`, superTrends)
+                console.log(`[RSS Cron] 🚀 Super Trends for Synthesis (${superTrends.length}):`, superTrends)
 
                 // 4. Process each Super Trend
                 for (const trendKeyword of superTrends) {
@@ -392,8 +402,16 @@ export async function GET(
 
                         // Search for diverse sources for this trend
                         const searchUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(trendKeyword)}&hl=${googleConfig.hl}&gl=${googleConfig.gl}&ceid=${googleConfig.ceid}&tbs=qdr:d`
-                        const searchFeed = await googleNewsParser.parseURL(searchUrl)
+                        let searchFeed = await googleNewsParser.parseURL(searchUrl)
                         let trendSources = searchFeed.items.slice(0, 5)
+
+                        // FALLBACK: If trend search is empty, try without time filter
+                        if (trendSources.length === 0) {
+                            const broaderUrl = searchUrl.replace('&tbs=qdr:d', '')
+                            console.log(`[RSS Cron] ⚠️ No sources in 24h for trend. Trying broader search: ${broaderUrl}`)
+                            searchFeed = await googleNewsParser.parseURL(broaderUrl)
+                            trendSources = searchFeed.items.slice(0, 5)
+                        }
 
                         if (trendSources.length === 0) {
                             console.log(`[RSS Cron] ⚠️ No sources found for trend: ${trendKeyword}`)
@@ -418,6 +436,16 @@ export async function GET(
                                         image: exData.data.image,
                                         sourceName: (item.source?.title || 'Google News').toString()
                                     })
+                                } else {
+                                    console.log(`[RSS Cron] ⚠️ Extraction poor or failed for ${item.link}. Using snippet fallback.`)
+                                    const snippet = item.contentSnippet || item.content || item.description || ''
+                                    if (snippet.length > 50) {
+                                        extractedContents.push({
+                                            title: (item.title || 'Untitled').toString(),
+                                            content: snippet.toString(),
+                                            sourceName: (item.source?.title || 'Google News').toString()
+                                        })
+                                    }
                                 }
                                 if (extractedContents.length >= 3) break
                             } catch (e) { }
@@ -563,6 +591,7 @@ export async function GET(
                     }
 
                     // Save article
+                    console.log(`[RSS Cron] Standard: Saving article: ${rewriteData.data.title}`)
                     const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

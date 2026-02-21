@@ -49,13 +49,20 @@ def get_trending_keywords(geo='ID', category=0, hl='id-ID'):
             
             with urllib.request.urlopen(rss_url, timeout=10) as response:
                 html = response.read().decode('utf-8')
-                # Extract titles using regex (simple but effective for RSS titles)
+                # Extract titles using regex
                 titles = re.findall(r'<title>(.*?)</title>', html)
-                # Filter out the main "Google News" title and strip source
+                
+                # Blacklist of generic titles
+                blacklist = ['Google News', 'Google Berita', 'Berita Google']
+                
                 keywords = []
-                for t in titles[1:]:
+                for t in titles:
+                    # Clean title: strip source suffix
                     clean = re.sub(r' - .*?$', '', t)
-                    if clean and len(clean) > 10:
+                    # Skip generic ones
+                    if any(b.lower() in clean.lower() for b in blacklist):
+                        continue
+                    if clean and len(clean) > 15:
                         keywords.append(clean)
                     if len(keywords) >= 5: break
                 return keywords
