@@ -322,7 +322,10 @@ export async function GET(
 
                             const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+                                },
                                 body: JSON.stringify({
                                     title: synthesis.title,
                                     content: synthesis.content,
@@ -482,7 +485,10 @@ export async function GET(
                             // Save Article
                             const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+                                },
                                 body: JSON.stringify({
                                     title: synthesis.title,
                                     content: synthesis.content,
@@ -594,7 +600,10 @@ export async function GET(
                     console.log(`[RSS Cron] Standard: Saving article: ${rewriteData.data.title}`)
                     const saveRes = await fetch(`${request.nextUrl.origin}/api/rss/save`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+                        },
                         body: JSON.stringify({
                             title: rewriteData.data.title,
                             content: rewriteData.data.content,

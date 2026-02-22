@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { uploadRSSImageToCloudinary } from '@/lib/cloudinary/upload-rss-image'
 import { forceHtmlFormatting } from '@/lib/utils/format-html'
 
@@ -9,7 +9,11 @@ import { forceHtmlFormatting } from '@/lib/utils/format-html'
  */
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient()
+        // Check for internal authentication to bypass RLS
+        const authHeader = request.headers.get('Authorization')
+        const isInternalLocal = authHeader === `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+
+        const supabase = isInternalLocal ? createAdminClient() : await createClient()
 
         const {
             title,
