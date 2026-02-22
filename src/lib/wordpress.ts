@@ -19,12 +19,16 @@ export interface WPPost {
     };
 }
 
-export async function fetchWPPosts(url: string, page: number = 1, perPage: number = 10, after?: string): Promise<WPPost[]> {
+export async function fetchWPPosts(url: string, page: number = 1, perPage: number = 10, after?: string, before?: string): Promise<WPPost[]> {
     const cleanUrl = url.replace(/\/$/, '');
     let apiUrl = `${cleanUrl}/wp-json/wp/v2/posts?_embed&page=${page}&per_page=${perPage}`;
 
     if (after) {
         apiUrl += `&after=${after}`;
+    }
+
+    if (before) {
+        apiUrl += `&before=${before}`;
     }
 
     const response = await fetch(apiUrl);
