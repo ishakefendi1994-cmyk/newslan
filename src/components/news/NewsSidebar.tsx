@@ -73,7 +73,7 @@ export default function NewsSidebar({ latestArticles, sidebarAds = [], trendingN
                                 <h3 className="text-sm font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2">
                                     {article.title}
                                 </h3>
-                                <div className="flex items-center text-[10px] text-gray-400">
+                                <div className="flex items-center text-[10px] text-gray-400" suppressHydrationWarning>
                                     <Clock className="w-3 h-3 mr-1" />
                                     {new Date(article.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                 </div>

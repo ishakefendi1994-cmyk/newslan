@@ -112,7 +112,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-3">
                     <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center space-x-2 text-slate-500 text-xs font-semibold">
                         <Calendar className="w-4 h-4" />
-                        <span>{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+                        <span suppressHydrationWarning>{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
                     </div>
                     <button
                         onClick={fetchDashboardData}
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
                                                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
                                                     {article.categories?.name}
                                                 </span>
-                                                <span className="text-[10px] text-slate-400 font-medium">
+                                                <span className="text-[10px] text-slate-400 font-medium" suppressHydrationWarning>
                                                     {new Date(article.created_at).toLocaleDateString()}
                                                 </span>
                                             </div>

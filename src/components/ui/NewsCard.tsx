@@ -17,7 +17,7 @@ interface NewsCardProps {
     isDark?: boolean
     variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief' | 'grid-standard' | 'horizontal-medium' | 'recent-list' | 'spotlight' | 'feature-block' | 'overlay-grid' | 'tempo-hero' | 'tempo-sub' | 'tempo-sidebar' | 'tempo-horizontal'
     author?: string
-    date?: string
+    date?: React.ReactNode
 }
 
 const DEFAULT_NEWS_IMAGE = 'https://images.unsplash.com/photo-1585829365234-78d2b94a6d50?q=80&w=800&auto=format&fit=crop'
@@ -72,7 +72,7 @@ export function NewsCard({
                     <div className="flex items-center text-gray-300 text-sm font-bold">
                         <span>{author}</span>
                         <span className="mx-2">•</span>
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
                 {isPremium && (
@@ -100,7 +100,7 @@ export function NewsCard({
                     <div className="flex items-center text-gray-400 text-xs font-bold mt-1">
                         <span>{author}</span>
                         <span className="mx-2">•</span>
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
                 <div className="relative w-32 h-24 md:w-48 md:h-32 shrink-0 overflow-hidden bg-gray-100">
@@ -135,7 +135,7 @@ export function NewsCard({
                         <div className="text-gray-400 text-[10px] font-bold mt-1">
                             <span>{author}</span>
                             <span className="mx-1">•</span>
-                            <span>{date}</span>
+                            <span suppressHydrationWarning>{date}</span>
                         </div>
                     </div>
                 </div>
@@ -221,7 +221,7 @@ export function NewsCard({
                     </Link>
                     <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                         <Calendar className="w-3 h-3 mr-1.5" />
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
             </div>
@@ -253,7 +253,7 @@ export function NewsCard({
                     </Link>
                     <div className="flex items-center text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-t border-gray-100 pt-3">
                         <Calendar className="w-3.5 h-3.5 mr-2 text-primary/50" />
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
             </div>
@@ -280,7 +280,7 @@ export function NewsCard({
                     </Link>
                     <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                         <Calendar className="w-3 h-3 mr-1.5" />
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
             </div>
@@ -338,7 +338,7 @@ export function NewsCard({
                     </div>
                     <div className="flex items-center text-[10px] font-bold text-white/60 uppercase tracking-widest mt-6">
                         <Calendar className="w-3 h-3 mr-1.5" />
-                        <span>{date}</span>
+                        <span suppressHydrationWarning>{date}</span>
                     </div>
                 </div>
             </div>

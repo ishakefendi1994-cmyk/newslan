@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import NextImage from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
     LayoutDashboard,
@@ -31,8 +31,19 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const supabase = createClient()
     const pathname = usePathname()
+    const router = useRouter()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [siteName, setSiteName] = useState('CMS')
+
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+            console.error('Logout error:', error.message)
+            return
+        }
+        router.push('/')
+        router.refresh()
+    }
 
     useEffect(() => {
         const fetchSiteSettings = async () => {
@@ -119,7 +130,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     {/* Sidebar Footer */}
                     <div className="p-6 mt-auto border-t border-slate-800">
-                        <button className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-400/5 transition-all">
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-400/5 transition-all"
+                        >
                             <LogOut className="w-5 h-5" />
                             <span>Logout Dashboard</span>
                         </button>

@@ -292,7 +292,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                                     <span className="uppercase">{article.profiles?.full_name || `Redaksi ${siteSettings.site_name || 'Portal Berita'}`}</span>
                                 </div>
                                 <span className="hidden md:inline mx-3">•</span>
-                                <span>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                <span suppressHydrationWarning>{new Date(article.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                 <span className="hidden md:inline mx-3">•</span>
                                 <span className="flex items-center">
                                     <Eye className="w-4 h-4 mr-1" />
