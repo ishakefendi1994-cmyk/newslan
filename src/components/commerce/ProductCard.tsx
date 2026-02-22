@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { ShoppingCart, ExternalLink, Tag } from 'lucide-react'
-import { formatRupiah } from '@/lib/utils'
+import { formatRupiah, optimizeCloudinaryUrl } from '@/lib/utils'
 
 interface AffiliateLink {
     store: string
@@ -34,7 +34,7 @@ export function ProductCard({ name, description, image, priceRange, links }: Pro
             {/* Image Section */}
             <div className="relative w-full sm:w-32 md:w-40 aspect-square rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500">
                 <Image
-                    src={image}
+                    src={optimizeCloudinaryUrl(image)}
                     alt={name}
                     fill
                     className="object-cover"

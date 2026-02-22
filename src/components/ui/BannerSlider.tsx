@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { optimizeCloudinaryUrl } from '@/lib/utils'
 
 export default function BannerSlider({ banners }: any) {
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -42,7 +43,7 @@ export default function BannerSlider({ banners }: any) {
                             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                         >
                             <Image
-                                src={banner.image_url}
+                                src={optimizeCloudinaryUrl(banner.image_url)}
                                 alt={`Banner ${index + 1}`}
                                 fill
                                 className="object-cover"
