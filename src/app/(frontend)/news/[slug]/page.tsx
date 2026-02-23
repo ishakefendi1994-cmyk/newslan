@@ -18,6 +18,7 @@ import { getSiteSettings } from '@/lib/settings'
 import TrendingProductsContainer from '@/components/commerce/TrendingProductsContainer'
 import DetailDetik from '@/components/templates/details/DetailDetik'
 import DetailTempo from '@/components/templates/details/DetailTempo'
+import DetailCNN from '@/components/templates/details/DetailCNN'
 
 // Generate Metadata for SEO and Social Sharing
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -175,6 +176,8 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         }
 
         switch (activeTemplate) {
+            case 'cnn':
+                return <DetailCNN {...props} />
             case 'detik':
                 return <DetailDetik {...props} />
             case 'tempo':

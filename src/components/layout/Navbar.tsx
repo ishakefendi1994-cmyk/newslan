@@ -35,7 +35,35 @@ export default function Navbar({
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
     const [searchQuery, setSearchQuery] = useState('')
     const [isScrolled, setIsScrolled] = useState(false)
+    const [hoveredCat, setHoveredCat] = useState<any | null>(null)
+    const [megaMenuArticles, setMegaMenuArticles] = useState<any[]>([])
+    const [megaMenuLoading, setMegaMenuLoading] = useState(false)
+    const timeoutRef = useState<ReturnType<typeof setTimeout> | null>(null)
     const router = useRouter()
+
+    const handleCatEnter = (cat: any) => {
+        if (timeoutRef[0]) clearTimeout(timeoutRef[0])
+        setHoveredCat(cat)
+    }
+
+    const handleCatLeave = () => {
+        const t = setTimeout(() => setHoveredCat(null), 180)
+        timeoutRef[1](t)
+    }
+
+    // Fetch articles when category is hovered
+    useEffect(() => {
+        if (!hoveredCat || activeTemplate !== 'cnn') return
+        setMegaMenuLoading(true)
+        setMegaMenuArticles([])
+        fetch(`/api/articles/by-category?slug=${hoveredCat.slug}&limit=4`)
+            .then(r => r.json())
+            .then(data => {
+                setMegaMenuArticles(Array.isArray(data) ? data : [])
+                setMegaMenuLoading(false)
+            })
+            .catch(() => setMegaMenuLoading(false))
+    }, [hoveredCat, activeTemplate])
 
     useEffect(() => {
         if (navLinks) {
@@ -74,17 +102,20 @@ export default function Navbar({
     return (
         <>
             <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''} ${activeTemplate === 'cnn' ? 'bg-[#000000] text-white border-b border-white/10' : 'bg-white text-black border-b border-gray-100'}`}>
-                {/* Top Bar: Logo & Actions */}
-                <div className={`w-full transition-all duration-300 ${isScrolled ? 'border-b-0' : 'border-b border-gray-100/10'}`}>
+                {/* Top Bar: Logo & Actions — hidden on scroll for CNN */}
+                <div className={`w-full transition-all duration-300 overflow-hidden ${activeTemplate === 'cnn' && isScrolled
+                    ? 'max-h-0 opacity-0 pointer-events-none'
+                    : 'max-h-40 opacity-100'
+                    } ${isScrolled ? 'border-b-0' : 'border-b border-gray-100/10'}`}>
                     <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className={`flex justify-between items-center transition-all duration-300 ${isScrolled ? 'h-14' : 'h-20'}`}>
+                        <div className={`flex justify-between items-center transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16'}`}>
 
                             {/* Logo */}
                             <div className="flex-1 flex justify-start">
                                 <Link href="/" className="flex items-center shrink-0">
                                     {activeTemplate === 'cnn' ? (
-                                        <div className="bg-[#cc0000] p-3 text-white font-black text-2xl leading-none flex items-center justify-center">
-                                            CNN
+                                        <div className="bg-[#cc0000] px-3 py-1.5 text-white font-bold italic text-lg leading-none flex items-center justify-center tracking-wide">
+                                            {siteName?.split('.')[0] || siteName}
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-start">
@@ -131,11 +162,11 @@ export default function Navbar({
                                     </div>
                                 )}
 
-                                {/* CNN TV Button (CNN Only) */}
+                                {/* Live TV Button (CNN Only) */}
                                 {activeTemplate === 'cnn' && (
                                     <button className="hidden md:flex items-center gap-2 bg-white/5 border border-white/20 px-4 py-2 hover:bg-white/10 transition-colors">
                                         <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                                        <span className="text-[11px] font-black uppercase tracking-widest text-white">CNN TV</span>
+                                        <span className="text-[11px] font-black uppercase tracking-widest text-white">{siteName?.split('.')[0] || siteName} TV</span>
                                     </button>
                                 )}
 
@@ -169,26 +200,138 @@ export default function Navbar({
 
                 {/* Navigation Bar (Categories) */}
                 {!hideCategories && (
-                    <div className={`hidden lg:block w-full border-b ${activeTemplate === 'cnn' ? 'bg-[#000000] border-white/10' : activeTemplate === 'detik' ? 'bg-[#005596] border-[#00447a]' : 'bg-white border-black'}`}>
+                    <div
+                        className={`hidden lg:block w-full border-b relative z-40 ${activeTemplate === 'cnn'
+                            ? 'bg-[#000000] border-white/10'
+                            : activeTemplate === 'detik'
+                                ? 'bg-[#005596] border-[#00447a]'
+                                : 'bg-white border-black'
+                            }`}
+                        onMouseLeave={activeTemplate === 'cnn' ? handleCatLeave : undefined}
+                    >
                         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
-                                <Link href="/" className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'cnn' ? 'text-white hover:text-red-600' : activeTemplate === 'detik' ? 'text-[#ffbe00] hover:text-white' : 'text-primary hover:text-black'}`}>
+                            <div className="flex items-center h-10 space-x-5 overflow-x-auto no-scrollbar">
+
+                                {/* Mini logo — hanya muncul saat scroll (CNN only) */}
+                                {activeTemplate === 'cnn' && isScrolled && (
+                                    <Link href="/" className="shrink-0 mr-4">
+                                        <div className="bg-[#cc0000] px-2.5 py-1 text-white font-bold italic text-sm leading-none">
+                                            {siteName?.split('.')[0] || siteName}
+                                        </div>
+                                    </Link>
+                                )}
+
+                                <Link
+                                    href="/"
+                                    className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'cnn' ? 'text-white hover:text-red-500' : activeTemplate === 'detik' ? 'text-[#ffbe00] hover:text-white' : 'text-primary hover:text-black'}`}
+                                >
                                     Home
                                 </Link>
                                 {categories.slice(0, 10).map((cat) => (
-                                    <Link
-                                        key={cat.id}
-                                        href={`/category/${cat.slug}`}
-                                        className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'cnn' ? 'text-white/80 hover:text-white' : activeTemplate === 'detik' ? 'text-white hover:text-[#ffbe00]' : 'text-black/70 hover:text-black'}`}
-                                    >
-                                        {cat.name}
-                                    </Link>
+                                    activeTemplate === 'cnn' ? (
+                                        <button
+                                            key={cat.id}
+                                            onMouseEnter={() => handleCatEnter(cat)}
+                                            onClick={() => router.push(`/category/${cat.slug}`)}
+                                            className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap border-b-2 pb-0.5 ${hoveredCat?.id === cat.id
+                                                ? 'text-white border-red-600'
+                                                : 'text-white/80 border-transparent hover:text-white hover:border-red-600'
+                                                }`}
+                                        >
+                                            {cat.name}
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            key={cat.id}
+                                            href={`/category/${cat.slug}`}
+                                            className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'detik' ? 'text-white hover:text-[#ffbe00]' : 'text-black/70 hover:text-black'}`}
+                                        >
+                                            {cat.name}
+                                        </Link>
+                                    )
                                 ))}
-                                <button className={`ml-auto transition-colors ${activeTemplate === 'cnn' ? 'text-white/50 hover:text-white' : activeTemplate === 'detik' ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-black'}`}>
+                                <button className={`ml-auto shrink-0 transition-colors ${activeTemplate === 'cnn' ? 'text-white/50 hover:text-white' : activeTemplate === 'detik' ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-black'}`}>
                                     <Menu className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
+
+                        {/* ── Mega Menu (CNN only) — Berita per Kategori ── */}
+                        {activeTemplate === 'cnn' && hoveredCat && (
+                            <div
+                                className="absolute left-0 w-full bg-[#111111] border-t border-white/10 shadow-2xl z-50"
+                                style={{ animation: 'megaFadeIn 0.15s ease' }}
+                                onMouseEnter={() => handleCatEnter(hoveredCat)}
+                                onMouseLeave={handleCatLeave}
+                            >
+                                <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1 h-5 bg-red-600" />
+                                            <span className="text-white font-black text-[13px] uppercase tracking-widest">
+                                                {hoveredCat.name}
+                                            </span>
+                                        </div>
+                                        <Link
+                                            href={`/category/${hoveredCat.slug}`}
+                                            className="text-[10px] font-black text-red-500 hover:text-white uppercase tracking-widest transition-colors"
+                                            onClick={() => setHoveredCat(null)}
+                                        >
+                                            Lihat Semua →
+                                        </Link>
+                                    </div>
+
+                                    {/* Artikel */}
+                                    {megaMenuLoading ? (
+                                        <div className="grid grid-cols-4 gap-4">
+                                            {[...Array(4)].map((_, i) => (
+                                                <div key={i} className="space-y-2 animate-pulse">
+                                                    <div className="aspect-[16/10] rounded-sm bg-white/10" />
+                                                    <div className="h-3 bg-white/10 rounded w-3/4" />
+                                                    <div className="h-3 bg-white/10 rounded w-1/2" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : megaMenuArticles.length > 0 ? (
+                                        <div className="grid grid-cols-4 gap-5">
+                                            {megaMenuArticles.map((art: any) => (
+                                                <Link
+                                                    key={art.id}
+                                                    href={`/news/${art.slug}`}
+                                                    className="group block space-y-2"
+                                                    onClick={() => setHoveredCat(null)}
+                                                >
+                                                    <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-white/10">
+                                                        {art.featured_image && (
+                                                            <NextImage
+                                                                src={art.featured_image}
+                                                                alt={art.title}
+                                                                fill
+                                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <h4 className="text-[12px] font-bold text-white/70 group-hover:text-white leading-snug line-clamp-3 transition-colors">
+                                                        {art.title}
+                                                    </h4>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-[12px] text-white/30 italic">Belum ada berita di kategori ini.</p>
+                                    )}
+                                </div>
+
+                                <style>{`
+                                    @keyframes megaFadeIn {
+                                        from { opacity: 0; transform: translateY(-6px); }
+                                        to   { opacity: 1; transform: translateY(0); }
+                                    }
+                                `}</style>
+                            </div>
+                        )}
                     </div>
                 )}
 

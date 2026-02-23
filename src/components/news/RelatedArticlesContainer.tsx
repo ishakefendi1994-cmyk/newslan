@@ -7,11 +7,13 @@ import { optimizeCloudinaryUrl } from '@/lib/utils'
 export default async function RelatedArticlesContainer({
     currentArticleId,
     categoryId,
-    showHeader = true
+    showHeader = true,
+    limit = 6
 }: {
     currentArticleId: string
     categoryId?: string
     showHeader?: boolean
+    limit?: number
 }) {
     if (!categoryId) return null
 
@@ -24,7 +26,7 @@ export default async function RelatedArticlesContainer({
         .eq('category_id', categoryId)
         .neq('id', currentArticleId)
         .order('created_at', { ascending: false })
-        .limit(6)
+        .limit(limit)
 
     if (!relatedArticles || relatedArticles.length === 0) return null
 
