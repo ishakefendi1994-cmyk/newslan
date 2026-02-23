@@ -104,7 +104,7 @@ export default function Navbar({
             <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''} ${activeTemplate === 'cnn' ? 'bg-[#000000] text-white border-b border-white/10' : 'bg-white text-black border-b border-gray-100'}`}>
                 {/* Top Bar: Logo & Actions — hidden on scroll for CNN */}
                 <div className={`w-full transition-all duration-300 overflow-hidden ${activeTemplate === 'cnn' && isScrolled
-                    ? 'max-h-0 opacity-0 pointer-events-none'
+                    ? 'lg:max-h-0 lg:opacity-0 lg:pointer-events-none'
                     : 'max-h-40 opacity-100'
                     } ${isScrolled ? 'border-b-0' : 'border-b border-gray-100/10'}`}>
                     <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -189,7 +189,7 @@ export default function Navbar({
                                 {/* Mobile Menu Toggle */}
                                 <button
                                     onClick={() => setIsOpen(!isOpen)}
-                                    className="lg:hidden p-1 text-black hover:bg-gray-100 focus:outline-none ml-2 rounded"
+                                    className={`lg:hidden p-1 focus:outline-none ml-2 rounded transition-colors ${activeTemplate === 'cnn' ? 'text-white hover:bg-white/10' : 'text-black hover:bg-gray-100'}`}
                                 >
                                     {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                                 </button>
@@ -337,7 +337,7 @@ export default function Navbar({
 
                 {/* Mobile Menu Overlay */}
                 {isOpen && (
-                    <div className="lg:hidden bg-white border-t border-gray-100 animate-in slide-in-from-top duration-200 absolute w-full left-0 top-20 shadow-xl h-screen overflow-y-auto pb-40 z-50">
+                    <div className={`lg:hidden border-t animate-in slide-in-from-top duration-200 absolute w-full left-0 top-[60px] shadow-xl h-screen overflow-y-auto pb-40 z-50 ${activeTemplate === 'cnn' ? 'bg-[#111111] border-white/10 text-white' : 'bg-white border-gray-100 text-black'}`}>
                         <div className="p-4 space-y-6">
                             {/* Mobile Search */}
                             <div className="flex items-center bg-gray-50 rounded px-3 py-2 border border-gray-200 focus-within:border-black focus-within:ring-1 focus-within:ring-black">
@@ -350,12 +350,12 @@ export default function Navbar({
                             </div>
 
                             <div className="space-y-1">
-                                <p className="text-xs font-black text-gray-400 uppercase mb-3 tracking-widest pl-1">Kategori</p>
+                                <p className={`text-xs font-black uppercase mb-3 tracking-widest pl-1 ${activeTemplate === 'cnn' ? 'text-white/40' : 'text-gray-400'}`}>Kategori</p>
                                 {categories.map((cat) => (
                                     <Link
                                         key={cat.id}
                                         href={`/category/${cat.slug}`}
-                                        className="block py-3 text-lg font-bold text-gray-800 hover:text-black border-b border-gray-100 pl-1"
+                                        className={`block py-3 text-lg font-bold border-b pl-1 transition-colors ${activeTemplate === 'cnn' ? 'text-white/80 hover:text-white border-white/5' : 'text-gray-800 hover:text-black border-gray-100'}`}
                                         onClick={() => setIsOpen(false)}
                                     >
                                         {cat.name}
