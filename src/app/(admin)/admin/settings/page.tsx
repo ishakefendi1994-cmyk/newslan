@@ -470,6 +470,30 @@ export default function SettingsPage() {
                                 </div>
                                 {settings.active_template === 'detik' && <Check className="w-4 h-4 text-primary ml-auto" />}
                             </button>
+
+                            <button
+                                onClick={() => setSettings({ ...settings, active_template: 'cnn' })}
+                                className={`p-4 rounded-xl border-2 transition-all text-left space-y-3 ${settings.active_template === 'cnn' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                            >
+                                <div className="aspect-video bg-black rounded-lg overflow-hidden relative border border-slate-700">
+                                    <div className="absolute inset-x-0 top-0 h-1.5 bg-[#cc0000]" />
+                                    <div className="absolute inset-2 top-3 flex flex-col gap-1">
+                                        <div className="flex gap-1 h-2/5">
+                                            <div className="flex-1 bg-white/10 rounded" />
+                                            <div className="flex-[2] bg-white rounded border border-slate-600" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-1 flex-1">
+                                            <div className="bg-white/10 rounded" />
+                                            <div className="bg-white/10 rounded" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">CNN Style</p>
+                                    <p className="text-[10px] text-slate-500">Premium, bold, dan high-impact.</p>
+                                </div>
+                                {settings.active_template === 'cnn' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                            </button>
                         </div>
                     </div>
 

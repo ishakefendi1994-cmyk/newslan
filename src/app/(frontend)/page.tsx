@@ -28,6 +28,7 @@ import TemplateTempo from '@/components/templates/TemplateTempo'
 import TemplateGrid from '@/components/templates/TemplateGrid'
 import TemplateMagazine from '@/components/templates/TemplateMagazine'
 import TemplateDetik from '@/components/templates/TemplateDetik'
+import TemplateCNN from '@/components/templates/TemplateCNN'
 
 export default async function HomePage({
   searchParams,
@@ -112,6 +113,8 @@ export default async function HomePage({
       return <TemplateMagazine {...templateProps} />
     case 'detik':
       return <TemplateDetik {...templateProps} />
+    case 'cnn':
+      return <TemplateCNN {...templateProps} />
     case 'tempo':
     default:
       return <TemplateTempo {...templateProps} />
