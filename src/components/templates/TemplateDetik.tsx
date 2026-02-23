@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { NewsCard } from '@/components/ui/NewsCard'
 import BannerSlider from '@/components/ui/BannerSlider'
 import { Pagination } from '@/components/ui/Pagination'
-import { ChevronRight, PlayCircle, TrendingUp } from 'lucide-react'
+import { ChevronRight, PlayCircle, TrendingUp, X, Play } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { optimizeCloudinaryUrl, formatRupiah } from '@/lib/utils'
@@ -41,9 +42,17 @@ export default function TemplateDetik({
     trendingProducts = [],
     shorts = []
 }: TemplateProps) {
+    const [selectedVideo, setSelectedVideo] = useState<any>(null)
 
     const focusArticles = latestArticles?.slice(0, 3) || []
     const listArticles = latestArticles?.slice(3, 10) || []
+
+    // Extract youtube ID for fallback thumbnail (moved here to be accessible by modal)
+    const getYTID = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/
+        const match = url.match(regExp)
+        return (match && match[2].length === 11) ? match[2] : null
+    }
 
     return (
         <div className="flex flex-col bg-white min-h-screen">
@@ -375,15 +384,14 @@ export default function TemplateDetik({
                         <div className="flex gap-6 overflow-x-auto pb-6 no-scrollbar snap-x snap-mandatory">
                             {shorts.map((video) => {
                                 // Extract youtube ID for fallback thumbnail
-                                const getYTID = (url: string) => {
-                                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/
-                                    const match = url.match(regExp)
-                                    return (match && match[2].length === 11) ? match[2] : null
-                                }
                                 const ytId = getYTID(video.video_url)
 
                                 return (
-                                    <div key={video.id} className="min-w-[280px] md:min-w-[320px] group snap-start">
+                                    <div
+                                        key={video.id}
+                                        className="min-w-[280px] md:min-w-[320px] group snap-start cursor-pointer"
+                                        onClick={() => setSelectedVideo(video)}
+                                    >
                                         <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 border border-gray-800 bg-gray-900 shadow-2xl">
                                             <Image
                                                 src={video.thumbnail_url || `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
@@ -450,6 +458,32 @@ export default function TemplateDetik({
                         />
                     </div>
                 </section>
+            )}
+
+            {/* Video Player Modal */}
+            {selectedVideo && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+                    <div
+                        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                        onClick={() => setSelectedVideo(null)}
+                    />
+
+                    <div className="relative w-full max-w-5xl aspect-video bg-black overflow-hidden shadow-2xl ring-1 ring-white/10">
+                        <button
+                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white text-white hover:text-black rounded-full transition-all z-20"
+                            onClick={() => setSelectedVideo(null)}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <iframe
+                            src={`https://www.youtube.com/embed/${getYTID(selectedVideo.video_url)}?autoplay=1&modestbranding=1&rel=0`}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    </div>
+                </div>
             )}
         </div>
     )
