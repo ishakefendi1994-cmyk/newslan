@@ -143,7 +143,7 @@ export default function DetailDetik({
 
                         {/* Article Header */}
                         <div className="mb-8 text-center md:text-left">
-                            <h1 className="text-3xl md:text-5xl font-black text-[#0047ba] leading-[1.1] tracking-tight mb-6">
+                            <h1 className="text-2xl md:text-4xl font-bold text-[#0047ba] leading-[1.1] tracking-tight mb-6">
                                 {article.title}
                             </h1>
 

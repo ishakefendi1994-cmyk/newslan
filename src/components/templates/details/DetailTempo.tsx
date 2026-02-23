@@ -139,7 +139,7 @@ export default function DetailTempo({
                             <span className="text-xs font-black uppercase tracking-[0.2em]">{article.categories?.name || 'News'}</span>
                         </div>
 
-                        <h1 className="text-3xl md:text-5xl font-black leading-none tracking-tighter mb-8">
+                        <h1 className="text-2xl md:text-4xl font-bold leading-none tracking-tighter mb-8">
                             {article.title}
                         </h1>
 
