@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import ProductAd from './ProductAd'
 
@@ -20,10 +20,15 @@ interface AdRendererProps {
 }
 
 export default function AdRenderer({ ad, className = "", isSidebar = false }: AdRendererProps) {
+    const [isMounted, setIsMounted] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (ad?.type === 'html' && ad.html_content && containerRef.current) {
+        setIsMounted(true)
+    }, [])
+
+    useEffect(() => {
+        if (isMounted && ad?.type === 'html' && ad.html_content && containerRef.current) {
             // Select only scripts within this specific container
             const scripts = containerRef.current.getElementsByTagName('script')
             const scriptsArray = Array.from(scripts)
@@ -111,11 +116,17 @@ export default function AdRenderer({ ad, className = "", isSidebar = false }: Ad
                     )}
                 </a>
             ) : ad.type === 'html' && ad.html_content ? (
-                <div
-                    ref={containerRef}
-                    className="flex justify-center w-full max-w-full overflow-hidden [&>iframe]:max-w-full [&>img]:max-w-full"
-                    dangerouslySetInnerHTML={{ __html: ad.html_content }}
-                />
+                isMounted ? (
+                    <div
+                        ref={containerRef}
+                        className="flex justify-center w-full max-w-full overflow-hidden [&>iframe]:max-w-full [&>img]:max-w-full"
+                        dangerouslySetInnerHTML={{ __html: ad.html_content }}
+                    />
+                ) : (
+                    <div className="flex justify-center items-center min-h-[100px] w-full bg-gray-50 animate-pulse text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                        Loading Ad...
+                    </div>
+                )
             ) : ad.type === 'product_list' && ad.id ? (
                 <ProductAd adId={ad.id} />
             ) : null}
