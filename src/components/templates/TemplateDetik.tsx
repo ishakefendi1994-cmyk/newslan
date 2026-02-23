@@ -372,7 +372,7 @@ export default function TemplateDetik({
                         <div className="flex items-center justify-between mb-8 border-b border-gray-800 pb-2">
                             <div className="flex items-center gap-3">
                                 <div className="bg-[#e00034] p-1.5 rounded-lg">
-                                    <PlayCircle className="w-5 h-5 text-white" />
+                                    <Play className="w-5 h-5 text-white fill-current" />
                                 </div>
                                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">Video Terkini</h2>
                             </div>
@@ -401,8 +401,8 @@ export default function TemplateDetik({
                                             />
                                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="w-16 h-16 bg-[#e00034] rounded-full flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                                                    <PlayCircle className="w-8 h-8 text-white fill-current" />
+                                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                                    <Play className="w-8 h-8 text-[#e00034] fill-current ml-1" />
                                                 </div>
                                             </div>
                                             <div className="absolute bottom-4 left-4 right-4">
