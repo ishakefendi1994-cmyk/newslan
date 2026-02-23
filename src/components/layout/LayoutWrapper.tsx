@@ -22,6 +22,7 @@ interface LayoutWrapperProps {
     site_favicon_url?: string
     site_url?: string
     siteDescription?: string
+    activeTemplate?: string
 }
 
 export default function LayoutWrapper({
@@ -36,7 +37,8 @@ export default function LayoutWrapper({
     contactWhatsapp = '+62 823-7886-5775',
     contactEmail = 'redaksi@newslan.id',
     site_url = '',
-    siteDescription = 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.'
+    siteDescription = 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.',
+    activeTemplate = 'tempo'
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
@@ -55,6 +57,8 @@ export default function LayoutWrapper({
                 logoType={logoType}
                 siteLogoUrl={siteLogoUrl}
                 siteDescription={siteDescription}
+                activeTemplate={activeTemplate}
+                hideCategories={pathname.startsWith('/products')}
             />
             <div className="boxed-container transition-all duration-300">
                 <main className="min-h-screen pb-20 lg:pb-0">

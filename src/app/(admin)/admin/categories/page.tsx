@@ -14,7 +14,8 @@ import {
     EyeOff,
     Palette,
     Plus,
-    X
+    X,
+    Trash2
 } from 'lucide-react'
 
 // Helper function to determine if text should be white or black based on background color
@@ -53,6 +54,10 @@ export default function AdminCategoriesPage() {
         bg_color: '#E11D48',
         show_on_home: true
     })
+
+    // Delete Modal State
+    const [categoryToDelete, setCategoryToDelete] = useState<any | null>(null)
+    const [deleting, setDeleting] = useState(false)
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -161,6 +166,26 @@ export default function AdminCategoriesPage() {
         }
     }
 
+    async function deleteCategory(id: string) {
+        try {
+            setDeleting(true)
+            const { error } = await supabase
+                .from('categories')
+                .delete()
+                .eq('id', id)
+
+            if (error) throw error
+
+            setCategories(prev => prev.filter(cat => cat.id !== id))
+            setStatus({ type: 'success', message: 'Category deleted successfully.' })
+            setCategoryToDelete(null)
+        } catch (error: any) {
+            setStatus({ type: 'error', message: error.message })
+        } finally {
+            setDeleting(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20">
@@ -205,6 +230,7 @@ export default function AdminCategoriesPage() {
                                 <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-50 text-center text-primary">Ad 3</th>
                                 <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-50 text-center">Show on Home</th>
                                 <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-50 text-center">Display Order</th>
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-50 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -312,6 +338,15 @@ export default function AdminCategoriesPage() {
                                                 </button>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-8 py-5 text-right whitespace-nowrap">
+                                        <button
+                                            onClick={() => setCategoryToDelete(category)}
+                                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                            title="Delete Category"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -445,6 +480,49 @@ export default function AdminCategoriesPage() {
                                     <>
                                         <Plus className="w-5 h-5" />
                                         <span>Create Category</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {categoryToDelete && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 animate-in zoom-in-95 duration-200 text-center">
+                        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Trash2 className="w-10 h-10 text-red-500" />
+                        </div>
+                        <h2 className="text-2xl font-black tracking-tight mb-2">Delete Category?</h2>
+                        <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                            Are you sure you want to delete <span className="font-black text-black">"{categoryToDelete.name}"</span>?
+                            This action cannot be undone and might affect articles in this category.
+                        </p>
+
+                        <div className="flex items-center space-x-3">
+                            <button
+                                onClick={() => setCategoryToDelete(null)}
+                                className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-200 font-bold hover:bg-gray-50 transition-all"
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => deleteCategory(categoryToDelete.id)}
+                                disabled={deleting}
+                                className="flex-1 bg-red-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-red-700 transition-all disabled:opacity-50"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Deleting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-5 h-5" />
+                                        <span>Yes, Delete</span>
                                     </>
                                 )}
                             </button>

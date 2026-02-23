@@ -26,7 +26,8 @@ export default function SettingsPage() {
         contact_email: '',
         site_favicon_url: '',
         site_url: '',
-        header_scripts: ''
+        header_scripts: '',
+        active_template: 'tempo'
     })
     const [categories, setCategories] = useState<any[]>([])
 
@@ -63,6 +64,7 @@ export default function SettingsPage() {
                 if (item.setting_key === 'site_favicon_url') s.site_favicon_url = item.setting_value
                 if (item.setting_key === 'site_url') s.site_url = item.setting_value
                 if (item.setting_key === 'header_scripts') s.header_scripts = item.setting_value
+                if (item.setting_key === 'active_template') s.active_template = item.setting_value
             })
             setSettings(s)
         } catch (error) {
@@ -92,7 +94,8 @@ export default function SettingsPage() {
                 { setting_key: 'contact_email', setting_value: settings.contact_email },
                 { setting_key: 'site_favicon_url', setting_value: settings.site_favicon_url },
                 { setting_key: 'site_url', setting_value: settings.site_url },
-                { setting_key: 'header_scripts', setting_value: settings.header_scripts }
+                { setting_key: 'header_scripts', setting_value: settings.header_scripts },
+                { setting_key: 'active_template', setting_value: settings.active_template }
             ]
 
             for (const update of finalUpdates) {
@@ -368,6 +371,105 @@ export default function SettingsPage() {
                                     <p className="text-[10px] text-slate-400 italic">Dibutuhkan untuk membuat gambar artikel otomatis.</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Template Selection */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                        <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-4">
+                            <Layout className="w-5 h-5 text-indigo-500" />
+                            <span>Pilih Template Frontend</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                                onClick={() => setSettings({ ...settings, active_template: 'tempo' })}
+                                className={`p-4 rounded-xl border-2 transition-all text-left space-y-3 ${settings.active_template === 'tempo' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                            >
+                                <div className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative">
+                                    <div className="absolute inset-x-2 top-2 bottom-2 bg-white rounded border border-slate-300 flex flex-col p-1 gap-1">
+                                        <div className="h-1/4 bg-slate-100 rounded w-full" />
+                                        <div className="flex-1 flex gap-1">
+                                            <div className="flex-[2] bg-slate-100 rounded" />
+                                            <div className="flex-1 bg-slate-100 rounded" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">Tempo Style</p>
+                                    <p className="text-[10px] text-slate-500">Layout standar berita dengan sidebar.</p>
+                                </div>
+                                {settings.active_template === 'tempo' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                            </button>
+
+                            <button
+                                onClick={() => setSettings({ ...settings, active_template: 'grid' })}
+                                className={`p-4 rounded-xl border-2 transition-all text-left space-y-3 ${settings.active_template === 'grid' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                            >
+                                <div className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative">
+                                    <div className="absolute inset-2 grid grid-cols-2 grid-rows-2 gap-1">
+                                        <div className="bg-white rounded border border-slate-300" />
+                                        <div className="bg-white rounded border border-slate-300" />
+                                        <div className="bg-white rounded border border-slate-300" />
+                                        <div className="bg-white rounded border border-slate-300" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">Modern Grid</p>
+                                    <p className="text-[10px] text-slate-500">Fokus pada visual gambar besar.</p>
+                                </div>
+                                {settings.active_template === 'grid' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                            </button>
+
+                            <button
+                                onClick={() => setSettings({ ...settings, active_template: 'magazine' })}
+                                className={`p-4 rounded-xl border-2 transition-all text-left space-y-3 ${settings.active_template === 'magazine' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                            >
+                                <div className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative">
+                                    <div className="absolute inset-2 flex flex-col gap-1">
+                                        <div className="h-2/5 bg-white rounded border border-slate-300" />
+                                        <div className="grid grid-cols-3 gap-1 flex-1">
+                                            <div className="bg-white rounded border border-slate-300" />
+                                            <div className="bg-white rounded border border-slate-300" />
+                                            <div className="bg-white rounded border border-slate-300" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">Magazine List</p>
+                                    <p className="text-[10px] text-slate-500">Campuran list dan grid elegan.</p>
+                                </div>
+                                {settings.active_template === 'magazine' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                            </button>
+
+                            <button
+                                onClick={() => setSettings({ ...settings, active_template: 'detik' })}
+                                className={`p-4 rounded-xl border-2 transition-all text-left space-y-3 ${settings.active_template === 'detik' ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-slate-200'}`}
+                            >
+                                <div className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative">
+                                    <div className="absolute inset-x-0 top-0 h-1.5 bg-[#005596]" />
+                                    <div className="absolute inset-2 top-3 flex flex-col gap-1">
+                                        <div className="grid grid-cols-3 gap-1 h-1/4">
+                                            <div className="bg-white rounded border border-slate-300" />
+                                            <div className="bg-white rounded border border-slate-300" />
+                                            <div className="bg-white rounded border border-slate-300" />
+                                        </div>
+                                        <div className="flex gap-1 flex-1">
+                                            <div className="flex-[2] space-y-1">
+                                                <div className="h-1 bg-slate-100 rounded" />
+                                                <div className="h-1 bg-slate-100 rounded" />
+                                                <div className="h-1 bg-slate-100 rounded" />
+                                            </div>
+                                            <div className="flex-1 bg-white rounded border border-slate-300" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">Detik Style</p>
+                                    <p className="text-[10px] text-slate-500">Layout list padat khas Detik.com.</p>
+                                </div>
+                                {settings.active_template === 'detik' && <Check className="w-4 h-4 text-primary ml-auto" />}
+                            </button>
                         </div>
                     </div>
 

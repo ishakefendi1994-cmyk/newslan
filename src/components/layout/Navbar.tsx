@@ -14,6 +14,8 @@ interface NavbarProps {
     logoType?: 'text' | 'image'
     siteLogoUrl?: string
     siteDescription?: string
+    activeTemplate?: string
+    hideCategories?: boolean
 }
 
 import { useRouter } from 'next/navigation'
@@ -25,7 +27,9 @@ export default function Navbar({
     siteName = 'NEWSLAN.ID',
     logoType = 'text',
     siteLogoUrl = '/logo.png',
-    siteDescription = 'Portal Berita Terpercaya'
+    siteDescription = 'Portal Berita Terpercaya',
+    activeTemplate = 'tempo',
+    hideCategories = false
 }: NavbarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [menus, setMenus] = useState<{ [key: string]: any[] }>({})
@@ -160,27 +164,29 @@ export default function Navbar({
                 </div>
 
                 {/* Navigation Bar (Categories) */}
-                <div className="hidden lg:block bg-white w-full border-b border-black">
-                    <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
-                            <Link href="/" className="text-[11px] font-bold uppercase tracking-widest text-primary hover:text-black transition-colors whitespace-nowrap">
-                                Home
-                            </Link>
-                            {categories.slice(0, 8).map((cat) => (
-                                <Link
-                                    key={cat.id}
-                                    href={`/category/${cat.slug}`}
-                                    className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors whitespace-nowrap"
-                                >
-                                    {cat.name}
+                {!hideCategories && (
+                    <div className={`hidden lg:block w-full border-b ${activeTemplate === 'detik' ? 'bg-[#005596] border-[#00447a]' : 'bg-white border-black'}`}>
+                        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center h-10 space-x-6 overflow-x-auto no-scrollbar">
+                                <Link href="/" className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'detik' ? 'text-[#ffbe00] hover:text-white' : 'text-primary hover:text-black'}`}>
+                                    Home
                                 </Link>
-                            ))}
-                            <button className="ml-auto text-gray-400 hover:text-black">
-                                <Menu className="w-4 h-4" />
-                            </button>
+                                {categories.slice(0, 8).map((cat) => (
+                                    <Link
+                                        key={cat.id}
+                                        href={`/category/${cat.slug}`}
+                                        className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTemplate === 'detik' ? 'text-white hover:text-[#ffbe00]' : 'text-black/70 hover:text-black'}`}
+                                    >
+                                        {cat.name}
+                                    </Link>
+                                ))}
+                                <button className={`ml-auto transition-colors ${activeTemplate === 'detik' ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-black'}`}>
+                                    <Menu className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Mobile Menu Overlay */}
                 {isOpen && (

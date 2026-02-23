@@ -102,6 +102,20 @@ export const getFeedAds = unstable_cache(
     { revalidate: REVALIDATE_TIME, tags: ['ads'] }
 )
 
+export const getSidebarAds = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('advertisements')
+            .select('*')
+            .eq('placement', 'sidebar_right')
+            .eq('is_active', true)
+        return data
+    },
+    ['sidebar-ads'],
+    { revalidate: REVALIDATE_TIME, tags: ['ads'] }
+)
+
 export const getLatestGridNews = unstable_cache(
     async (page: number, itemsPerPage: number) => {
         const supabase = createPublicClient()
@@ -221,6 +235,20 @@ export const getTrendingProducts = unstable_cache(
     { revalidate: REVALIDATE_TIME, tags: ['products'] }
 )
 
+export const getShorts = unstable_cache(
+    async (limit: number = 6) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('shorts')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit)
+        return data
+    },
+    ['latest-shorts'],
+    { revalidate: REVALIDATE_TIME, tags: ['shorts'] }
+)
+
 export async function getSiteSettings() {
     const supabase = createPublicClient()
     const { data } = await supabase
@@ -236,3 +264,44 @@ export async function getSiteSettings() {
     }
     return settings
 }
+
+export const getIndeksArticles = unstable_cache(
+    async (date: string, categoryId?: string) => {
+        const supabase = createPublicClient()
+
+        // Start and end of the day in ISO
+        const startOfDay = `${date}T00:00:00Z`
+        const endOfDay = `${date}T23:59:59Z`
+
+        let query = supabase
+            .from('articles')
+            .select('*, categories(name, bg_color)')
+            .eq('is_published', true)
+            .gte('created_at', startOfDay)
+            .lte('created_at', endOfDay)
+            .order('created_at', { ascending: false })
+
+        if (categoryId && categoryId !== 'all') {
+            query = query.eq('category_id', categoryId)
+        }
+
+        const { data } = await query
+        return data
+    },
+    ['indeks-articles'],
+    { revalidate: REVALIDATE_TIME, tags: ['articles'] }
+)
+
+export const getAllCategories = unstable_cache(
+    async () => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('categories')
+            .select('id, name, slug')
+            .neq('slug', 'uncategorized')
+            .order('display_order', { ascending: true })
+        return data
+    },
+    ['all-categories'],
+    { revalidate: REVALIDATE_TIME, tags: ['categories'] }
+)

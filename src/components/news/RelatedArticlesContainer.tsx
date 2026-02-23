@@ -6,10 +6,12 @@ import { optimizeCloudinaryUrl } from '@/lib/utils'
 
 export default async function RelatedArticlesContainer({
     currentArticleId,
-    categoryId
+    categoryId,
+    showHeader = true
 }: {
     currentArticleId: string
     categoryId?: string
+    showHeader?: boolean
 }) {
     if (!categoryId) return null
 
@@ -29,12 +31,14 @@ export default async function RelatedArticlesContainer({
     return (
         <div className="mt-16 bg-white space-y-8">
             {/* Header */}
-            <div className="flex items-center space-x-3 pb-4 border-b-2 border-gray-200">
-                <Zap className="w-6 h-6" />
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight italic">
-                    BERITA <span className="font-normal">TERKAIT</span>
-                </h2>
-            </div>
+            {showHeader && (
+                <div className="flex items-center space-x-3 pb-4 border-b-2 border-gray-200">
+                    <Zap className="w-6 h-6" />
+                    <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight italic">
+                        BERITA <span className="font-normal">TERKAIT</span>
+                    </h2>
+                </div>
+            )}
 
             {/* Horizontal Cards */}
             <div className="space-y-6">

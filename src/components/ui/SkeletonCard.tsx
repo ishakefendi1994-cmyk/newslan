@@ -1,7 +1,7 @@
 export default function SkeletonCard({
     variant = 'compact'
 }: {
-    variant?: 'tempo-hero' | 'tempo-sub' | 'tempo-sidebar' | 'tempo-horizontal' | 'compact'
+    variant?: 'tempo-hero' | 'tempo-sub' | 'tempo-sidebar' | 'tempo-horizontal' | 'compact' | 'detik-list'
 }) {
 
     // Tempo Hero Skeleton (Large dramatic hero)
@@ -57,6 +57,19 @@ export default function SkeletonCard({
                     <div className="skeleton w-4/5 h-6 rounded" />
                     <div className="skeleton w-full h-4 rounded" />
                     <div className="skeleton w-3/5 h-4 rounded" />
+                </div>
+            </div>
+        )
+    }
+
+    // Detik List Skeleton (Medium aspect with meta below)
+    if (variant === 'detik-list') {
+        return (
+            <div className="flex flex-col space-y-4">
+                <div className="skeleton relative aspect-video w-full rounded-2xl md:rounded-3xl" />
+                <div className="space-y-2">
+                    <div className="skeleton w-3/4 h-6 rounded" />
+                    <div className="skeleton w-1/2 h-4 rounded" />
                 </div>
             </div>
         )

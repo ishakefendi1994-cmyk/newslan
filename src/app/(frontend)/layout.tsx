@@ -57,6 +57,7 @@ export default async function FrontendLayout({
             site_url={settings.site_url}
             site_favicon_url={settings.site_favicon_url}
             siteDescription={settings.description}
+            activeTemplate={settings.active_template}
             navLinks={[
                 ...navLinks,
                 ...footerPages.map((p: any) => ({

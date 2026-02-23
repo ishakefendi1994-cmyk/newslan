@@ -15,6 +15,7 @@ const placements = [
     { id: 'sidebar', label: 'Sidebar (News Detail)' },
     { id: 'section_sidebar', label: 'Category Section Sidebar' },
     { id: 'feed_between', label: 'Between Feed Items' },
+    { id: 'sidebar_right', label: 'Sidebar Right (Detik Style)' },
     { id: 'skin_left', label: 'Left Skin (Desktop)' },
     { id: 'skin_right', label: 'Right Skin (Desktop)' }
 ]
