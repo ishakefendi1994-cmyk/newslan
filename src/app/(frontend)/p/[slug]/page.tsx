@@ -1,11 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import { Shield, Info, FileText } from 'lucide-react'
-import RedaksiFallback from '@/components/static-pages/RedaksiFallback'
-import CompanyProfileFallback from '@/components/static-pages/CompanyProfileFallback'
-import PedomanMediaSiberFallback from '@/components/static-pages/PedomanMediaSiberFallback'
-import PrivacyPolicyFallback from '@/components/static-pages/PrivacyPolicyFallback'
-import { getSiteSettings } from '@/lib/settings'
 
 interface PageProps {
     params: Promise<{ slug: string }>
