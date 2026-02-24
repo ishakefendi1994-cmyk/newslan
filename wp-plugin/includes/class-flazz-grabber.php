@@ -35,7 +35,7 @@ class Flazz_Grabber {
         ) );
 
         if ( is_wp_error( $response ) ) {
-            error_log( '[Newslan AI] Grabber::fetch_rss - HTTP Error: ' . $response->get_error_message() );
+            error_log( '[Flazz AI] Grabber::fetch_rss - HTTP Error: ' . $response->get_error_message() );
             return false;
         }
 
@@ -120,7 +120,7 @@ class Flazz_Grabber {
         ) );
 
         if ( is_wp_error( $response ) ) {
-            error_log( '[Newslan AI] Grabber::extract_content - WP_Error: ' . $response->get_error_message() );
+            error_log( '[Flazz AI] Grabber::extract_content - WP_Error: ' . $response->get_error_message() );
             return false;
         }
 
@@ -128,7 +128,7 @@ class Flazz_Grabber {
         $html      = wp_remote_retrieve_body( $response );
 
         if ( $http_code !== 200 || empty( $html ) ) {
-            error_log( '[Newslan AI] Grabber::extract_content - Bad response code: ' . $http_code );
+            error_log( '[Flazz AI] Grabber::extract_content - Bad response code: ' . $http_code );
             return false;
         }
 
@@ -138,7 +138,7 @@ class Flazz_Grabber {
         }
 
         // Fallback: strip all tags and return raw text
-        error_log( '[Newslan AI] Grabber::extract_content - DOMDocument not available, using fallback' );
+        error_log( '[Flazz AI] Grabber::extract_content - DOMDocument not available, using fallback' );
         return $this->extract_fallback( $html, $url );
     }
 

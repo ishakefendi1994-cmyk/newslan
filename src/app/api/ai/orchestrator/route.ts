@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
+export async function GET() {
+    return NextResponse.json({
+        success: true,
+        message: 'Flazz AI Orchestrator is active and running. This endpoint only accepts POST requests for AI processing.'
+    })
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json()

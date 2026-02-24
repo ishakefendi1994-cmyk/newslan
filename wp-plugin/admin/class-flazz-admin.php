@@ -141,7 +141,7 @@ class Flazz_Admin {
                         if ( strpos( $content_type, 'gif' ) !== false )  $ext = 'gif';
 
                         // Save to temp file
-                        $tmp_file = wp_tempnam( 'newslan_img.' . $ext );
+                        $tmp_file = wp_tempnam( 'flazz_img.' . $ext );
                         file_put_contents( $tmp_file, wp_remote_retrieve_body( $img_resp ) );
 
                         // Build file array for wp_handle_sideload
@@ -230,7 +230,7 @@ class Flazz_Admin {
 
     /**
      * Search Pixabay API for a photo related to a query.
-     * Requires: newslan_ai_pixabay_key in Settings.
+     * Requires: flazz_ai_pixabay_key in Settings.
      * Free API key at: https://pixabay.com/api/docs/ (register + get key instantly)
      *
      * @param  string $query  Search query (article title or keyword)
@@ -315,22 +315,28 @@ class Flazz_Admin {
         $this->check_permission();
 
         try {
-            $api_key = get_option( 'newslan_ai_groq_key', '' );
+            $api_key = get_option( 'flazz_ai_groq_key', '' );
+            $license = get_option( 'flazz_ai_license_key', '' );
+
             if ( empty( $api_key ) ) {
                 wp_send_json_error( 'API Key (Groq) belum diisi di Settings.' );
             }
 
-            $response = wp_remote_post( 'https://api.groq.com/openai/v1/chat/completions', array(
-                'headers' => array(
-                    'Authorization' => 'Bearer ' . $api_key,
-                    'Content-Type'  => 'application/json',
-                ),
-                'body'    => wp_json_encode( array(
-                    'model'      => 'llama-3.3-70b-versatile',
-                    'messages'   => array( array( 'role' => 'user', 'content' => 'Reply with: OK' ) ),
-                    'max_tokens' => 5,
-                ) ),
-                'timeout' => 20,
+            // Test via cloud orchestrator (Saas transition)
+            $response = wp_remote_post( 'https://www.cryptotechnews.net/api/ai/orchestrator', array(
+                'headers' => array( 'Content-Type' => 'application/json' ),
+                'body'    => json_encode( array(
+                    'action'      => 'rewrite',
+                    'license_key' => $license,
+                    'api_key'     => $api_key,
+                    'payload'     => array(
+                        'title'   => 'Test Sync',
+                        'content' => 'Keep it short',
+                        'style'   => 'Professional',
+                        'model'   => 'Straight News'
+                    )
+                )),
+                'timeout' => 30,
             ) );
 
             if ( is_wp_error( $response ) ) {
@@ -338,14 +344,14 @@ class Flazz_Admin {
             }
 
             $code = wp_remote_retrieve_response_code( $response );
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
             $this->log( 'ajax_test_api: code = ' . $code );
 
-            if ( $code === 200 ) {
-                wp_send_json_success( 'Koneksi Groq BERHASIL! API Key valid.' );
+            if ( $code === 200 && isset( $body['success'] ) && $body['success'] === true ) {
+                wp_send_json_success( 'Koneksi Cloud Orchestrator BERHASIL! Brain AI aktif.' );
             } else {
-                $body = json_decode( wp_remote_retrieve_body( $response ), true );
-                $err  = isset( $body['error']['message'] ) ? $body['error']['message'] : 'HTTP ' . $code;
-                wp_send_json_error( 'Groq Error: ' . $err );
+                $err  = isset( $body['message'] ) ? $body['message'] : 'HTTP ' . $code;
+                wp_send_json_error( 'Orchestrator Error: ' . $err );
             }
         } catch ( Exception $e ) {
             $this->log( 'ajax_test_api: Exception = ' . $e->getMessage() );
@@ -363,7 +369,7 @@ class Flazz_Admin {
         $this->check_license();
 
         try {
-            $job_engine = Newslan_Job_Engine::get_instance();
+            $job_engine = Flazz_Job_Engine::get_instance();
             $post_id    = $job_engine->create_job( $_POST );
 
             if ( $post_id ) {
@@ -383,7 +389,7 @@ class Flazz_Admin {
 
         try {
             $job_id     = isset( $_POST['job_id'] ) ? intval( $_POST['job_id'] ) : 0;
-            $job_engine = Newslan_Job_Engine::get_instance();
+            $job_engine = Flazz_Job_Engine::get_instance();
 
             if ( $job_engine->delete_job( $job_id ) ) {
                 wp_send_json_success( 'Job dihapus.' );
@@ -412,7 +418,7 @@ class Flazz_Admin {
                 wp_send_json_error( 'Job ID tidak valid.' );
             }
 
-            $job_engine = Newslan_Job_Engine::get_instance();
+            $job_engine = Flazz_Job_Engine::get_instance();
             $result     = $job_engine->run_job( $job_id );
 
             $this->log( 'ajax_run_job: result = ' . print_r( $result, true ) );
@@ -444,7 +450,7 @@ class Flazz_Admin {
             $rss_url_override = isset( $_POST['rss_url'] ) ? esc_url_raw( trim( $_POST['rss_url'] ) ) : '';
             $this->log( 'ajax_manual_fetch: url = "' . $rss_url_override . '"' );
 
-            $cron_manager = Newslan_Cron_Manager::get_instance();
+            $cron_manager = Flazz_Cron_Manager::get_instance();
             $stats        = $cron_manager->grab_rss_and_process( $rss_url_override );
 
             $this->log( 'ajax_manual_fetch: total=' . $stats['total'] . ' processed=' . $stats['processed'] . ' errors=' . $stats['errors'] );
@@ -604,9 +610,9 @@ class Flazz_Admin {
             $this->log( 'ajax_research_keyword: ' . count( $source_contents ) . ' sources ready for AI' );
 
             // ── STEP 4: Synthesize with AI ────────────────────────────────────────────
-            $ai_writer   = Newslan_AI_Writer::get_instance();
-            $style       = isset( $_POST['writing_style'] ) ? sanitize_text_field( $_POST['writing_style'] ) : get_option( 'newslan_ai_writing_style', 'Professional' );
-            $model       = isset( $_POST['article_model'] ) ? sanitize_text_field( $_POST['article_model'] ) : get_option( 'newslan_ai_article_model', 'Straight News' );
+            $ai_writer   = Flazz_AI_Writer::get_instance();
+            $style       = isset( $_POST['writing_style'] ) ? sanitize_text_field( $_POST['writing_style'] ) : get_option( 'flazz_ai_writing_style', 'Professional' );
+            $model       = isset( $_POST['article_model'] ) ? sanitize_text_field( $_POST['article_model'] ) : get_option( 'flazz_ai_article_model', 'Straight News' );
             $image_mode       = isset( $_POST['image_mode'] ) ? sanitize_text_field( $_POST['image_mode'] ) : 'rss';
             $thumbnail_style  = isset( $_POST['thumbnail_style'] ) ? sanitize_text_field( $_POST['thumbnail_style'] ) : 'editorial_vector';
             $this->log( 'ajax_research_keyword: style=' . $style . ' model=' . $model . ' image_mode=' . $image_mode . ' thumb_style=' . $thumbnail_style );
@@ -627,7 +633,7 @@ class Flazz_Admin {
             if ( $image_mode === 'generate_ai' ) {
                 // Generate a fresh image via Replicate + Groq prompt
                 $this->log( 'ajax_research_keyword: Generating AI image via Replicate (style: ' . $thumbnail_style . ')...' );
-                $img_gen   = Newslan_Image_Generator::get_instance();
+                $img_gen   = Flazz_Image_Generator::get_instance();
                 $generated = $img_gen->generate_article_image( $synthesis['title'], $synthesis['content'], $thumbnail_style );
                 if ( $generated ) {
                     $final_image = $generated;
@@ -730,11 +736,11 @@ class Flazz_Admin {
                         <tr><td colspan="5" style="text-align:center; padding:20px;">Belum ada Job. Klik "Buat Job Baru" untuk memulai.</td></tr>
                     <?php else : ?>
                         <?php foreach ( $jobs as $jobs_item ) :
-                            $type     = get_post_meta( $jobs_item->ID, '_newslan_job_job_type', true );
-                            $keyword  = get_post_meta( $jobs_item->ID, '_newslan_job_keyword', true );
-                            $rss      = get_post_meta( $jobs_item->ID, '_newslan_job_rss_url', true );
-                            $ai_idea  = get_post_meta( $jobs_item->ID, '_newslan_job_ai_idea', true );
-                            $secret   = get_post_meta( $jobs_item->ID, '_newslan_job_secret', true );
+                            $type     = get_post_meta( $jobs_item->ID, '_flazz_job_job_type', true );
+                            $keyword  = get_post_meta( $jobs_item->ID, '_flazz_job_keyword', true );
+                            $rss      = get_post_meta( $jobs_item->ID, '_flazz_job_rss_url', true );
+                            $ai_idea  = get_post_meta( $jobs_item->ID, '_flazz_job_ai_idea', true );
+                            $secret   = get_post_meta( $jobs_item->ID, '_flazz_job_secret', true );
                             
                             $detail = $rss;
                             if ( $type === 'keyword' ) $detail = $keyword;
@@ -890,7 +896,7 @@ class Flazz_Admin {
                     <tr>
                         <th style="width:150px;">Pilih Sumber Preset</th>
                         <td>
-                            <select id="newslan_manual_preset" style="width:100%; max-width:400px;">
+                            <select id="flazz_manual_preset" style="width:100%; max-width:400px;">
                                 <option value="">-- Pilih Preset atau Input Manual --</option>
                                 <?php foreach ( $preset_urls as $key => $url ) : ?>
                                     <option value="<?php echo esc_attr( $url ); ?>"><?php echo strtoupper( $key ); ?> — <?php echo esc_html( $url ); ?></option>
@@ -980,7 +986,7 @@ class Flazz_Admin {
     }
 
     public function render_settings_page() {
-        $license_status = get_option( 'newslan_ai_license_status', 'invalid' );
+        $license_status = get_option( 'flazz_ai_license_status', 'invalid' );
         $has_dom        = class_exists( 'DOMDocument' );
         $has_curl       = function_exists( 'curl_init' );
         $has_simplexml  = function_exists( 'simplexml_load_string' );

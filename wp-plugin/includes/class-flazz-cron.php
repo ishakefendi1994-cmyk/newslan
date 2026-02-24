@@ -20,7 +20,7 @@ class Flazz_Cron_Manager {
 
     /**
      * Handle external cron trigger via URL:
-     * yourdomain.com/?newslan_run_job=ID&key=SECRET
+     * yourdomain.com/?flazz_run_job=ID&key=SECRET
      */
     public function handle_external_trigger() {
         if ( ! isset( $_GET['flazz_run_job'] ) || ! isset( $_GET['key'] ) ) {
