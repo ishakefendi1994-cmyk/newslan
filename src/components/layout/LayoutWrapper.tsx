@@ -105,10 +105,10 @@ export default function LayoutWrapper({
                                     ))
                                 ) : (
                                     <>
-                                        <li><Link href="/p/redaksi" className="text-gray-300 hover:text-white transition-colors">Redaksi</Link></li>
-                                        <li><Link href="/p/company-profile" className="text-gray-300 hover:text-white transition-colors">Company Profile</Link></li>
-                                        <li><Link href="/p/pedoman-media-siber" className="text-gray-300 hover:text-white transition-colors">Pedoman Media Siber</Link></li>
-                                        <li><Link href="/p/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Kebijakan Privasi</Link></li>
+                                        <li><Link href="/redaksi" className="text-gray-300 hover:text-white transition-colors">Redaksi</Link></li>
+                                        <li><Link href="/company-profile" className="text-gray-300 hover:text-white transition-colors">Company Profile</Link></li>
+                                        <li><Link href="/pedoman-media-siber" className="text-gray-300 hover:text-white transition-colors">Pedoman Media Siber</Link></li>
+                                        <li><Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">Kebijakan Privasi</Link></li>
                                     </>
                                 )}
                             </ul>

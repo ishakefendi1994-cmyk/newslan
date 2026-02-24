@@ -22,7 +22,7 @@ export default async function PedomanMediaSiberPage() {
     }
 
     const settings = await getSiteSettings();
-    const siteName = settings.site_name;
+    const siteName = settings.site_name || 'NEWSLAN.ID';
     const sections = [
         { id: 'ruang-lingkup', title: '1. Ruang Lingkup' },
         { id: 'verifikasi', title: '2. Verifikasi & Keberimbangan' },
@@ -134,7 +134,7 @@ export default async function PedomanMediaSiberPage() {
                             <section id="pencabutan" className="scroll-mt-32 mt-16">
                                 <h2>5. Pencabutan Berita</h2>
                                 <p>
-                                    Berita yang sudah dipublikasikan tidak dapat dicabut karena alasan penyuntingan dari pihak luar redaksi, kecuali terkait masalah rasisme, pornografi, keberlangsungan hidup anak, pengalaman traumatik korban atau berdasarkan pertimbangan khusus lain dari Dewan Pers.
+                                    Berita yang sudah dipublikasikan tidak dapat dicabut because alasan penyuntingan dari pihak luar redaksi, kecuali terkait masalah rasisme, pornografi, keberlangsungan hidup anak, pengalaman traumatik korban atau berdasarkan pertimbangan khusus lain dari Dewan Pers.
                                 </p>
                                 <p>
                                     Pencabutan berita wajib disertai dengan alasan pencabutan dan diumumkan kepada publik.
