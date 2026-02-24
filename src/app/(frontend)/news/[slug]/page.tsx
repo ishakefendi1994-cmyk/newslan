@@ -28,7 +28,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const article = await getArticleBySlug(slug)
 
     const settings = await getSiteSettings()
-    const siteUrl = settings.site_url || process.env.NEXT_PUBLIC_SITE_URL || ''
+    let siteUrl = settings.site_url || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+    // Guard against invalid URLs stored in site_settings (e.g. email addresses)
+    try { new URL(siteUrl) } catch { siteUrl = 'http://localhost:3000' }
+
     if (!article) return { title: `Article Not Found - ${settings.site_name}` }
     const title = article.title
     const description = article.excerpt || article.title
@@ -40,7 +44,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         title: `${title} - ${settings.site_name}`,
         description,
         keywords: article.focus_keyword || undefined,
-        metadataBase: new URL(siteUrl || 'http://localhost:3000'),
+        metadataBase: new URL(siteUrl),
         alternates: {
             canonical: `/news/${slug}`,
         },

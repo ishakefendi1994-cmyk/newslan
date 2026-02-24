@@ -163,7 +163,9 @@ export const searchArticles = async (query: string) => {
 export const getArticleBySlug = unstable_cache(
     async (slug: string) => {
         const supabase = createPublicClient()
-        const { data } = await supabase
+
+        // Try full query with product joins first
+        const { data, error } = await supabase
             .from('articles')
             .select(`
                 *,
@@ -180,7 +182,19 @@ export const getArticleBySlug = unstable_cache(
             .eq('slug', slug)
             .eq('is_published', true)
             .single()
-        return data
+
+        if (!error) return data
+
+        // Fallback: query without product joins (in case tables don't exist)
+        console.warn('[getArticleBySlug] Full query failed, trying simplified query:', error.message)
+        const { data: simpleData } = await supabase
+            .from('articles')
+            .select('*, categories(id, name), profiles(full_name)')
+            .eq('slug', slug)
+            .eq('is_published', true)
+            .single()
+
+        return simpleData
     },
     ['article-by-slug'],
     { revalidate: REVALIDATE_TIME, tags: ['articles'] }
