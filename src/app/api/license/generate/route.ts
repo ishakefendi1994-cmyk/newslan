@@ -22,7 +22,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
         }
 
-        // Use Admin Client for DB operations if needed (bypassing RLS or using service role)
+        // Use Admin Client for DB operations (bypassing RLS)
         const adminSupabase = createAdminClient()
         const { client_name, max_domains, notes, expires_at } = await request.json()
 
@@ -36,22 +36,32 @@ export async function POST(request: Request) {
         const license_key = generateKey()
 
         // 3. Save to database
+        const insertData: any = {
+            license_key,
+            client_name,
+            max_domains: max_domains || 1,
+            notes,
+            status: 'active'
+        }
+
+        // Only add expires_at if it's a valid string, otherwise set to null
+        if (expires_at && expires_at.trim() !== '') {
+            insertData.expires_at = expires_at
+        }
+
         const { data: license, error: dbError } = await adminSupabase
             .from('plugin_licenses')
-            .insert({
-                license_key,
-                client_name,
-                max_domains: max_domains || 1,
-                notes,
-                expires_at,
-                status: 'active'
-            })
+            .insert(insertData)
             .select()
             .single()
 
         if (dbError) {
             console.error('License Generation DB Error:', dbError)
-            return NextResponse.json({ success: false, message: 'Failed to save license to database.' }, { status: 500 })
+            return NextResponse.json({
+                success: false,
+                message: `Database Error: ${dbError.message}`,
+                details: dbError.details || dbError.hint
+            }, { status: 500 })
         }
 
         return NextResponse.json({
