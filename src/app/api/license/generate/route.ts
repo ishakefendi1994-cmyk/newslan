@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
     try {
-        const supabase = createAdminClient()
+        const supabase = await createClient()
 
-        // 1. Verify Admin Session
+        // 1. Verify Session
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
@@ -22,6 +22,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
         }
 
+        // Use Admin Client for DB operations if needed (bypassing RLS or using service role)
+        const adminSupabase = createAdminClient()
         const { client_name, max_domains, notes, expires_at } = await request.json()
 
         // 2. Generate License Key: FLAZZ-XXXX-XXXX-XXXX
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
         const license_key = generateKey()
 
         // 3. Save to database
-        const { data: license, error: dbError } = await supabase
+        const { data: license, error: dbError } = await adminSupabase
             .from('plugin_licenses')
             .insert({
                 license_key,
