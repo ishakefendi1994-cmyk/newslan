@@ -11,7 +11,7 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { action, license_key, api_key, payload } = body
+        const { action, license_key, domain, api_key, payload } = body
 
         if (!license_key) {
             return NextResponse.json({ success: false, message: 'License key is required.' }, { status: 400 })
@@ -22,12 +22,23 @@ export async function POST(request: Request) {
         // 1. Verify License (Reuse logic or call internal helper)
         const { data: license, error } = await supabase
             .from('plugin_licenses')
-            .select('*')
+            .select('*, license_activations(domain)')
             .eq('license_key', license_key)
             .single()
 
         if (error || !license || license.status !== 'active') {
             return NextResponse.json({ success: false, message: 'Invalid or inactive license.' }, { status: 403 })
+        }
+
+        // 1.1 Strict Domain Matching
+        const activations = license.license_activations || []
+        const isDomainValid = activations.some((a: { domain: string }) => a.domain === domain)
+
+        if (!isDomainValid) {
+            return NextResponse.json({
+                success: false,
+                message: `Domain mismatch. This license is not activated for ${domain}. Please activate it from your WordPress settings.`
+            }, { status: 403 })
         }
 
         // 2. Orchestrate based on action

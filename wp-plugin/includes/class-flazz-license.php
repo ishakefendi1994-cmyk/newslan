@@ -71,13 +71,27 @@ class Flazz_License_Manager {
 
         if ( $code === 200 && isset( $body['success'] ) && $body['success'] === true ) {
             update_option( $this->status_option, 'valid' );
+            
+            // Store extra info for the UI
+            if ( isset( $body['data'] ) ) {
+                update_option( 'flazz_ai_license_info', $body['data'] );
+            }
+
             set_transient( 'flazz_license_check', 'valid', 12 * HOUR_IN_SECONDS );
             return true;
         }
 
         // Invalid license
         update_option( $this->status_option, 'invalid' );
+        delete_option( 'flazz_ai_license_info' );
         set_transient( 'flazz_license_check', 'invalid', 12 * HOUR_IN_SECONDS );
         return false;
+    }
+
+    /**
+     * Get license details stored from last verification
+     */
+    public function get_license_info() {
+        return get_option( 'flazz_ai_license_info', array() );
     }
 }

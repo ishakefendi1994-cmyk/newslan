@@ -46,8 +46,9 @@ class Flazz_Image_Generator {
         $response = wp_remote_post( $api_url, array(
             'headers' => array( 'Content-Type' => 'application/json' ),
             'body'    => json_encode( array(
-                'action'      => 'generate_prompt', // We might need to add this action to orchestrator
+                'action'      => 'generate_prompt',
                 'license_key' => $license,
+                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
                 'api_key'     => $groq_key,
                 'payload'     => array(
                     'title'   => $title,
@@ -71,6 +72,7 @@ class Flazz_Image_Generator {
             'body'    => json_encode( array(
                 'action'      => 'generate_image',
                 'license_key' => $license,
+                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
                 'api_key'     => $token,
                 'payload'     => array(
                     'prompt' => $prompt,

@@ -27,32 +27,41 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: `License is ${license.status}.` }, { status: 403 })
         }
 
-        // 3. Check domain binding (if domain is already registered)
-        if (license.registered_domain && license.registered_domain !== domain) {
-            return NextResponse.json({
-                success: false,
-                message: 'License is already registered to another domain: ' + license.registered_domain
-            }, { status: 403 })
-        }
-
-        // 4. Bind domain if first time use
-        if (!license.registered_domain) {
-            await supabase
-                .from('plugin_licenses')
-                .update({ registered_domain: domain })
-                .eq('id', license.id)
-        }
-
-        // 5. Check expiry
+        // 3. Check expiry
         if (license.expires_at && new Date(license.expires_at) < new Date()) {
-            await supabase
-                .from('plugin_licenses')
-                .update({ status: 'expired' })
-                .eq('id', license.id)
             return NextResponse.json({ success: false, message: 'License has expired.' }, { status: 403 })
         }
 
-        // 6. Update last verified at
+        // 4. Check domain registrations/activations
+        const { data: activations } = await supabase
+            .from('license_activations')
+            .select('*')
+            .eq('license_id', license.id)
+
+        const activeDomains = activations || []
+        const alreadyRegistered = activeDomains.find(a => a.domain === domain)
+
+        if (!alreadyRegistered) {
+            // Check if we hit the limit
+            if (activeDomains.length >= (license.max_domains || 1)) {
+                return NextResponse.json({
+                    success: false,
+                    message: `Domain limit reached (${license.max_domains} site/s). Please upgrade your license.`
+                }, { status: 403 })
+            }
+
+            // Register new domain
+            const { error: regError } = await supabase
+                .from('license_activations')
+                .insert({ license_id: license.id, domain: domain })
+
+            if (regError) {
+                console.error('Domain Registration Error:', regError)
+                return NextResponse.json({ success: false, message: 'Failed to activate on this domain.' }, { status: 500 })
+            }
+        }
+
+        // 5. Update last verified at
         await supabase
             .from('plugin_licenses')
             .update({ last_verified_at: new Date().toISOString() })
@@ -63,7 +72,9 @@ export async function POST(request: Request) {
             message: 'License verified successfully.',
             data: {
                 status: 'active',
-                expires_at: license.expires_at
+                expires_at: license.expires_at,
+                max_domains: license.max_domains,
+                activations_count: alreadyRegistered ? activeDomains.length : activeDomains.length + 1
             }
         })
 

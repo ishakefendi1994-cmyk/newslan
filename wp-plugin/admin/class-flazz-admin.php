@@ -36,14 +36,23 @@ class Flazz_Admin {
     // =========================================================================
 
     public function add_menu_page() {
+        require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-license.php';
+        $license_valid = Flazz_License_Manager::get_instance()->is_valid();
+
+        $main_page = $license_valid ? 'render_jobs_page' : 'render_settings_page';
+        $main_slug = $license_valid ? 'flazz-ai' : 'flazz-settings';
+
+        // Main Menu
         add_menu_page( 'Flazz AI', 'Flazz AI', 'manage_options', 'flazz-ai',
-            array( $this, 'render_jobs_page' ), 'dashicons-rss', 30 );
+            array( $this, $main_page ), 'dashicons-rss', 30 );
 
-        add_submenu_page( 'flazz-ai', 'Auto-Jobs Manager', 'Auto-Jobs', 'manage_options',
-            'flazz-ai', array( $this, 'render_jobs_page' ) );
+        if ( $license_valid ) {
+            add_submenu_page( 'flazz-ai', 'Auto-Jobs Manager', 'Auto-Jobs', 'manage_options',
+                'flazz-ai', array( $this, 'render_jobs_page' ) );
 
-        add_submenu_page( 'flazz-ai', 'Manual Fetch & Tools', 'Manual Tools', 'manage_options',
-            'flazz-manual-tools', array( $this, 'render_manual_tools_page' ) );
+            add_submenu_page( 'flazz-ai', 'Manual Fetch & Tools', 'Manual Tools', 'manage_options',
+                'flazz-manual-tools', array( $this, 'render_manual_tools_page' ) );
+        }
 
         add_submenu_page( 'flazz-ai', 'Global Settings', 'Settings', 'manage_options',
             'flazz-settings', array( $this, 'render_settings_page' ) );
@@ -1036,6 +1045,15 @@ class Flazz_Admin {
                                 <span style="margin-left:10px; font-weight:bold; color:<?php echo $license_status === 'valid' ? 'green' : '#d63638'; ?>">
                                     <?php echo strtoupper( $license_status ); ?>
                                 </span>
+                                <?php if ( $license_status === 'valid' ) :
+                                    $info = Flazz_License_Manager::get_instance()->get_license_info();
+                                    if ( !empty( $info ) ) : ?>
+                                        <p class="description" style="color:green; font-weight:bold;">
+                                            ✅ Teraktivasi: <?php echo $info['activations_count']; ?> / <?php echo $info['max_domains']; ?> Domain
+                                            <?php if (isset($info['expires_at'])) echo ' | Exp: ' . date('d M Y', strtotime($info['expires_at'])); ?>
+                                        </p>
+                                    <?php endif;
+                                endif; ?>
                             </td>
                         </tr>
                         <tr>

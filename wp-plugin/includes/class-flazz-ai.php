@@ -34,6 +34,7 @@ class Flazz_AI_Writer {
             'body'    => json_encode( array(
                 'action'      => 'rewrite',
                 'license_key' => $license,
+                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
                 'api_key'     => $api_key,
                 'payload'     => array(
                     'title'   => $title,
@@ -78,6 +79,7 @@ class Flazz_AI_Writer {
             'body'    => json_encode( array(
                 'action'      => 'write_from_idea',
                 'license_key' => $license,
+                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
                 'api_key'     => $api_key,
                 'payload'     => array(
                     'idea'  => $idea,
