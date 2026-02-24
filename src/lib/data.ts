@@ -319,3 +319,18 @@ export const getAllCategories = unstable_cache(
     ['all-categories'],
     { revalidate: REVALIDATE_TIME, tags: ['categories'] }
 )
+
+export const getPageBySlug = unstable_cache(
+    async (slug: string) => {
+        const supabase = createPublicClient()
+        const { data } = await supabase
+            .from('pages')
+            .select('*')
+            .eq('slug', slug)
+            .eq('is_published', true)
+            .single()
+        return data
+    },
+    ['page-by-slug'],
+    { revalidate: REVALIDATE_TIME, tags: ['pages'] }
+)

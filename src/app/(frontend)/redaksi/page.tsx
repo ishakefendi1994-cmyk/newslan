@@ -1,8 +1,28 @@
 import { Shield, Users, MapPin, Briefcase, Info, AlertTriangle, Scale, Target, CreditCard } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import Image from 'next/image'
+import { getPageBySlug } from '@/lib/data'
 
-export default function RedaksiPage() {
+export default async function RedaksiPage() {
+    const dbPage = await getPageBySlug('redaksi')
+
+    // If page exists in database, render dynamic content
+    if (dbPage && dbPage.content) {
+        return (
+            <div className="bg-white min-h-screen py-20 px-4">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-10">
+                        {dbPage.title}
+                    </h1>
+                    <article
+                        className="prose prose-lg max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-p:text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: dbPage.content }}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="bg-white min-h-screen">
             {/* Hero Header */}
