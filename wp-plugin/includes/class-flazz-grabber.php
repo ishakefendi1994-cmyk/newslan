@@ -2,7 +2,7 @@
 /**
  * Handle RSS Fetching and Content Extraction
  */
-class Newslan_Grabber {
+class Flazz_Grabber {
 
     private static $instance = null;
 
@@ -20,9 +20,9 @@ class Newslan_Grabber {
      * @return array|false Array of articles or false on failure
      */
     public function fetch_rss( $url ) {
-        error_log( '[Newslan AI] Grabber::fetch_rss - URL: ' . $url );
+        error_log( '[Flazz AI] Grabber::fetch_rss - URL: ' . $url );
 
-        $limit = (int) get_option( 'newslan_ai_fetch_limit', 10 );
+        $limit = (int) get_option( 'flazz_ai_fetch_limit', 10 );
         if ( $limit < 1 ) $limit = 5;
 
         // ── Step 1: Fetch content via wp_remote_get with custom User-Agent ──
@@ -46,7 +46,7 @@ class Newslan_Grabber {
 
         // ── Step 2: Parse via SimpleXML ──
         if ( ! function_exists( 'simplexml_load_string' ) ) {
-            error_log( '[Newslan AI] Grabber::fetch_rss - SimpleXML extension missing' );
+            error_log( '[Flazz AI] Grabber::fetch_rss - SimpleXML extension missing' );
             return false;
         }
 
@@ -55,7 +55,7 @@ class Newslan_Grabber {
         libxml_clear_errors();
 
         if ( ! $xml || ! isset( $xml->channel->item ) ) {
-            error_log( '[Newslan AI] Grabber::fetch_rss - Invalid XML or no items' );
+            error_log( '[Flazz AI] Grabber::fetch_rss - Invalid XML or no items' );
             return false;
         }
 
@@ -95,7 +95,7 @@ class Newslan_Grabber {
             );
         }
 
-        error_log( '[Newslan AI] Grabber::fetch_rss - Found ' . count( $articles ) . ' items' );
+        error_log( '[Flazz AI] Grabber::fetch_rss - Found ' . count( $articles ) . ' items' );
         return $articles;
     }
 
@@ -111,7 +111,7 @@ class Newslan_Grabber {
      * @return array|false Associative array with title, content, image or false
      */
     public function extract_content( $url ) {
-        error_log( '[Newslan AI] Grabber::extract_content - URL: ' . $url );
+        error_log( '[Flazz AI] Grabber::extract_content - URL: ' . $url );
 
         $response = wp_remote_get( $url, array(
             'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -205,7 +205,7 @@ class Newslan_Grabber {
             $image = $og_nodes->item(0)->getAttribute('content');
         }
 
-        error_log( '[Newslan AI] Grabber::extract_with_dom - content_len=' . strlen( $cleaned ) . ' title=' . $title );
+        error_log( '[Flazz AI] Grabber::extract_with_dom - content_len=' . strlen( $cleaned ) . ' title=' . $title );
 
         return array(
             'title'   => $title,
@@ -265,14 +265,14 @@ class Newslan_Grabber {
     }
 
     private function log( $msg ) {
-        error_log( '[Newslan AI] Grabber: ' . $msg );
+        error_log( '[Flazz AI] Grabber: ' . $msg );
     }
 
     /**
      * Search Pixabay API for a photo related to a query.
      */
     public function fetch_pixabay_image( $query ) {
-        $api_key = get_option( 'newslan_ai_pixabay_key', '' );
+        $api_key = get_option( 'flazz_ai_pixabay_key', '' );
         if ( empty( $api_key ) ) return false;
 
         $words   = explode( ' ', $query );
@@ -318,8 +318,8 @@ class Newslan_Grabber {
      * Search Google Custom Search API for an image.
      */
     public function fetch_google_image( $query ) {
-        $api_key = get_option( 'newslan_ai_google_api_key', '' );
-        $cx      = get_option( 'newslan_ai_google_cx', '' );
+        $api_key = get_option( 'flazz_ai_google_api_key', '' );
+        $cx      = get_option( 'flazz_ai_google_cx', '' );
 
         if ( empty( $api_key ) || empty( $cx ) ) return false;
 

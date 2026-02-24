@@ -2,7 +2,7 @@
 /**
  * Handle Auto-Job Logic and CPT
  */
-class Newslan_Job_Engine {
+class Flazz_Job_Engine {
 
     private static $instance = null;
 
@@ -19,10 +19,10 @@ class Newslan_Job_Engine {
 
     public function register_job_cpt() {
         $labels = array(
-            'name'               => 'Newslan Jobs',
-            'singular_name'      => 'Newslan Job',
-            'menu_name'          => 'Newslan Jobs',
-            'name_admin_bar'     => 'Newslan Job',
+            'name'               => 'Flazz Jobs',
+            'singular_name'      => 'Flazz Job',
+            'menu_name'          => 'Flazz Jobs',
+            'name_admin_bar'     => 'Flazz Job',
             'add_new'            => 'Add New',
             'add_new_item'       => 'Add New Job',
             'new_item'           => 'New Job',
@@ -45,14 +45,14 @@ class Newslan_Job_Engine {
             'query_var'          => true,
         );
 
-        register_post_type( 'newslan_job', $args );
+        register_post_type( 'flazz_job', $args );
     }
 
     public function create_job( $data ) {
         $post_id = wp_insert_post( array(
             'post_title'   => $data['job_name'],
             'post_status'  => 'publish',
-            'post_type'    => 'newslan_job',
+            'post_type'    => 'flazz_job',
         ));
 
         if ( $post_id ) {
@@ -79,40 +79,40 @@ class Newslan_Job_Engine {
 
         foreach ( $fields as $field ) {
             if ( isset( $data[$field] ) ) {
-                update_post_meta( $post_id, '_newslan_job_' . $field, sanitize_text_field( $data[$field] ) );
+                update_post_meta( $post_id, '_flazz_job_' . $field, sanitize_text_field( $data[$field] ) );
             }
         }
 
         // Generate secret key if not exists (for external cron trigger)
-        $secret = get_post_meta( $post_id, '_newslan_job_secret', true );
+        $secret = get_post_meta( $post_id, '_flazz_job_secret', true );
         if ( empty( $secret ) ) {
             $secret = wp_generate_password( 32, false );
-            update_post_meta( $post_id, '_newslan_job_secret', $secret );
+            update_post_meta( $post_id, '_flazz_job_secret', $secret );
         }
     }
 
     public function run_job( $job_id ) {
         // License Guard
-        require_once plugin_dir_path( __FILE__ ) . 'class-newslan-license.php';
-        if ( ! Newslan_License_Manager::get_instance()->is_valid() ) {
+        require_once plugin_dir_path( __FILE__ ) . 'class-flazz-license.php';
+        if ( ! Flazz_License_Manager::get_instance()->is_valid() ) {
             return "Error: Lisensi tidak valid atau sudah kadaluarsa. Silakan periksa pengaturan lisensi.";
         }
 
-        $job_type    = get_post_meta( $job_id, '_newslan_job_job_type', true );
-        $keyword     = get_post_meta( $job_id, '_newslan_job_keyword', true );
-        $rss_url     = get_post_meta( $job_id, '_newslan_job_rss_url', true );
-        $category    = get_post_meta( $job_id, '_newslan_job_category', true );
-        $max_art     = get_post_meta( $job_id, '_newslan_job_max_articles', true ) ?: 3;
-        $style       = get_post_meta( $job_id, '_newslan_job_writing_style', true );
-        $model       = get_post_meta( $job_id, '_newslan_job_article_model', true ) ?: 'Straight News';
-        $status      = get_post_meta( $job_id, '_newslan_job_publish_status', true );
-        $image_mode  = get_post_meta( $job_id, '_newslan_job_image_mode', true ) ?: 'rss';
-        $thumb_style = get_post_meta( $job_id, '_newslan_job_thumbnail_style', true ) ?: 'editorial_vector';
-        $ai_idea     = get_post_meta( $job_id, '_newslan_job_ai_idea', true );
+        $job_type    = get_post_meta( $job_id, '_flazz_job_job_type', true );
+        $keyword     = get_post_meta( $job_id, '_flazz_job_keyword', true );
+        $rss_url     = get_post_meta( $job_id, '_flazz_job_rss_url', true );
+        $category    = get_post_meta( $job_id, '_flazz_job_category', true );
+        $max_art     = get_post_meta( $job_id, '_flazz_job_max_articles', true ) ?: 3;
+        $style       = get_post_meta( $job_id, '_flazz_job_writing_style', true );
+        $model       = get_post_meta( $job_id, '_flazz_job_article_model', true ) ?: 'Straight News';
+        $status      = get_post_meta( $job_id, '_flazz_job_publish_status', true );
+        $image_mode  = get_post_meta( $job_id, '_flazz_job_image_mode', true ) ?: 'rss';
+        $thumb_style = get_post_meta( $job_id, '_flazz_job_thumbnail_style', true ) ?: 'editorial_vector';
+        $ai_idea     = get_post_meta( $job_id, '_flazz_job_ai_idea', true );
 
-        $grabber   = Newslan_Grabber::get_instance();
-        $ai_writer = Newslan_AI_Writer::get_instance();
-        $img_gen   = Newslan_Image_Generator::get_instance();
+        $grabber   = Flazz_Grabber::get_instance();
+        $ai_writer = Flazz_AI_Writer::get_instance();
+        $img_gen   = Flazz_Image_Generator::get_instance();
 
         $source_contents = array();
         $synthesis       = null;
@@ -206,7 +206,7 @@ class Newslan_Job_Engine {
             }
             // Mark all sources as processed
             foreach ( $processed_links as $link ) {
-                add_post_meta( $new_post_id, '_newslan_source_url', $link );
+                add_post_meta( $new_post_id, '_flazz_source_url', $link );
             }
             return "Success: Berhasil memposting artikel \"" . $synthesis['title'] . "\"";
         }
@@ -217,7 +217,7 @@ class Newslan_Job_Engine {
     private function is_link_processed( $link ) {
         global $wpdb;
         $processed = $wpdb->get_var( $wpdb->prepare(
-            "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_newslan_source_url' AND meta_value = %s LIMIT 1",
+            "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_flazz_source_url' AND meta_value = %s LIMIT 1",
             $link
         ));
         return !empty($processed);
@@ -225,7 +225,7 @@ class Newslan_Job_Engine {
 
     public function get_jobs() {
         return get_posts( array(
-            'post_type'      => 'newslan_job',
+            'post_type'      => 'flazz_job',
             'post_status'    => 'publish',
             'posts_per_page' => -1,
             'orderby'        => 'date',

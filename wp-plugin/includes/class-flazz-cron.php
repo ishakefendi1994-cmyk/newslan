@@ -2,7 +2,7 @@
 /**
  * Handle Scheduled Tasks (WP-Cron) and manual RSS processing
  */
-class Newslan_Cron_Manager {
+class Flazz_Cron_Manager {
 
     private static $instance = null;
 
@@ -14,7 +14,7 @@ class Newslan_Cron_Manager {
     }
 
     private function __construct() {
-        add_action( 'newslan_cron_grab_rss', array( $this, 'grab_rss_and_process' ) );
+        add_action( 'flazz_cron_grab_rss', array( $this, 'grab_rss_and_process' ) );
         add_action( 'init', array( $this, 'handle_external_trigger' ) );
     }
 
@@ -23,30 +23,30 @@ class Newslan_Cron_Manager {
      * yourdomain.com/?newslan_run_job=ID&key=SECRET
      */
     public function handle_external_trigger() {
-        if ( ! isset( $_GET['newslan_run_job'] ) || ! isset( $_GET['key'] ) ) {
+        if ( ! isset( $_GET['flazz_run_job'] ) || ! isset( $_GET['key'] ) ) {
             return;
         }
 
-        $job_id = intval( $_GET['newslan_run_job'] );
+        $job_id = intval( $_GET['flazz_run_job'] );
         $key    = sanitize_text_field( $_GET['key'] );
 
         if ( ! $job_id || empty( $key ) ) {
             wp_die( 'Job ID atau Key tidak valid.' );
         }
 
-        $job_secret = get_post_meta( $job_id, '_newslan_job_secret', true );
+        $job_secret = get_post_meta( $job_id, '_flazz_job_secret', true );
 
         if ( empty( $job_secret ) || $key !== $job_secret ) {
             wp_die( 'Akses ditolak. Key tidak cocok atau tidak ditemukan.' );
         }
 
         // Run the job
-        require_once plugin_dir_path( __FILE__ ) . 'class-newslan-job-engine.php';
-        $engine = Newslan_Job_Engine::get_instance();
+        require_once plugin_dir_path( __FILE__ ) . 'class-flazz-job-engine.php';
+        $engine = Flazz_Job_Engine::get_instance();
         $result = $engine->run_job( $job_id );
 
         // Log result to error log for debugging
-        error_log( '[Newslan AI] External Job Trigger (ID: ' . $job_id . '): ' . $result );
+        error_log( '[Flazz AI] External Job Trigger (ID: ' . $job_id . '): ' . $result );
 
         // Output result for the cron service (e.g. curl)
         echo $result;
@@ -68,7 +68,7 @@ class Newslan_Cron_Manager {
             'last_error' => '',
         );
 
-        error_log( '[Newslan AI] CronManager::grab_rss_and_process START' );
+        error_log( '[Flazz AI] CronManager::grab_rss_and_process START' );
 
         // Determine RSS URL
         // Priority: 1. Parameter override, 2. Settings URL, 3. Preset URL
@@ -76,65 +76,65 @@ class Newslan_Cron_Manager {
 
         if ( ! empty( $rss_url_override ) ) {
             $rss_url = $rss_url_override;
-            error_log( '[Newslan AI] Using URL override: ' . $rss_url );
+            error_log( '[Flazz AI] Using URL override: ' . $rss_url );
         } else {
-            $preset  = get_option( 'newslan_ai_rss_source_preset', 'custom' );
-            $rss_url = get_option( 'newslan_ai_rss_feed_url', '' );
+            $preset  = get_option( 'flazz_ai_rss_source_preset', 'custom' );
+            $rss_url = get_option( 'flazz_ai_rss_feed_url', '' );
 
             if ( $preset !== 'custom' ) {
                 $preset_url = $this->get_preset_url( $preset );
                 if ( $preset_url ) {
                     $rss_url = $preset_url;
-                    error_log( '[Newslan AI] Using preset URL: ' . $rss_url );
+                    error_log( '[Flazz AI] Using preset URL: ' . $rss_url );
                 }
             }
         }
 
         if ( empty( $rss_url ) ) {
             $stats['last_error'] = 'RSS Feed URL kosong. Silakan isi di Settings atau input di Manual Tools.';
-            error_log( '[Newslan AI] CronManager: ' . $stats['last_error'] );
+            error_log( '[Flazz AI] CronManager: ' . $stats['last_error'] );
             return $stats;
         }
 
-        $grabber       = Newslan_Grabber::get_instance();
-        $ai_writer     = Newslan_AI_Writer::get_instance();
-        $writing_style = get_option( 'newslan_ai_writing_style', 'Professional' );
-        $article_model = get_option( 'newslan_ai_article_model', 'Straight News' );
-        $fetch_limit   = (int) get_option( 'newslan_ai_fetch_limit', 5 );
+        $grabber       = Flazz_Grabber::get_instance();
+        $ai_writer     = Flazz_AI_Writer::get_instance();
+        $writing_style = get_option( 'flazz_ai_writing_style', 'Professional' );
+        $article_model = get_option( 'flazz_ai_article_model', 'Straight News' );
+        $fetch_limit   = (int) get_option( 'flazz_ai_fetch_limit', 5 );
 
         // Fetch RSS
         $articles = $grabber->fetch_rss( $rss_url );
 
         if ( empty( $articles ) ) {
             $stats['last_error'] = 'Tidak ada artikel yang berhasil diambil dari RSS URL: ' . $rss_url;
-            error_log( '[Newslan AI] CronManager: ' . $stats['last_error'] );
+            error_log( '[Flazz AI] CronManager: ' . $stats['last_error'] );
             return $stats;
         }
 
         $stats['total'] = count( $articles );
-        error_log( '[Newslan AI] CronManager: Found ' . $stats['total'] . ' articles in RSS' );
+        error_log( '[Flazz AI] CronManager: Found ' . $stats['total'] . ' articles in RSS' );
 
         foreach ( $articles as $article ) {
             // Skip already processed URLs
             if ( $this->post_exists( $article['link'] ) ) {
-                error_log( '[Newslan AI] CronManager: Skipping (already exists): ' . $article['link'] );
+                error_log( '[Flazz AI] CronManager: Skipping (already exists): ' . $article['link'] );
                 $stats['skipped']++;
                 continue;
             }
 
             // Extract content
-            error_log( '[Newslan AI] CronManager: Extracting: ' . $article['link'] );
+            error_log( '[Flazz AI] CronManager: Extracting: ' . $article['link'] );
             $extracted = $grabber->extract_content( $article['link'] );
 
             if ( ! $extracted || strlen( $extracted['content'] ) < 100 ) {
                 $stats['last_error'] = 'Gagal ekstrak konten dari: ' . $article['link'];
-                error_log( '[Newslan AI] CronManager: ' . $stats['last_error'] );
+                error_log( '[Flazz AI] CronManager: ' . $stats['last_error'] );
                 $stats['errors']++;
                 continue;
             }
 
             // Rewrite with AI
-            error_log( '[Newslan AI] CronManager: Rewriting with AI...' );
+            error_log( '[Flazz AI] CronManager: Rewriting with AI...' );
             $rewritten = $ai_writer->rewrite_article( 
                 $extracted['title'] ?: $article['title'],
                 $extracted['content'],
@@ -144,7 +144,7 @@ class Newslan_Cron_Manager {
 
             if ( ! $rewritten ) {
                 $stats['last_error'] = 'AI Error: ' . $ai_writer->get_last_error();
-                error_log( '[Newslan AI] CronManager: ' . $stats['last_error'] );
+                error_log( '[Flazz AI] CronManager: ' . $stats['last_error'] );
                 $stats['errors']++;
                 continue;
             }
@@ -155,13 +155,13 @@ class Newslan_Cron_Manager {
             // Create post
             $this->create_wp_post( $rewritten, $article['link'], $final_image );
             $stats['processed']++;
-            error_log( '[Newslan AI] CronManager: Posted: ' . $rewritten['title'] );
+            error_log( '[Flazz AI] CronManager: Posted: ' . $rewritten['title'] );
 
             // Throttle to respect API rate limits
             sleep( 5 );
         }
 
-        error_log( '[Newslan AI] CronManager: DONE. Total=' . $stats['total'] . ' Processed=' . $stats['processed'] . ' Errors=' . $stats['errors'] );
+        error_log( '[Flazz AI] CronManager: DONE. Total=' . $stats['total'] . ' Processed=' . $stats['processed'] . ' Errors=' . $stats['errors'] );
         return $stats;
     }
 
@@ -182,7 +182,7 @@ class Newslan_Cron_Manager {
     private function post_exists( $url ) {
         global $wpdb;
         $found = $wpdb->get_var( $wpdb->prepare(
-            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_newslan_source_url' AND meta_value = %s LIMIT 1",
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_flazz_source_url' AND meta_value = %s LIMIT 1",
             $url
         ) );
         return ! empty( $found );
@@ -198,7 +198,7 @@ class Newslan_Cron_Manager {
         ) );
 
         if ( $post_id && ! is_wp_error( $post_id ) ) {
-            update_post_meta( $post_id, '_newslan_source_url', $source_url );
+            update_post_meta( $post_id, '_flazz_source_url', $source_url );
 
             if ( ! empty( $image_url ) ) {
                 require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -209,7 +209,7 @@ class Newslan_Cron_Manager {
                 if ( ! is_wp_error( $att_id ) ) {
                     set_post_thumbnail( $post_id, $att_id );
                 } else {
-                    error_log( '[Newslan AI] CronManager: Image sideload error: ' . $att_id->get_error_message() );
+                    error_log( '[Flazz AI] CronManager: Image sideload error: ' . $att_id->get_error_message() );
                 }
             }
         }

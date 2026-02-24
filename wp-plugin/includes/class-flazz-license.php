@@ -2,11 +2,11 @@
 /**
  * Handle Plugin Licensing
  */
-class Newslan_License_Manager {
+class Flazz_License_Manager {
 
     private static $instance = null;
-    private $license_option = 'newslan_ai_license_key';
-    private $status_option = 'newslan_ai_license_status';
+    private $license_option = 'flazz_ai_license_key';
+    private $status_option = 'flazz_ai_license_status';
 
     public static function get_instance() {
         if ( is_null( self::$instance ) ) {
@@ -21,7 +21,7 @@ class Newslan_License_Manager {
 
     public function on_license_key_update( $old_value, $new_value ) {
         if ( $old_value !== $new_value ) {
-            delete_transient( 'newslan_license_check' );
+            delete_transient( 'flazz_license_check' );
             $this->verify_license( $new_value );
         }
     }
@@ -34,7 +34,7 @@ class Newslan_License_Manager {
         if ( empty( $key ) ) return false;
 
         // Check cache first
-        $cached_status = get_transient( 'newslan_license_check' );
+        $cached_status = get_transient( 'flazz_license_check' );
         if ( $cached_status !== false ) {
             return $cached_status === 'valid';
         }
@@ -50,7 +50,6 @@ class Newslan_License_Manager {
         $domain = isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '';
         
         // Next.js API endpoint (License Server)
-        // Hardcoded for now as per plan, could be moved to settings
         $api_url = 'https://www.cryptotechnews.net/api/license/verify'; 
 
         $response = wp_remote_post( $api_url, array(
@@ -63,9 +62,7 @@ class Newslan_License_Manager {
         ) );
 
         if ( is_wp_error( $response ) ) {
-            error_log( '[Newslan AI] License API Error: ' . $response->get_error_message() );
-            // Fail silently if server is down, but maybe don't invalidate local status immediately
-            // For security, strictly return false or use a grace period
+            error_log( '[Flazz AI] License API Error: ' . $response->get_error_message() );
             return false;
         }
 
@@ -74,13 +71,13 @@ class Newslan_License_Manager {
 
         if ( $code === 200 && isset( $body['success'] ) && $body['success'] === true ) {
             update_option( $this->status_option, 'valid' );
-            set_transient( 'newslan_license_check', 'valid', 12 * HOUR_IN_SECONDS );
+            set_transient( 'flazz_license_check', 'valid', 12 * HOUR_IN_SECONDS );
             return true;
         }
 
         // Invalid license
         update_option( $this->status_option, 'invalid' );
-        set_transient( 'newslan_license_check', 'invalid', 12 * HOUR_IN_SECONDS );
+        set_transient( 'flazz_license_check', 'invalid', 12 * HOUR_IN_SECONDS );
         return false;
     }
 }

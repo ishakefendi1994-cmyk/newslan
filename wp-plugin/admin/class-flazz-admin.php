@@ -6,7 +6,7 @@
 // Increase memory limit for heavy processing
 @ini_set( 'memory_limit', '256M' );
 
-class Newslan_Admin {
+class Flazz_Admin {
 
     private static $instance = null;
 
@@ -23,12 +23,12 @@ class Newslan_Admin {
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 
         // AJAX Handlers
-        add_action( 'wp_ajax_newslan_save_job',        array( $this, 'ajax_save_job' ) );
-        add_action( 'wp_ajax_newslan_delete_job',      array( $this, 'ajax_delete_job' ) );
-        add_action( 'wp_ajax_newslan_run_job',         array( $this, 'ajax_run_job' ) );
-        add_action( 'wp_ajax_newslan_test_api',        array( $this, 'ajax_test_api' ) );
-        add_action( 'wp_ajax_newslan_manual_fetch',    array( $this, 'ajax_manual_fetch' ) );
-        add_action( 'wp_ajax_newslan_research_keyword',array( $this, 'ajax_research_keyword' ) );
+        add_action( 'wp_ajax_flazz_save_job',        array( $this, 'ajax_save_job' ) );
+        add_action( 'wp_ajax_flazz_delete_job',      array( $this, 'ajax_delete_job' ) );
+        add_action( 'wp_ajax_flazz_run_job',         array( $this, 'ajax_run_job' ) );
+        add_action( 'wp_ajax_flazz_test_api',        array( $this, 'ajax_test_api' ) );
+        add_action( 'wp_ajax_flazz_manual_fetch',    array( $this, 'ajax_manual_fetch' ) );
+        add_action( 'wp_ajax_flazz_research_keyword',array( $this, 'ajax_research_keyword' ) );
     }
 
     // =========================================================================
@@ -36,44 +36,44 @@ class Newslan_Admin {
     // =========================================================================
 
     public function add_menu_page() {
-        add_menu_page( 'Newslan AI', 'Newslan AI', 'manage_options', 'newslan-ai',
+        add_menu_page( 'Flazz AI', 'Flazz AI', 'manage_options', 'flazz-ai',
             array( $this, 'render_jobs_page' ), 'dashicons-rss', 30 );
 
-        add_submenu_page( 'newslan-ai', 'Auto-Jobs Manager', 'Auto-Jobs', 'manage_options',
-            'newslan-ai', array( $this, 'render_jobs_page' ) );
+        add_submenu_page( 'flazz-ai', 'Auto-Jobs Manager', 'Auto-Jobs', 'manage_options',
+            'flazz-ai', array( $this, 'render_jobs_page' ) );
 
-        add_submenu_page( 'newslan-ai', 'Manual Fetch & Tools', 'Manual Tools', 'manage_options',
-            'newslan-manual-tools', array( $this, 'render_manual_tools_page' ) );
+        add_submenu_page( 'flazz-ai', 'Manual Fetch & Tools', 'Manual Tools', 'manage_options',
+            'flazz-manual-tools', array( $this, 'render_manual_tools_page' ) );
 
-        add_submenu_page( 'newslan-ai', 'Global Settings', 'Settings', 'manage_options',
-            'newslan-settings', array( $this, 'render_settings_page' ) );
+        add_submenu_page( 'flazz-ai', 'Global Settings', 'Settings', 'manage_options',
+            'flazz-settings', array( $this, 'render_settings_page' ) );
     }
 
     public function register_settings() {
         $options = array(
-            'newslan_ai_license_key', 'newslan_ai_groq_key', 'newslan_ai_replicate_token',
-            'newslan_ai_rss_source_preset', 'newslan_ai_rss_feed_url', 'newslan_ai_fetch_limit',
-            'newslan_ai_image_mode', 'newslan_ai_writing_style', 'newslan_ai_article_model',
-            'newslan_ai_pixabay_key',
+            'flazz_ai_license_key', 'flazz_ai_groq_key', 'flazz_ai_replicate_token',
+            'flazz_ai_rss_source_preset', 'flazz_ai_rss_feed_url', 'flazz_ai_fetch_limit',
+            'flazz_ai_image_mode', 'flazz_ai_writing_style', 'flazz_ai_article_model',
+            'flazz_ai_pixabay_key',
         );
         foreach ( $options as $opt ) {
-            register_setting( 'newslan_ai_settings', $opt );
+            register_setting( 'flazz_ai_settings', $opt );
         }
     }
 
     public function enqueue_admin_scripts( $hook ) {
-        $pages = array( 'newslan-ai', 'newslan-manual-tools', 'newslan-settings' );
+        $pages = array( 'flazz-ai', 'flazz-manual-tools', 'flazz-settings' );
         $found = false;
         foreach ( $pages as $p ) {
             if ( strpos( $hook, $p ) !== false ) { $found = true; break; }
         }
         if ( ! $found ) return;
 
-        wp_enqueue_script( 'newslan-admin-js', NEWSLAN_AI_URL . 'admin/admin.js',
-            array( 'jquery' ), NEWSLAN_AI_VERSION, true );
-        wp_localize_script( 'newslan-admin-js', 'newslanData', array(
+        wp_enqueue_script( 'flazz-admin-js', FLAZZ_AI_URL . 'admin/admin.js',
+            array( 'jquery' ), FLAZZ_AI_VERSION, true );
+        wp_localize_script( 'flazz-admin-js', 'flazzData', array(
             'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'newslan_admin_nonce' ),
+            'nonce'    => wp_create_nonce( 'flazz_admin_nonce' ),
         ) );
     }
 
@@ -82,19 +82,19 @@ class Newslan_Admin {
     // =========================================================================
 
     private function log( $msg ) {
-        error_log( '[Newslan AI] ' . $msg );
+        error_log( '[Flazz AI] ' . $msg );
     }
 
     private function check_permission() {
-        check_ajax_referer( 'newslan_admin_nonce', 'nonce' );
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( 'Unauthorized' );
         }
     }
 
     private function check_license() {
-        require_once plugin_dir_path( __FILE__ ) . '../includes/class-newslan-license.php';
-        if ( ! Newslan_License_Manager::get_instance()->is_valid() ) {
+        require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-license.php';
+        if ( ! Flazz_License_Manager::get_instance()->is_valid() ) {
             wp_send_json_error( 'Lisensi tidak valid atau sudah kadaluarsa. Silakan periksa tab Pengaturan.' );
         }
     }
@@ -109,7 +109,7 @@ class Newslan_Admin {
         ) );
 
         if ( $post_id && ! is_wp_error( $post_id ) ) {
-            update_post_meta( $post_id, '_newslan_source_url', $source_url );
+            update_post_meta( $post_id, '_flazz_source_url', $source_url );
 
             if ( ! empty( $image_url ) ) {
                 require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -146,7 +146,7 @@ class Newslan_Admin {
 
                         // Build file array for wp_handle_sideload
                         $file_array = array(
-                            'name'     => 'newslan-' . $post_id . '.' . $ext,
+                            'name'     => 'flazz-' . $post_id . '.' . $ext,
                             'tmp_name' => $tmp_file,
                         );
                         $att_id = media_handle_sideload( $file_array, $post_id, $data['title'] );
@@ -237,7 +237,7 @@ class Newslan_Admin {
      * @return string|false   Direct image URL or false on failure
      */
     private function fetch_pixabay_image( $query ) {
-        $api_key = get_option( 'newslan_ai_pixabay_key', '' );
+        $api_key = get_option( 'flazz_ai_pixabay_key', '' );
 
         if ( empty( $api_key ) ) {
             $this->log( 'fetch_pixabay_image: Pixabay API key not set.' );
@@ -698,7 +698,7 @@ class Newslan_Admin {
     // =========================================================================
 
     public function render_jobs_page() {
-        $job_engine  = Newslan_Job_Engine::get_instance();
+        $job_engine  = Flazz_Job_Engine::get_instance();
         $jobs        = $job_engine->get_jobs();
         $type_labels = array(
             'keyword'     => '🔍 Keyword Search',
@@ -707,12 +707,12 @@ class Newslan_Admin {
             'smart_trend' => '📈 Trending',
         );
         ?>
-        <div class="wrap" id="newslan-job-manager">
+        <div class="wrap" id="flazz-job-manager">
             <h1>📋 Auto-Jobs Manager</h1>
             <p class="description">Buat dan kelola job otomasi berita. Setiap job akan mencari dan memposting artikel secara otomatis.</p>
 
             <div style="margin: 20px 0;">
-                <button id="newslan-open-job-form" class="button button-primary button-large">➕ Buat Job Baru</button>
+                <button id="flazz-open-job-form" class="button button-primary button-large">➕ Buat Job Baru</button>
             </div>
 
             <table class="wp-list-table widefat fixed striped posts">
@@ -740,7 +740,7 @@ class Newslan_Admin {
                             if ( $type === 'keyword' ) $detail = $keyword;
                             if ( $type === 'ai_editor' ) $detail = $ai_idea;
 
-                            $cron_url = site_url( '/?newslan_run_job=' . $jobs_item->ID . '&key=' . $secret );
+                            $cron_url = site_url( '/?flazz_run_job=' . $jobs_item->ID . '&key=' . $secret );
                         ?>
                         <tr>
                             <td><strong><?php echo esc_html( $jobs_item->post_title ); ?></strong></td>
@@ -761,7 +761,7 @@ class Newslan_Admin {
             </table>
 
             <!-- Job Creation Form -->
-            <div id="newslan-job-form-container" style="display:none; margin-top:30px; background:#fff; padding:25px; border:1px solid #ccd0d4; border-radius:6px;">
+            <div id="flazz-job-form-container" style="display:none; margin-top:30px; background:#fff; padding:25px; border:1px solid #ccd0d4; border-radius:6px;">
                 <h2 style="margin-top:0;">Buat Auto-Job Baru</h2>
                 <table class="form-table">
                     <tr>
@@ -858,8 +858,8 @@ class Newslan_Admin {
                     </tr>
                 </table>
                 <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button id="newslan-save-job" class="button button-primary button-large">💾 Simpan Job</button>
-                    <button id="newslan-close-job-form" class="button button-large">Batal</button>
+                    <button id="flazz-save-job" class="button button-primary button-large">💾 Simpan Job</button>
+                    <button id="flazz-close-job-form" class="button button-large">Batal</button>
                 </div>
             </div>
         </div>
@@ -875,7 +875,7 @@ class Newslan_Admin {
             'liputan6' => 'https://www.liputan6.com/rss',
             'tribun'   => 'https://www.tribunnews.com/rss',
         );
-        $current_url = get_option( 'newslan_ai_rss_feed_url', '' );
+        $current_url = get_option( 'flazz_ai_rss_feed_url', '' );
         ?>
         <div class="wrap">
             <h1>🛠 Manual Tools</h1>
@@ -901,13 +901,13 @@ class Newslan_Admin {
                     <tr>
                         <th>URL RSS Manual</th>
                         <td>
-                            <input type="url" id="newslan_manual_rss_url" class="large-text" placeholder="https://example.com/rss" value="<?php echo esc_attr( $current_url ); ?>">
+                            <input type="url" id="flazz_manual_rss_url" class="large-text" placeholder="https://example.com/rss" value="<?php echo esc_attr( $current_url ); ?>">
                             <p class="description">Input URL RSS di sini jika tidak ada di daftar preset di atas.</p>
                         </td>
                     </tr>
                 </table>
-                <button id="newslan-manual-fetch" class="button button-primary button-large" style="margin-top:10px;">▶ Fetch & Proses Sekarang</button>
-                <div id="newslan-fetch-status" style="margin-top:15px; font-weight:bold;"></div>
+                <button id="flazz-manual-fetch" class="button button-primary button-large" style="margin-top:10px;">▶ Fetch & Proses Sekarang</button>
+                <div id="flazz-fetch-status" style="margin-top:15px; font-weight:bold;"></div>
             </div>
 
             <!-- SECTION 2: Keyword Research -->
@@ -919,12 +919,12 @@ class Newslan_Admin {
                 <table class="form-table" style="margin:0;">
                     <tr>
                         <th style="width:180px;">Kata Kunci <span style="color:red">*</span></th>
-                        <td><input type="text" id="newslan_research_keyword" class="regular-text" placeholder="Contoh: Timnas Indonesia U-23" style="width:100%; max-width:400px;"></td>
+                        <td><input type="text" id="flazz_research_keyword" class="regular-text" placeholder="Contoh: Timnas Indonesia U-23" style="width:100%; max-width:400px;"></td>
                     </tr>
                     <tr>
                         <th>Gaya Penulisan</th>
                         <td>
-                            <select id="newslan_research_style">
+                            <select id="flazz_research_style">
                                 <option value="Professional">Professional (Formal &amp; Lugas)</option>
                                 <option value="Casual">Casual (Santai &amp; Gaul)</option>
                                 <option value="Investigative">Investigatif (Mendalam &amp; Kritis)</option>
@@ -934,7 +934,7 @@ class Newslan_Admin {
                     <tr>
                         <th>Tone / Model Artikel</th>
                         <td>
-                            <select id="newslan_research_model">
+                            <select id="flazz_research_model">
                                 <option value="Straight News">Straight News (Berita Langsung)</option>
                                 <option value="Feature Story">Feature Story (Narasi Mendalam)</option>
                                 <option value="Opinion">Opinion / Opini</option>
@@ -945,9 +945,9 @@ class Newslan_Admin {
                     <tr>
                         <th>Sumber Foto / Featured Image</th>
                         <td>
-                            <select id="newslan_research_image_mode">
+                            <select id="flazz_research_image_mode">
                                 <option value="rss">Otomatis dari RSS / OG Image Artikel</option>
-                                <option value="pixabay">�️ Pixabay Image Search (FREE)</option>
+                                <option value="pixabay">🖼️ Pixabay Image Search (FREE)</option>
                                 <option value="generate_ai">🤖 Generate dengan AI (Replicate)</option>
                                 <option value="none">Tanpa Foto</option>
                             </select>
@@ -961,7 +961,7 @@ class Newslan_Admin {
                     <tr id="row-thumbnail-style" style="display:none;">
                         <th>Style Thumbnail AI</th>
                         <td>
-                            <select id="newslan_research_thumbnail_style">
+                            <select id="flazz_research_thumbnail_style">
                                 <option value="editorial_vector">🎨 Editorial Vector (Majalah Satiris)</option>
                                 <option value="real_photo">📸 Real Photo (Foto Realistis)</option>
                             </select>
@@ -972,8 +972,8 @@ class Newslan_Admin {
                         </td>
                     </tr>
                 </table>
-                <button id="newslan-start-research" class="button button-secondary button-large" style="margin-top:10px;">🔬 Mulai Riset & Posting</button>
-                <div id="newslan-research-status" style="margin-top:15px; font-weight:bold;"></div>
+                <button id="flazz-start-research" class="button button-secondary button-large" style="margin-top:10px;">🔬 Mulai Riset & Posting</button>
+                <div id="flazz-research-status" style="margin-top:15px; font-weight:bold;"></div>
             </div>
         </div>
         <?php
@@ -1021,12 +1021,12 @@ class Newslan_Admin {
             <div class="card" style="max-width:700px; margin-top:20px; padding:20px;">
                 <h2 style="margin-top:0;">🔑 API Keys & Configuration</h2>
                 <form method="post" action="options.php">
-                    <?php settings_fields( 'newslan_ai_settings' ); ?>
+                    <?php settings_fields( 'flazz_ai_settings' ); ?>
                     <table class="form-table">
                         <tr>
                             <th>License Key</th>
                             <td>
-                                <input type="text" name="newslan_ai_license_key" value="<?php echo esc_attr( get_option( 'newslan_ai_license_key' ) ); ?>" class="regular-text">
+                                <input type="text" name="flazz_ai_license_key" value="<?php echo esc_attr( get_option( 'flazz_ai_license_key' ) ); ?>" class="regular-text">
                                 <span style="margin-left:10px; font-weight:bold; color:<?php echo $license_status === 'valid' ? 'green' : '#d63638'; ?>">
                                     <?php echo strtoupper( $license_status ); ?>
                                 </span>
@@ -1035,8 +1035,8 @@ class Newslan_Admin {
                         <tr>
                             <th>Groq API Key</th>
                             <td>
-                                <input type="password" name="newslan_ai_groq_key" value="<?php echo esc_attr( get_option( 'newslan_ai_groq_key' ) ); ?>" class="regular-text">
-                                <button type="button" id="newslan-test-api" class="button" style="margin-left:10px;">🧪 Test Koneksi</button>
+                                <input type="password" name="flazz_ai_groq_key" value="<?php echo esc_attr( get_option( 'flazz_ai_groq_key' ) ); ?>" class="regular-text">
+                                <button type="button" id="flazz-test-api" class="button" style="margin-left:10px;">🧪 Test Koneksi</button>
                                 <span id="test-api-status" style="margin-left:10px; font-weight:bold;"></span>
                                 <p class="description">Dapatkan API key gratis di <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
                             </td>
@@ -1044,7 +1044,7 @@ class Newslan_Admin {
                         <tr>
                             <th>Replicate API Token <span style="color:#888; font-size:12px; font-weight:normal;">(opsional)</span></th>
                             <td>
-                                <input type="password" name="newslan_ai_replicate_token" value="<?php echo esc_attr( get_option( 'newslan_ai_replicate_token' ) ); ?>" class="regular-text">
+                                <input type="password" name="flazz_ai_replicate_token" value="<?php echo esc_attr( get_option( 'flazz_ai_replicate_token' ) ); ?>" class="regular-text">
                                 <p class="description">
                                     Diperlukan jika Bapak ingin generate gambar AI (Replicate Flux).<br>
                                     Dapatkan token di <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/account/api-tokens</a>
@@ -1055,7 +1055,7 @@ class Newslan_Admin {
                         <tr>
                             <th>Pixabay API Key <span style="color:#888; font-size:12px; font-weight:normal;">(Image Search, gratis)</span></th>
                             <td>
-                                <input type="password" name="newslan_ai_pixabay_key" value="<?php echo esc_attr( get_option( 'newslan_ai_pixabay_key' ) ); ?>" class="regular-text">
+                                <input type="password" name="flazz_ai_pixabay_key" value="<?php echo esc_attr( get_option( 'flazz_ai_pixabay_key' ) ); ?>" class="regular-text">
                                 <p class="description">
                                     Untuk fitur <strong>Pixabay Image Search</strong> — gratis tanpa batas.<br>
                                     Daftar + ambil API key di <a href="https://pixabay.com/api/docs/" target="_blank">pixabay.com/api/docs</a> (cukup register, langsung dapat key).
@@ -1066,9 +1066,9 @@ class Newslan_Admin {
                         <tr>
                             <th>Gaya Penulisan Default</th>
                             <td>
-                                <select name="newslan_ai_writing_style">
+                                <select name="flazz_ai_writing_style">
                                     <?php foreach ( array( 'Professional', 'Casual', 'Investigative' ) as $s ) : ?>
-                                        <option value="<?php echo $s; ?>" <?php selected( get_option( 'newslan_ai_writing_style', 'Professional' ), $s ); ?>><?php echo $s; ?></option>
+                                        <option value="<?php echo $s; ?>" <?php selected( get_option( 'flazz_ai_writing_style', 'Professional' ), $s ); ?>><?php echo $s; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>
@@ -1076,7 +1076,7 @@ class Newslan_Admin {
                         <tr>
                             <th>Max Artikel per Fetch</th>
                             <td>
-                                <input type="number" name="newslan_ai_fetch_limit" value="<?php echo esc_attr( get_option( 'newslan_ai_fetch_limit', 5 ) ); ?>" min="1" max="20" style="width:80px;">
+                                <input type="number" name="flazz_ai_fetch_limit" value="<?php echo esc_attr( get_option( 'flazz_ai_fetch_limit', 5 ) ); ?>" min="1" max="20" style="width:80px;">
                                 <p class="description">Jumlah maksimal artikel yang diproses per satu kali fetch/run.</p>
                             </td>
                         </tr>
