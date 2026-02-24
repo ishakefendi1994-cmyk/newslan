@@ -51,7 +51,7 @@ class Newslan_License_Manager {
         
         // Next.js API endpoint (License Server)
         // Hardcoded for now as per plan, could be moved to settings
-        $api_url = 'http://localhost:3000/api/license/verify'; 
+        $api_url = 'https://www.cryptotechnews.net/api/license/verify'; 
 
         $response = wp_remote_post( $api_url, array(
             'timeout' => 15,
