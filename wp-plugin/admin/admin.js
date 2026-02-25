@@ -385,23 +385,46 @@ jQuery(document).ready(function ($) {
 
     // GOOGLE TRENDS: Fetch and Render
     // ==========================================================================
-    function fetchGoogleTrends(geo, selector) {
+    function fetchGoogleTrends(geo, selector, isFull = false) {
         var $container = $(selector);
         if (!$container.length) return;
 
-        console.log('[Flazz AI] Fetching trends for:', geo);
+        if (isFull) {
+            $container.html('<div style="text-align:center; padding: 40px;"><span class="spinner is-active" style="float:none;"></span><p>Mengambil data tren...</p></div>');
+        }
+
+        console.log('[Flazz AI] Fetching trends for:', geo, 'isFull:', isFull);
         $.post(flazzData.ajax_url, {
             action: 'flazz_get_trends',
             nonce: flazzData.nonce,
             geo: geo
         }, function (response) {
             if (response.success && response.data.length > 0) {
-                var html = '<div style="margin-top:5px; font-weight:bold; color:#444; font-size:11px; margin-bottom:5px;">Trend Saat Ini (' + geo + '):</div>';
-                response.data.forEach(function (t) {
-                    html += '<span class="trend-badge" data-keyword="' + t.keyword + '">' +
-                        t.keyword + '<span class="trend-traffic">📈 ' + t.traffic + '+</span></span>';
-                });
-                $container.html(html);
+                if (isFull) {
+                    var html = '<table class="trends-table">' +
+                        '<thead><tr><th>#</th><th>Kata Kunci</th><th>Trafik</th><th>Aksi Cepat</th></tr></thead>' +
+                        '<tbody>';
+                    response.data.forEach(function (t, index) {
+                        html += '<tr>' +
+                            '<td class="trend-rank">' + (index + 1) + '</td>' +
+                            '<td><span class="trend-keyword">' + t.keyword + '</span></td>' +
+                            '<td><span class="trend-vol">📈 ' + t.traffic + '+ Pencarian</span></td>' +
+                            '<td>' +
+                            '<button class="button trend-action-research" data-keyword="' + t.keyword + '">🔬 Riset Sekarang</button> ' +
+                            '<button class="button trend-action-job" data-keyword="' + t.keyword + '">🤖 Buat Auto-Job</button>' +
+                            '</td>' +
+                            '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    $container.html(html);
+                } else {
+                    var html = '<div style="margin-top:5px; font-weight:bold; color:#444; font-size:11px; margin-bottom:5px;">Trend Saat Ini (' + geo + '):</div>';
+                    response.data.forEach(function (t) {
+                        html += '<span class="trend-badge" data-keyword="' + t.keyword + '">' +
+                            t.keyword + '<span class="trend-traffic">📈 ' + t.traffic + '+</span></span>';
+                    });
+                    $container.html(html);
+                }
             } else {
                 $container.html('<span class="description" style="color:#d63638;">Gagal memuat tren.</span>');
             }
@@ -411,6 +434,43 @@ jQuery(document).ready(function ($) {
     // Load trends on page load
     fetchGoogleTrends('ID', '#manual-keyword-trends');
     fetchGoogleTrends('ID', '#job-keyword-trends');
+    fetchGoogleTrends('ID', '#trends-full-container', true);
+
+    // Trend Region Switcher
+    $(document).on('change', '#flazz-trend-region-selector', function () {
+        var geo = $(this).val();
+        fetchGoogleTrends(geo, '#trends-full-container', true);
+    });
+
+    // Trend actions
+    $(document).on('click', '.trend-action-research', function () {
+        var keyword = $(this).data('keyword');
+        // Redirect to Manual Tools with query param
+        window.location.href = 'admin.php?page=flazz-ai-manual&keyword=' + encodeURIComponent(keyword);
+    });
+
+    $(document).on('click', '.trend-action-job', function () {
+        var keyword = $(this).data('keyword');
+        // Switch to Jobs tab
+        $('.nav-tab[href="#flazz-tab-jobs"]').trigger('click');
+        // Open form
+        if ($('#flazz-job-form-container').is(':hidden')) {
+            $('#flazz-open-job-form').trigger('click');
+        }
+        // Fill keyword
+        $('#job_type').val('keyword').trigger('change');
+        $('#job_keyword').val(keyword);
+        // Scroll
+        $('html, body').animate({
+            scrollTop: $("#flazz-job-form-container").offset().top - 50
+        }, 500);
+    });
+
+    // Handle Manual page keyword auto-fill
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('keyword')) {
+        $('#flazz_research_keyword').val(urlParams.get('keyword'));
+    }
 
     // Trend badge click handler
     $(document).on('click', '.trend-badge', function () {

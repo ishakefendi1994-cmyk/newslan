@@ -800,7 +800,8 @@ class Flazz_Admin {
 
             <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
                 <a href="#flazz-tab-jobs" class="nav-tab nav-tab-active">📋 Daftar Auto-Jobs</a>
-                <a href="#flazz-tab-rss-db" class="nav-tab">📡 Database RSS Rekomendasi</a>
+                <a href="#flazz-tab-rss-db" class="nav-tab">📡 Database RSS</a>
+                <a href="#flazz-tab-trends" class="nav-tab">📈 Trending Topik</a>
             </h2>
 
             <!-- TAB 1: JOB MANAGER -->
@@ -1058,12 +1059,46 @@ class Flazz_Admin {
                 </div>
             </div>
 
+            <!-- TAB 3: TRENDING TOPICS -->
+            <div id="flazz-tab-trends" class="tab-content" style="display:none;">
+                <div class="card" style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                        <div>
+                            <h2 style="margin:0;">📈 Trending Topik Hari Ini</h2>
+                            <p class="description">Temukan topik viral dari Google Trends untuk dijadikan konten segar.</p>
+                        </div>
+                        <div>
+                            <label style="font-weight: bold; margin-right: 10px;">Pilih Wilayah:</label>
+                            <select id="flazz-trend-region-selector" class="regular-text" style="width: auto;">
+                                <option value="ID">🇮🇩 Indonesia</option>
+                                <option value="US">🌐 Global / USA (English)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="trends-full-container">
+                        <div style="text-align:center; padding: 40px;">
+                            <span class="spinner is-active" style="float:none;"></span>
+                            <p>Sedang mengambil data tren terbaru...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <style>
                 .tab-content { background: #fff; border: 1px solid #ccd0d4; border-top: none; padding: 20px; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
                 .nav-tab-wrapper { margin-bottom: 0 !important; }
                 .trend-badge { display: inline-block; padding: 5px 12px; background: #f0f0f1; border: 1px solid #ccd0d4; border-radius: 20px; margin: 3px; cursor: pointer; transition: all 0.2s; font-size: 12px; }
                 .trend-badge:hover { background: #2271b1; color: #fff; border-color: #2271b1; }
                 .trend-traffic { font-size: 10px; opacity: 0.7; margin-left: 5px; }
+
+                .trends-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                .trends-table th, .trends-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+                .trends-table th { background: #f9f9f9; font-weight: bold; color: #444; }
+                .trends-table tr:hover { background: #fdfdfd; }
+                .trend-rank { font-weight: bold; color: #2271b1; font-size: 16px; width: 40px; }
+                .trend-keyword { font-weight: 600; font-size: 14px; display: block; }
+                .trend-vol { color: #666; font-size: 12px; }
             </style>
         </div>
         <?php
