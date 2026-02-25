@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: settings.site_favicon_url || '/favicon.ico',
     },
     verification: {
-      google: 'u8cZGQ1OYtYad-py6DebKVpaUCdxNH2HuSQfzjCipoU',
+      google: 'Qos1JSRySAiuFYjTm_X3eLQRpU1JPRF8EQy-3a03BVY',
     }
   }
 }
