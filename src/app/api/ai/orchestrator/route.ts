@@ -147,9 +147,9 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
     let finalPrompt = prompt
 
     if (style === 'editorial_vector') {
-        finalPrompt = "Front page news editorial flat vector illustration, clean geometric shapes, professional news magazine style, simple corporate colors, high quality, " + prompt
+        finalPrompt = "Front-page news editorial vector illustration, clean geometric shapes, professional news magazine style, " + prompt
     } else {
-        finalPrompt = "Professional DSLR press photography, award winning news photo, high resolution, 8k, realistic journalistic style, " + prompt
+        finalPrompt = "Professional news press photography, award-winning journalism style, high resolution, " + prompt
     }
 
     // 1. Start the prediction
@@ -160,15 +160,12 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            // stabilityai/sdxl-turbo (via jyoung105)
-            version: "521267bca99a59f8b16b812755603e23b7a5412767568d47c915920eabd9ef90",
+            // black-forest-labs/flux-schnell (High quality + Great text)
+            version: "f711200ede178e244d01b9794d03be5953046bcbad2448373b9e86c0e252a197",
             input: {
                 prompt: finalPrompt,
-                width: 512,
-                height: 512,
-                num_inference_steps: 4, // Sweet spot for Turbo
-                guidance_scale: 1.5,      // Turbo models need very low CFG (1-2)
-                scheduler: "K_EULER"
+                aspect_ratio: "1:1",
+                num_inference_steps: 4
             }
         })
     })
