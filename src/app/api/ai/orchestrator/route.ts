@@ -96,13 +96,14 @@ async function handlePromptGeneration(apiKey: string, payload: any) {
 async function handleGroqProcessing(apiKey: string, action: string, payload: any) {
     if (!apiKey) return NextResponse.json({ success: false, message: 'Groq API Key missing.' }, { status: 400 })
 
-    let systemPrompt = "You are a Professional Content Writer and SEO Expert. Output MUST be in Indonesian."
+    const targetLang = payload.target_language || 'Indonesian'
+    let systemPrompt = `You are a Professional Content Writer and SEO Expert. Output MUST be in ${targetLang}.`
 
     if (action === 'rewrite') {
-        systemPrompt += "\nTask: Rewrite the following article to be unique, engaging, and SEO friendly. Maintain the core facts.\n"
+        systemPrompt += `\nTask: Rewrite the following article to be unique, engaging, and SEO friendly in ${targetLang}. Maintain the core facts.\n`
         systemPrompt += "STYLE: " + (payload.style || 'Professional') + ". MODEL: " + (payload.model || 'Straight News') + ".\n"
     } else {
-        systemPrompt += "\nTask: Develop a single idea into a full, high-quality article.\n"
+        systemPrompt += `\nTask: Develop a single idea into a full, high-quality article in ${targetLang}.\n`
         systemPrompt += "STYLE: " + (payload.style || 'Professional') + ". MODEL: " + (payload.model || 'Straight News') + ".\n"
     }
 

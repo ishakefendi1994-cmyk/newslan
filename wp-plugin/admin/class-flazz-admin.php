@@ -626,7 +626,7 @@ class Flazz_Admin {
             $thumbnail_style  = isset( $_POST['thumbnail_style'] ) ? sanitize_text_field( $_POST['thumbnail_style'] ) : 'editorial_vector';
             $this->log( 'ajax_research_keyword: style=' . $style . ' model=' . $model . ' image_mode=' . $image_mode . ' thumb_style=' . $thumbnail_style );
 
-            $synthesis = $ai_writer->synthesize_from_multiple_sources( $source_contents, $style, $model );
+            $synthesis = $ai_writer->synthesize_from_multiple_sources( $source_contents, $style, $model, $target_language );
 
             if ( ! $synthesis ) {
                 $err = $ai_writer->get_last_error();
@@ -800,6 +800,26 @@ class Flazz_Admin {
                             <p class="description">Sistem akan mencari berita terkait kata kunci ini setiap kali job dijalankan.</p>
                         </td>
                     </tr>
+                    <tr id="row-research-scope">
+                        <th>Cakupan Riset</th>
+                        <td>
+                            <select id="job_research_scope" class="regular-text">
+                                <option value="local">🇮🇩 Lokal Indonesia</option>
+                                <option value="global">🌐 Global International (English Sources)</option>
+                            </select>
+                            <p class="description">Hanya berlaku untuk tipe Keyword Search.</p>
+                        </td>
+                    </tr>
+                    <tr id="row-target-language">
+                        <th>Bahasa Output</th>
+                        <td>
+                            <select id="job_target_language" class="regular-text">
+                                <option value="Indonesian">Bahasa Indonesia</option>
+                                <option value="English">English</option>
+                            </select>
+                            <p class="description">AI akan menulis artikel dalam bahasa yang dipilih.</p>
+                        </td>
+                    </tr>
                     <tr id="row-rss" style="display:none;">
                         <th>RSS Feed URL</th>
                         <td><input type="url" id="job_rss_url" class="large-text" placeholder="https://example.com/feed/rss"></td>
@@ -935,6 +955,24 @@ class Flazz_Admin {
                     <tr>
                         <th style="width:180px;">Kata Kunci <span style="color:red">*</span></th>
                         <td><input type="text" id="flazz_research_keyword" class="regular-text" placeholder="Contoh: Timnas Indonesia U-23" style="width:100%; max-width:400px;"></td>
+                    </tr>
+                    <tr>
+                        <th>Cakupan Riset</th>
+                        <td>
+                            <select id="flazz_research_scope">
+                                <option value="local">🇮🇩 Lokal Indonesia</option>
+                                <option value="global">🌐 Global International (English Sources)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Bahasa Output</th>
+                        <td>
+                            <select id="flazz_research_language">
+                                <option value="Indonesian">Bahasa Indonesia</option>
+                                <option value="English">English</option>
+                            </select>
+                        </td>
                     </tr>
                     <tr>
                         <th>Gaya Penulisan</th>

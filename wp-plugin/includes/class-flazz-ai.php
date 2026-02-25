@@ -17,7 +17,7 @@ class Flazz_AI_Writer {
     /**
      * Rewrite content using AI Orchestrator (Cloud Brain)
      */
-    public function rewrite_article( $title, $content, $style = 'Professional', $model = 'Straight News' ) {
+    public function rewrite_article( $title, $content, $style = 'Professional', $model = 'Straight News', $target_language = 'Indonesian' ) {
         $api_key = get_option( 'flazz_ai_groq_key' );
         $license = get_option( 'flazz_ai_license_key' );
 
@@ -40,7 +40,8 @@ class Flazz_AI_Writer {
                     'title'   => $title,
                     'content' => mb_substr( $content, 0, 3000 ),
                     'style'   => $style,
-                    'model'   => $model
+                    'model'   => $model,
+                    'target_language' => $target_language
                 )
             )),
             'timeout' => 90
@@ -52,18 +53,15 @@ class Flazz_AI_Writer {
     /**
      * Synthesize multiple articles (Cloud Brain)
      */
-    public function synthesize_from_multiple_sources( $sources, $style = 'Professional', $model = 'Straight News' ) {
-        // Implementation for synthesis via cloud
-        // For simplicity, we can use the same rewrite logic or create a specific cloud action
-        // Currently fallback to single rewrite of first source or error
+    public function synthesize_from_multiple_sources( $sources, $style = 'Professional', $model = 'Straight News', $target_language = 'Indonesian' ) {
         if ( empty( $sources ) ) return false;
-        return $this->rewrite_article( $sources[0]['title'], $sources[0]['content'], $style, $model );
+        return $this->rewrite_article( $sources[0]['title'], $sources[0]['content'], $style, $model, $target_language );
     }
 
     /**
      * Write from Idea (Cloud Brain)
      */
-    public function write_from_idea( $idea, $style = 'Professional', $model = 'Straight News' ) {
+    public function write_from_idea( $idea, $style = 'Professional', $model = 'Straight News', $target_language = 'Indonesian' ) {
         $api_key = get_option( 'flazz_ai_groq_key' );
         $license = get_option( 'flazz_ai_license_key' );
 
@@ -84,7 +82,8 @@ class Flazz_AI_Writer {
                 'payload'     => array(
                     'idea'  => $idea,
                     'style' => $style,
-                    'model' => $model
+                    'model' => $model,
+                    'target_language' => $target_language
                 )
             )),
             'timeout' => 90

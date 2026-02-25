@@ -75,6 +75,8 @@ class Flazz_Job_Engine {
             'image_mode',
             'thumbnail_style',
             'ai_idea',
+            'target_language',
+            'research_scope',
         );
 
         foreach ( $fields as $field ) {
@@ -109,6 +111,8 @@ class Flazz_Job_Engine {
         $image_mode  = get_post_meta( $job_id, '_flazz_job_image_mode', true ) ?: 'rss';
         $thumb_style = get_post_meta( $job_id, '_flazz_job_thumbnail_style', true ) ?: 'editorial_vector';
         $ai_idea     = get_post_meta( $job_id, '_flazz_job_ai_idea', true );
+        $target_lang = get_post_meta( $job_id, '_flazz_job_target_language', true ) ?: 'Indonesian';
+        $scope       = get_post_meta( $job_id, '_flazz_job_research_scope', true ) ?: 'local';
 
         $grabber   = Flazz_Grabber::get_instance();
         $ai_writer = Flazz_AI_Writer::get_instance();
@@ -119,7 +123,8 @@ class Flazz_Job_Engine {
         
         // 1. Fetch or Generate
         if ( $job_type === 'keyword' ) {
-            $search_url = "https://news.google.com/rss/search?q=" . urlencode( $keyword ) . "&hl=id&gl=ID&ceid=ID:id";
+            $lang_param = ( $scope === 'global' ) ? 'hl=en&gl=US&ceid=US:en' : 'hl=id&gl=ID&ceid=ID:id';
+            $search_url = "https://news.google.com/rss/search?q=" . urlencode( $keyword ) . "&" . $lang_param;
             $articles = $grabber->fetch_rss( $search_url );
             if ( ! $articles ) return "Gagal mengambil data dari sumber (RSS/Search).";
         } else if ( $job_type === 'rss_watcher' ) {
@@ -127,7 +132,7 @@ class Flazz_Job_Engine {
             if ( ! $articles ) return "Gagal mengambil data dari sumber (RSS/Search).";
         } else if ( $job_type === 'ai_editor' ) {
             if ( empty( $ai_idea ) ) return "Ide Utama kosong. Silakan isi ide artikel.";
-            $synthesis = $ai_writer->write_from_idea( $ai_idea, $style, $model );
+            $synthesis = $ai_writer->write_from_idea( $ai_idea, $style, $model, $target_lang );
             if ( ! $synthesis ) return "AI Writer Gagal: " . $ai_writer->get_last_error();
         } else {
             return "Tipe job tidak dikenal.";
@@ -159,7 +164,7 @@ class Flazz_Job_Engine {
             if ( empty( $source_contents ) ) return "Tidak ada artikel baru yang valid untuk diproses.";
 
             // 3. Synthesize with AI
-            $synthesis = $ai_writer->synthesize_from_multiple_sources( $source_contents, $style, $model );
+            $synthesis = $ai_writer->synthesize_from_multiple_sources( $source_contents, $style, $model, $target_lang );
             if ( ! $synthesis ) return "AI Synthesis Gagal: " . $ai_writer->get_last_error();
         }
 

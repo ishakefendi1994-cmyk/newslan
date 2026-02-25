@@ -91,7 +91,9 @@ jQuery(document).ready(function ($) {
             writing_style: style,
             article_model: model,
             image_mode: imgMode,
-            thumbnail_style: thumbStyle
+            thumbnail_style: thumbStyle,
+            research_scope: $('#flazz_research_scope').val(),
+            target_language: $('#flazz_research_language').val()
         }, function (response) {
             console.log('[Flazz AI] Research Response:', response);
             $btn.prop('disabled', false).text('🔬 Mulai Riset & Posting');
@@ -150,7 +152,7 @@ jQuery(document).ready(function ($) {
     // Toggle keyword/rss/idea rows based on job type
     $(document).on('change', '#job_type', function () {
         var type = $(this).val();
-        $('#row-keyword, #row-rss, #row-ai-idea').hide();
+        $('#row-keyword, #row-rss, #row-ai-idea, #row-research-scope').hide();
 
         if (type === 'rss_watcher') {
             $('#row-rss').show();
@@ -158,6 +160,7 @@ jQuery(document).ready(function ($) {
             $('#row-ai-idea').show();
         } else {
             $('#row-keyword').show();
+            $('#row-research-scope').show();
         }
     });
 
@@ -197,6 +200,8 @@ jQuery(document).ready(function ($) {
             thumbnail_style: $('#job_thumbnail_style').val(),
             max_articles: $('#job_max_articles').val(),
             writing_style: $('#job_writing_style').val(),
+            target_language: $('#job_target_language').val(),
+            research_scope: $('#job_research_scope').val(),
             publish_status: 'publish'
         }, function (response) {
             console.log('[Flazz AI] Save Job Response:', response);
