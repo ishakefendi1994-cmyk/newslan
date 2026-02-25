@@ -386,7 +386,7 @@ class Flazz_Job_Engine {
     }
 
     private function generate_and_save_seo_meta( $post_id, $title, $content ) {
-        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
         $token   = get_option( 'flazz_ai_site_access_token' );
@@ -422,7 +422,7 @@ class Flazz_Job_Engine {
         $categories = get_categories( array( 'hide_empty' => 0 ) );
         $cat_names  = array_map( function($c){ return $c->name; }, $categories );
 
-        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
         $token   = get_option( 'flazz_ai_site_access_token' );

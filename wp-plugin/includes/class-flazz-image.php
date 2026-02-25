@@ -41,7 +41,7 @@ class Flazz_Image_Generator {
     }
 
     private function generate_prompt_via_cloud( $title, $content, $groq_key, $license, $style ) {
-        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
         
         $response = wp_remote_post( $api_url, array(
@@ -78,7 +78,7 @@ class Flazz_Image_Generator {
      * Call the Cloud Orchestrator to generate the image via Replicate
      */
     public function generate_image_via_cloud( $prompt, $style, $apiKey, $license ) {
-        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
         $this->last_error = '';
 
