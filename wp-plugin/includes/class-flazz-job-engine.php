@@ -389,10 +389,14 @@ class Flazz_Job_Engine {
         $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
+        $token   = get_option( 'flazz_ai_site_access_token' );
 
         $response = wp_remote_post( $api_url, array(
             'timeout' => 30,
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'generate_seo',
                 'license_key' => $license,
@@ -421,10 +425,14 @@ class Flazz_Job_Engine {
         $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
+        $token   = get_option( 'flazz_ai_site_access_token' );
 
         $response = wp_remote_post( $api_url, array(
             'timeout' => 30,
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'suggest_taxonomy',
                 'license_key' => $license,

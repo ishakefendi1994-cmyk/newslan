@@ -27,10 +27,14 @@ class Flazz_AI_Writer {
         }
 
         // Orchestrator API
-        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $token   = get_option( 'flazz_ai_site_access_token' );
 
         $response = wp_remote_post( $api_url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'rewrite',
                 'license_key' => $license,
@@ -70,10 +74,14 @@ class Flazz_AI_Writer {
             return false;
         }
 
-        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $token   = get_option( 'flazz_ai_site_access_token' );
 
         $response = wp_remote_post( $api_url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'write_from_idea',
                 'license_key' => $license,

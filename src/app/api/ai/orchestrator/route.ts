@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import Replicate from 'replicate'
+import crypto from 'crypto'
 
 export async function GET() {
     return NextResponse.json({
@@ -13,14 +14,31 @@ export async function POST(request: Request) {
     try {
         const body = await request.json()
         const { action, license_key, domain, api_key, payload } = body
+        const clientToken = request.headers.get('x-flazz-token')
 
         if (!license_key) {
             return NextResponse.json({ success: false, message: 'License key is required.' }, { status: 400 })
         }
 
+        if (!clientToken) {
+            return NextResponse.json({ success: false, message: 'Security Handshake failed: Token missing.' }, { status: 401 })
+        }
+
+        const internalSecret = process.env.FLAZZ_INTERNAL_SECRET || 'fallback_secret_123'
+
+        // Verify Handshake Token
+        const expectedToken = crypto
+            .createHash('sha256')
+            .update(license_key + domain + internalSecret)
+            .digest('hex')
+
+        if (clientToken !== expectedToken) {
+            return NextResponse.json({ success: false, message: 'Security Handshake failed: Invalid Token.' }, { status: 401 })
+        }
+
         const supabase = createAdminClient()
 
-        // 1. Verify License (Reuse logic or call internal helper)
+        // 1. Verify License status and domain
         const { data: license, error } = await supabase
             .from('plugin_licenses')
             .select('*, license_activations(domain)')
@@ -53,6 +71,8 @@ export async function POST(request: Request) {
             return await handleGetTrends(payload)
         } else if (action === 'generate_seo') {
             return await handleGenerateSeoMeta(api_key, payload)
+        } else if (action === 'suggest_taxonomy') {
+            return await handleSuggestTaxonomy(api_key, payload)
         }
 
         return NextResponse.json({ success: false, message: 'Unknown action.' }, { status: 400 })
@@ -365,4 +385,54 @@ async function handleGetTrends(payload: any) {
     }
 
     return NextResponse.json({ success: false, message: 'Tidak dapat mengambil data trending saat ini.' })
+}
+/**
+ * Suggest category and tags based on content.
+ */
+async function handleSuggestTaxonomy(apiKey: string, payload: any) {
+    const { title, content, categories } = payload
+    const snippet = content ? content.substring(0, 1000) : ''
+
+    const prompt = `Based on this news article, suggest:
+1. The most suitable category from this list: [${categories.join(', ')}]
+2. At least 5 relevant SEO tags.
+
+Title: ${title}
+Content snippet: ${snippet}
+
+Return ONLY a JSON object:
+{
+  "category_index": (number, index of the best matching category from the list, 0-based),
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}`
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                    { role: 'system', content: 'You are an SEO expert and news editor. Output only valid JSON.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.2,
+                response_format: { type: 'json_object' }
+            })
+        })
+
+        const data = await response.json()
+        const result = JSON.parse(data.choices[0].message.content)
+
+        return NextResponse.json({
+            success: true,
+            data: result
+        })
+    } catch (err: any) {
+        console.error('Groq Taxononomy Error:', err)
+        return NextResponse.json({ success: false, message: err.message }, { status: 500 })
+    }
 }

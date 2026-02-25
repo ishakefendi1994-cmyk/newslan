@@ -75,6 +75,11 @@ class Flazz_License_Manager {
             // Store extra info for the UI
             if ( isset( $body['data'] ) ) {
                 update_option( 'flazz_ai_license_info', $body['data'] );
+
+                // Store Handshake Token
+                if ( isset( $body['data']['site_access_token'] ) ) {
+                    update_option( 'flazz_ai_site_access_token', sanitize_text_field( $body['data']['site_access_token'] ) );
+                }
             }
 
             set_transient( 'flazz_license_check', 'valid', 12 * HOUR_IN_SECONDS );
@@ -84,6 +89,7 @@ class Flazz_License_Manager {
         // Invalid license
         update_option( $this->status_option, 'invalid' );
         delete_option( 'flazz_ai_license_info' );
+        delete_option( 'flazz_ai_site_access_token' );
         set_transient( 'flazz_license_check', 'invalid', 12 * HOUR_IN_SECONDS );
         return false;
     }

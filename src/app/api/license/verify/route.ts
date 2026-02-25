@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
     try {
@@ -10,6 +11,7 @@ export async function POST(request: Request) {
         }
 
         const supabase = createAdminClient()
+        const internalSecret = process.env.FLAZZ_INTERNAL_SECRET || 'fallback_secret_123'
 
         // 1. Fetch license details
         const { data: license, error } = await supabase
@@ -67,6 +69,12 @@ export async function POST(request: Request) {
             .update({ last_verified_at: new Date().toISOString() })
             .eq('id', license.id)
 
+        // 6. Generate Secret Handshake Token
+        const siteAccessToken = crypto
+            .createHash('sha256')
+            .update(license_key + domain + internalSecret)
+            .digest('hex')
+
         return NextResponse.json({
             success: true,
             message: 'License verified successfully.',
@@ -74,7 +82,8 @@ export async function POST(request: Request) {
                 status: 'active',
                 expires_at: license.expires_at,
                 max_domains: license.max_domains,
-                activations_count: alreadyRegistered ? activeDomains.length : activeDomains.length + 1
+                activations_count: alreadyRegistered ? activeDomains.length : activeDomains.length + 1,
+                site_access_token: siteAccessToken
             }
         })
 

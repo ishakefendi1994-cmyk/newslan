@@ -141,53 +141,6 @@ class Flazz_Admin {
         $this->log( 'send_telegram: sent for post_id=' . $post_id );
     }
 
-    // =========================================================================
-    // HELPER: Auto SEO Meta Generator (via Groq Orchestrator)
-    // =========================================================================
-
-    private function generate_and_save_seo_meta( $post_id, $title, $content ) {
-        $license = get_option( 'flazz_ai_license_key', '' );
-        $api_key = get_option( 'flazz_ai_groq_key', '' );
-        if ( empty( $license ) || empty( $api_key ) ) return;
-
-        $response = wp_remote_post( 'https://www.cryptotechnews.net/api/ai/orchestrator', array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
-            'body'    => json_encode( array(
-                'action'      => 'generate_seo',
-                'license_key' => $license,
-                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
-                'api_key'     => $api_key,
-                'payload'     => array(
-                    'title'   => $title,
-                    'content' => wp_strip_all_tags( substr( $content, 0, 1500 ) ),
-                ),
-            )),
-            'timeout' => 25,
-        ) );
-
-        if ( is_wp_error( $response ) ) return;
-
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
-        if ( ! isset( $body['success'] ) || ! $body['success'] ) return;
-
-        $meta = $body['data'];
-
-        // Save Yoast-compatible meta
-        if ( ! empty( $meta['meta_description'] ) ) {
-            update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta['meta_description'] );
-            update_post_meta( $post_id, 'rank_math_description', $meta['meta_description'] );
-        }
-        if ( ! empty( $meta['focus_keyword'] ) ) {
-            update_post_meta( $post_id, '_yoast_wpseo_focuskw', $meta['focus_keyword'] );
-            update_post_meta( $post_id, 'rank_math_focus_keyword', $meta['focus_keyword'] );
-        }
-        if ( ! empty( $meta['seo_title'] ) ) {
-            update_post_meta( $post_id, '_yoast_wpseo_title', $meta['seo_title'] );
-            update_post_meta( $post_id, 'rank_math_title', $meta['seo_title'] );
-        }
-
-        $this->log( 'generate_and_save_seo_meta: saved for post_id=' . $post_id );
-    }
 
     private function create_wp_post_direct( $data, $source_url, $image_url ) {
         // Apply internal linking before post creation
@@ -410,8 +363,14 @@ class Flazz_Admin {
             }
 
             // Test via cloud orchestrator (Saas transition)
-            $response = wp_remote_post( 'https://www.cryptotechnews.net/api/ai/orchestrator', array(
-                'headers' => array( 'Content-Type' => 'application/json' ),
+            $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+            $token   = get_option( 'flazz_ai_site_access_token' );
+
+            $response = wp_remote_post( $api_url, array(
+                'headers' => array( 
+                    'Content-Type'  => 'application/json',
+                    'X-Flazz-Token' => $token
+                ),
                 'body'    => json_encode( array(
                     'action'      => 'rewrite',
                     'license_key' => $license,
@@ -577,10 +536,14 @@ class Flazz_Admin {
         $this->check_permission();
 
         $geo = isset( $_POST['geo'] ) ? sanitize_text_field( $_POST['geo'] ) : 'ID';
-        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $token   = get_option( 'flazz_ai_site_access_token' );
 
         $response = wp_remote_post( $api_url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'get_trends',
                 'license_key' => get_option( 'flazz_ai_license_key' ),

@@ -41,10 +41,14 @@ class Flazz_Image_Generator {
     }
 
     private function generate_prompt_via_cloud( $title, $content, $groq_key, $license, $style ) {
-        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $token   = get_option( 'flazz_ai_site_access_token' );
         
         $response = wp_remote_post( $api_url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'generate_prompt',
                 'license_key' => $license,
@@ -73,20 +77,24 @@ class Flazz_Image_Generator {
     /**
      * Call the Cloud Orchestrator to generate the image via Replicate
      */
-    public function generate_image_via_cloud( $prompt, $style, $token, $license ) {
-        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+    public function generate_image_via_cloud( $prompt, $style, $apiKey, $license ) {
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $token   = get_option( 'flazz_ai_site_access_token' );
         $this->last_error = '';
 
         error_log( '[Flazz AI] generate_image_via_cloud: START' );
         error_log( '[Flazz AI] payload action=generate_image, style=' . $style . ', prompt=' . $prompt );
 
         $response = wp_remote_post( $api_url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => array( 
+                'Content-Type'  => 'application/json',
+                'X-Flazz-Token' => $token
+            ),
             'body'    => json_encode( array(
                 'action'      => 'generate_image',
                 'license_key' => $license,
                 'domain'      => parse_url( home_url(), PHP_URL_HOST ),
-                'api_key'     => $token,
+                'api_key'     => $apiKey,
                 'payload'     => array(
                     'prompt' => $prompt,
                     'style'  => $style
