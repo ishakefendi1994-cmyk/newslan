@@ -190,9 +190,13 @@ class Flazz_Admin {
     }
 
     private function create_wp_post_direct( $data, $source_url, $image_url ) {
+        // Apply internal linking before post creation
+        $job_engine = Flazz_Job_Engine::get_instance();
+        $content_with_links = $job_engine->add_internal_links( $data['content'], $data['title'] );
+
         $post_id = wp_insert_post( array(
             'post_title'   => $data['title'],
-            'post_content' => $data['content'],
+            'post_content' => $content_with_links,
             'post_status'  => 'publish',
             'post_author'  => 1,
             'post_type'    => 'post',

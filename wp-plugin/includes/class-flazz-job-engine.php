@@ -237,10 +237,13 @@ class Flazz_Job_Engine {
             $post_date   = $this->get_next_scheduled_date( $interval );
         }
 
-        // ── Step 6: Create Post ───────────────────────────────────────────────
+        // ── Step 6: Internal Linking (SEO Engine) ────────────────────────────
+        $content_with_links = $this->add_internal_links( $synthesis['content'], $synthesis['title'] );
+
+        // ── Step 7: Create Post ───────────────────────────────────────────────
         $post_data = array(
             'post_title'    => $synthesis['title'],
-            'post_content'  => $synthesis['content'],
+            'post_content'  => $content_with_links,
             'post_status'   => $post_status,
             'post_category' => array( $category ),
         );
@@ -317,6 +320,48 @@ class Flazz_Job_Engine {
             $link
         ));
         return !empty($processed);
+    }
+
+    /**
+     * Internal Linking Engine:
+     * Appends related links to improve SEO and internal structure.
+     */
+    public function add_internal_links( $content, $title ) {
+        // Search related posts by title words
+        $words = explode( ' ', $title );
+        $query_words = array_slice( $words, 0, 3 ); // Pick first 3 words
+        $s_query = implode( ' ', $query_words );
+
+        $related = get_posts( array(
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => 2,
+            's'              => $s_query,
+            'orderby'        => 'relevance',
+        ) );
+
+        if ( empty( $related ) || count( $related ) < 1 ) {
+            // Fallback: just get latest posts if no match
+            $related = get_posts( array(
+                'post_type'      => 'post',
+                'post_status'    => 'publish',
+                'posts_per_page' => 2,
+            ) );
+        }
+
+        if ( ! empty( $related ) ) {
+            $links_html = '<div class="flazz-internal-links" style="margin-top: 30px; padding: 15px; background: #f9f9f9; border-left: 4px solid #2271b1;">';
+            $links_html .= '<h3 style="margin-top: 0; font-size: 18px;">Baca Juga:</h3><ul style="margin-bottom: 0;">';
+            
+            foreach ( $related as $rel_post ) {
+                $links_html .= '<li><a href="' . get_permalink( $rel_post->ID ) . '" title="' . esc_attr( $rel_post->post_title ) . '"><strong>' . esc_html( $rel_post->post_title ) . '</strong></a></li>';
+            }
+            
+            $links_html .= '</ul></div>';
+            $content .= $links_html;
+        }
+
+        return $content;
     }
 
     public function get_jobs() {
