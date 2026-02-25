@@ -321,6 +321,7 @@ class Flazz_Admin {
 
 
     public function ajax_test_ai_image() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_test_ai_image: START' );
         $this->check_permission();
         
@@ -362,6 +363,7 @@ class Flazz_Admin {
     // =========================================================================
 
     public function ajax_test_api() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_test_api: START' );
         $this->check_permission();
 
@@ -436,6 +438,7 @@ class Flazz_Admin {
     }
 
     public function ajax_delete_job() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_delete_job: START' );
         $this->check_permission();
 
@@ -455,6 +458,7 @@ class Flazz_Admin {
     }
 
     public function ajax_run_job() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_run_job: START' );
         $this->check_permission();
         $this->check_license();
@@ -491,6 +495,7 @@ class Flazz_Admin {
     // =========================================================================
 
     public function ajax_manual_fetch() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_manual_fetch: START' );
         $this->check_permission();
         $this->check_license();
@@ -534,7 +539,8 @@ class Flazz_Admin {
     // =========================================================================
 
     public function ajax_get_trends() {
-        check_ajax_referer( 'flazz_ai_nonce', 'nonce' );
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
+        $this->check_permission();
 
         $geo = isset( $_POST['geo'] ) ? sanitize_text_field( $_POST['geo'] ) : 'ID';
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
@@ -563,6 +569,7 @@ class Flazz_Admin {
     }
 
     public function ajax_research_keyword() {
+        check_ajax_referer( 'flazz_admin_nonce', 'nonce' );
         $this->log( 'ajax_research_keyword: START' );
         $this->check_permission();
         $this->check_license();
