@@ -39,7 +39,7 @@ class Flazz_Admin {
 
     public function add_menu_page() {
         require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-license.php';
-        $license_valid = Flazz_License_Manager::get_instance()->is_valid();
+        $license_valid = FZ_Auth_Guard::i()->v();
 
         $main_page = $license_valid ? 'render_jobs_page' : 'render_settings_page';
         $main_slug = $license_valid ? 'flazz-ai' : 'flazz-settings';
@@ -110,7 +110,7 @@ class Flazz_Admin {
 
     private function check_license() {
         require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-license.php';
-        if ( ! Flazz_License_Manager::get_instance()->is_valid() ) {
+        if ( ! FZ_Auth_Guard::i()->v() ) {
             wp_send_json_error( 'Lisensi tidak valid atau sudah kadaluarsa. Silakan periksa tab Pengaturan.' );
         }
     }
@@ -1397,7 +1397,7 @@ class Flazz_Admin {
                                     <?php echo strtoupper( $license_status ); ?>
                                 </span>
                                 <?php if ( $license_status === 'valid' ) :
-                                    $info = Flazz_License_Manager::get_instance()->get_license_info();
+                                    $info = FZ_Auth_Guard::i()->g();
                                     if ( !empty( $info ) ) : ?>
                                         <p class="description" style="color: green; font-weight: bold;">
                                             ✅ Teraktivasi: <?php echo $info['activations_count']; ?> / <?php echo $info['max_domains']; ?> Domain

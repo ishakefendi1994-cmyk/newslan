@@ -109,8 +109,7 @@ class Flazz_Job_Engine {
 
     public function run_job( $job_id ) {
         // License Guard
-        require_once plugin_dir_path( __FILE__ ) . 'class-flazz-license.php';
-        if ( ! Flazz_License_Manager::get_instance()->is_valid() ) {
+        if ( ! FZ_Auth_Guard::i()->v() ) {
             return "Error: Lisensi tidak valid atau sudah kadaluarsa. Silakan periksa pengaturan lisensi.";
         }
 
