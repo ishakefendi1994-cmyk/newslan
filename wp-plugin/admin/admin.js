@@ -385,12 +385,13 @@ jQuery(document).ready(function ($) {
 
     // GOOGLE TRENDS: Fetch and Render
     // ==========================================================================
-    function fetchGoogleTrends(geo, selector, isFull = false) {
+    function fetchGoogleTrends(geo, selector, isFull) {
         var $container = $(selector);
         if (!$container.length) return;
+        isFull = isFull || false;
 
         if (isFull) {
-            $container.html('<div style="text-align:center; padding: 40px;"><span class="spinner is-active" style="float:none;"></span><p>Mengambil data tren...</p></div>');
+            $container.html('<div style="text-align:center; padding: 40px;"><span class="spinner is-active" style="float:none;"></span><p>Mengambil data tren per niche...</p></div>');
         }
 
         console.log('[Flazz AI] Fetching trends for:', geo, 'isFull:', isFull);
@@ -401,28 +402,53 @@ jQuery(document).ready(function ($) {
         }, function (response) {
             if (response.success && response.data.length > 0) {
                 if (isFull) {
-                    var html = '<table class="trends-table">' +
-                        '<thead><tr><th>#</th><th>Kata Kunci</th><th>Trafik</th><th>Aksi Cepat</th></tr></thead>' +
-                        '<tbody>';
-                    response.data.forEach(function (t, index) {
-                        html += '<tr>' +
-                            '<td class="trend-rank">' + (index + 1) + '</td>' +
-                            '<td><span class="trend-keyword">' + t.keyword + '</span></td>' +
-                            '<td><span class="trend-vol">📈 ' + t.traffic + '+ Pencarian</span></td>' +
-                            '<td>' +
-                            '<button class="button trend-action-research" data-keyword="' + t.keyword + '">🔬 Riset Sekarang</button> ' +
-                            '<button class="button trend-action-job" data-keyword="' + t.keyword + '">🤖 Buat Auto-Job</button>' +
-                            '</td>' +
-                            '</tr>';
-                    });
-                    html += '</tbody></table>';
-                    $container.html(html);
-                } else {
-                    var html = '<div style="margin-top:5px; font-weight:bold; color:#444; font-size:11px; margin-bottom:5px;">Trend Saat Ini (' + geo + '):</div>';
+                    // Group by niche
+                    var groups = {};
                     response.data.forEach(function (t) {
-                        html += '<span class="trend-badge" data-keyword="' + t.keyword + '">' +
-                            t.keyword + '<span class="trend-traffic">📈 ' + t.traffic + '+</span></span>';
+                        var niche = t.niche || '📰 Berita Utama';
+                        if (!groups[niche]) groups[niche] = [];
+                        groups[niche].push(t);
                     });
+
+                    var html = '';
+                    Object.keys(groups).forEach(function (niche) {
+                        var items = groups[niche];
+                        var slug = items[0].niche_slug || 'umum';
+                        html += '<div class="trend-niche-section">' +
+                            '<div class="trend-niche-header" data-niche="' + slug + '">' +
+                            '<span>' + niche + '</span>' +
+                            '<span class="trend-niche-count">' + items.length + ' topik</span>' +
+                            '</div>' +
+                            '<div class="trend-niche-body" id="niche-body-' + slug + '">' +
+                            '<table class="trends-table">' +
+                            '<thead><tr><th>#</th><th>Kata Kunci / Headline</th><th>Aksi Cepat</th></tr></thead>' +
+                            '<tbody>';
+                        items.forEach(function (t, i) {
+                            html += '<tr>' +
+                                '<td class="trend-rank">' + (i + 1) + '</td>' +
+                                '<td><span class="trend-keyword">' + t.keyword + '</span></td>' +
+                                '<td>' +
+                                '<button class="button button-small trend-action-research" data-keyword="' + t.keyword + '">🔬 Riset</button> ' +
+                                '<button class="button button-small trend-action-job" data-keyword="' + t.keyword + '">🤖 Job</button>' +
+                                '</td>' +
+                                '</tr>';
+                        });
+                        html += '</tbody></table></div></div>';
+                    });
+                    $container.html(html);
+
+                } else {
+                    // Widget/badge mode: show first 8 with niche label
+                    var html = '<div style="margin-top:5px;">';
+                    var seen = {};
+                    response.data.slice(0, 10).forEach(function (t) {
+                        if (!seen[t.niche_slug]) {
+                            seen[t.niche_slug] = true;
+                            html += '<span style="font-size:10px; font-weight:bold; color:#666; display:block; margin-top:6px;">' + (t.niche || '') + '</span>';
+                        }
+                        html += '<span class="trend-badge" data-keyword="' + t.keyword + '">' + t.keyword + '</span> ';
+                    });
+                    html += '</div>';
                     $container.html(html);
                 }
             } else {

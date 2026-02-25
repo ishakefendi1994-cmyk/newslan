@@ -1106,6 +1106,13 @@ class Flazz_Admin {
                 .trend-rank { font-weight: bold; color: #2271b1; font-size: 16px; width: 40px; }
                 .trend-keyword { font-weight: 600; font-size: 14px; display: block; }
                 .trend-vol { color: #666; font-size: 12px; }
+
+                /* Niche sections */
+                .trend-niche-section { margin-bottom: 10px; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; }
+                .trend-niche-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: linear-gradient(to right, #f5f7fa, #eef0f3); font-weight: 700; font-size: 13px; cursor: pointer; border-bottom: 1px solid #e0e0e0; }
+                .trend-niche-header:hover { background: #e7eaf0; }
+                .trend-niche-count { font-size: 11px; font-weight: normal; color: #666; background: #fff; padding: 2px 8px; border-radius: 10px; border: 1px solid #ddd; }
+                .trend-niche-body { padding: 0; }
             </style>
         </div>
         <?php

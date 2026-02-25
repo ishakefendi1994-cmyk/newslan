@@ -242,81 +242,64 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
 }
 
 /**
- * handleGetTrends: Extracts trending topics using Google News RSS
- * Strategy (inspired by pytrends): Instead of directly hitting google trends
- * (which gets blocked in cloud), we fetch Google News's top news RSS feed
- * and extract the most-discussed keywords from headlines - effectively the same data.
+ * handleGetTrends: Extracts trending topics from Google News organized by niche.
+ * Each niche maps to a specific Google News topic RSS feed. Fetched in parallel.
  */
 async function handleGetTrends(payload: any) {
     const geo = payload.geo || 'ID'
 
-    // Language/region mapping
-    const geoMap: Record<string, { hl: string, gl: string, ceid: string, lang: string }> = {
-        ID: { hl: 'id', gl: 'ID', ceid: 'ID:id', lang: 'Indonesian' },
-        US: { hl: 'en-US', gl: 'US', ceid: 'US:en', lang: 'English' },
+    const geoMap: Record<string, { hl: string, gl: string, ceid: string }> = {
+        ID: { hl: 'id', gl: 'ID', ceid: 'ID:id' },
+        US: { hl: 'en-US', gl: 'US', ceid: 'US:en' },
     }
-    const geoConfig = geoMap[geo] || geoMap['ID']
+    const gc = geoMap[geo] || geoMap['ID']
 
-    const results: { keyword: string; traffic: string }[] = []
+    // Google News topic IDs — These are stable topic hashes used by Google News
+    const niches = [
+        { name: '📰 Berita Utama', slug: 'Utama', topicId: '' }, // main RSS (no topic ID)
+        { name: '💻 Teknologi', slug: 'Teknologi', topicId: 'CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtbGtHZ0pKUkNnQVAB' },
+        { name: '💼 Bisnis', slug: 'Bisnis', topicId: 'CAAqJggKIiBDQkFTRWdvSUwyMHZNRGVrNld5U0FtbGtHZ0pKUkNnQVAB' },
+        { name: '🎬 Hiburan', slug: 'Hiburan', topicId: 'CAAqJggKIiBDQkFTRWdvSUwyMHZNREpxYW5RU0FtbGtHZ0pKUkNnQVAB' },
+        { name: '⚽ Olahraga', slug: 'Olahraga', topicId: 'CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtbGtHZ0pKUkNnQVAB' },
+        { name: '🔬 Sains', slug: 'Sains', topicId: 'CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0YVRjU0FtbGtHZ0pKUkNnQVAB' },
+    ]
 
-    // ── Source 1: Google News Top Stories RSS ──────────────────────────────
-    try {
-        const topUrl = `https://news.google.com/rss?hl=${geoConfig.hl}&gl=${geoConfig.gl}&ceid=${geoConfig.ceid}`
-        const res = await fetch(topUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' }
-        })
+    const ua = 'Mozilla/5.0 (compatible; Googlebot/2.1)'
 
-        if (res.ok) {
+    async function fetchNiche(niche: typeof niches[0]) {
+        const url = niche.topicId
+            ? `https://news.google.com/rss/topics/${niche.topicId}?hl=${gc.hl}&gl=${gc.gl}&ceid=${gc.ceid}`
+            : `https://news.google.com/rss?hl=${gc.hl}&gl=${gc.gl}&ceid=${gc.ceid}`
+
+        try {
+            const res = await fetch(url, { headers: { 'User-Agent': ua } })
+            if (!res.ok) return []
+
             const xml = await res.text()
-            const items: string[] = []
+            const results: { keyword: string; traffic: string; niche: string; niche_slug: string }[] = []
             const titleRe = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/g
             let m
-            while ((m = titleRe.exec(xml)) !== null) {
+            while ((m = titleRe.exec(xml)) !== null && results.length < 8) {
                 const raw = m[1]
-                    .replace(/ - [^-]+$/, '')        // Remove " - Source Name"
+                    .replace(/ - [^-]+$/, '')
                     .replace(/&amp;/g, '&')
                     .replace(/&quot;/g, '"')
                     .trim()
-                if (raw.length > 3) items.push(raw)
-            }
-            // Pack up to 15 headlines as "trending" with estimated traffic "Baru"
-            items.slice(0, 15).forEach(t => {
-                results.push({ keyword: t, traffic: 'Terbaru' })
-            })
-        }
-    } catch (e) {
-        console.warn('[Trends] Source 1 Google News Top failed:', e)
-    }
-
-    // ── Source 2: Google News Tech RSS (bonus) ─────────────────────────────
-    if (results.length < 10) {
-        try {
-            const techUrl = `https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtbGtHZ0pKUkNnQVAB?hl=${geoConfig.hl}&gl=${geoConfig.gl}&ceid=${geoConfig.ceid}`
-            const res = await fetch(techUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' }
-            })
-            if (res.ok) {
-                const xml = await res.text()
-                const titleRe = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/g
-                let m
-                while ((m = titleRe.exec(xml)) !== null && results.length < 20) {
-                    const raw = m[1]
-                        .replace(/ - [^-]+$/, '')
-                        .replace(/&amp;/g, '&')
-                        .trim()
-                    if (raw.length > 3 && !results.find(r => r.keyword === raw)) {
-                        results.push({ keyword: raw, traffic: 'Teknologi' })
-                    }
+                if (raw.length > 3) {
+                    results.push({ keyword: raw, traffic: 'Trending', niche: niche.name, niche_slug: niche.slug })
                 }
             }
-        } catch (e) {
-            console.warn('[Trends] Source 2 Tech failed:', e)
+            return results
+        } catch {
+            return []
         }
     }
 
-    if (results.length > 0) {
-        console.log(`[Trends] Extracted ${results.length} trending topics for ${geo}`)
-        return NextResponse.json({ success: true, data: results })
+    const allResults = (await Promise.all(niches.map(fetchNiche))).flat()
+
+    if (allResults.length > 0) {
+        console.log(`[Trends] Extracted ${allResults.length} items in ${niches.length} niches for ${geo}`)
+        return NextResponse.json({ success: true, data: allResults })
     }
 
     return NextResponse.json({ success: false, message: 'Tidak dapat mengambil data trending saat ini.' })
