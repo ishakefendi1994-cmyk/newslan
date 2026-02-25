@@ -141,6 +141,12 @@ jQuery(document).ready(function ($) {
     // AUTO-JOBS: Open / Close form
     // ==========================================================================
     $(document).on('click', '#flazz-open-job-form', function () {
+        // Reset form for "New" mode
+        $('#job_id').val(0);
+        $('#job-form-title').text('Buat Auto-Job Baru');
+        $('#job_name, #job_keyword, #job_rss_url, #job_ai_idea').val('');
+        $('#job_type').val('keyword').trigger('change');
+
         $('#flazz-job-form-container').slideDown();
         $(this).hide();
     });
@@ -149,6 +155,38 @@ jQuery(document).ready(function ($) {
         $('#flazz-job-form-container').slideUp();
         $('#flazz-open-job-form').show();
     });
+
+    // AUTO-JOBS: Edit
+    $(document).on('click', '.edit-job', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var data = $btn.data();
+
+        // Populate fields
+        $('#job_id').val(data.id);
+        $('#job-form-title').text('📝 Edit Job: ' + data.name);
+        $('#job_name').val(data.name);
+        $('#job_type').val(data.type).trigger('change');
+        $('#job_keyword').val(data.keyword);
+        $('#job_rss_url').val(data.rss_url);
+        $('#job_ai_idea').val(data.ai_idea);
+        $('#job_category').val(data.category);
+        $('#job_max_articles').val(data.max_articles);
+        $('#job_writing_style').val(data.writing_style);
+        $('#job_article_model').val(data.article_model);
+        $('#job_image_mode').val(data.image_mode).trigger('change');
+        $('#job_thumbnail_style').val(data.thumbnail_style);
+        $('#job_target_language').val(data.target_language);
+        $('#job_research_scope').val(data.research_scope);
+
+        // Show form and scroll
+        $('#flazz-job-form-container').slideDown();
+        $('#flazz-open-job-form').hide();
+        $('html, body').animate({
+            scrollTop: $("#flazz-job-form-container").offset().top - 50
+        }, 500);
+    });
+
     // Toggle keyword/rss/idea rows based on job type
     $(document).on('change', '#job_type', function () {
         var type = $(this).val();
@@ -177,6 +215,7 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '#flazz-save-job', function () {
         var $btn = $(this);
         var jobName = $('#job_name').val().trim();
+        var jobId = $('#job_id').val();
 
         if (!jobName) {
             alert('Nama Job wajib diisi!');
@@ -184,11 +223,12 @@ jQuery(document).ready(function ($) {
         }
 
         $btn.prop('disabled', true).text('⏳ Menyimpan...');
-        console.log('[Flazz AI] Saving job:', jobName);
+        console.log('[Flazz AI] Saving job:', jobName, 'ID:', jobId);
 
         $.post(flazzData.ajax_url, {
             action: 'flazz_save_job',
             nonce: flazzData.nonce,
+            job_id: jobId,
             job_name: jobName,
             job_type: $('#job_type').val(),
             keyword: $('#job_keyword').val(),

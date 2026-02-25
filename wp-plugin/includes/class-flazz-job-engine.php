@@ -49,13 +49,23 @@ class Flazz_Job_Engine {
     }
 
     public function create_job( $data ) {
-        $post_id = wp_insert_post( array(
-            'post_title'   => $data['job_name'],
-            'post_status'  => 'publish',
-            'post_type'    => 'flazz_job',
-        ));
+        $job_id = isset( $data['job_id'] ) ? intval( $data['job_id'] ) : 0;
 
-        if ( $post_id ) {
+        if ( $job_id ) {
+            $post_id = wp_update_post( array(
+                'ID'           => $job_id,
+                'post_title'   => sanitize_text_field( $data['job_name'] ),
+                'post_status'  => 'publish',
+            ));
+        } else {
+            $post_id = wp_insert_post( array(
+                'post_title'   => sanitize_text_field( $data['job_name'] ),
+                'post_status'  => 'publish',
+                'post_type'    => 'flazz_job',
+            ));
+        }
+
+        if ( $post_id && ! is_wp_error( $post_id ) ) {
             $this->update_job_meta( $post_id, $data );
             return $post_id;
         }

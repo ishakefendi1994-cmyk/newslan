@@ -767,6 +767,22 @@ class Flazz_Admin {
                             </td>
                             <td>
                                 <button class="button button-small run-job" data-id="<?php echo $jobs_item->ID; ?>">▶ Jalankan</button>
+                                <button class="button button-small edit-job" 
+                                    data-id="<?php echo $jobs_item->ID; ?>"
+                                    data-name="<?php echo esc_attr( $jobs_item->post_title ); ?>"
+                                    data-type="<?php echo esc_attr( $type ); ?>"
+                                    data-keyword="<?php echo esc_attr( $keyword ); ?>"
+                                    data-rss_url="<?php echo esc_attr( $rss ); ?>"
+                                    data-ai_idea="<?php echo esc_attr( $ai_idea ); ?>"
+                                    data-category="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_category', true ) ); ?>"
+                                    data-max_articles="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_max_articles', true ) ); ?>"
+                                    data-writing_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_writing_style', true ) ); ?>"
+                                    data-article_model="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_article_model', true ) ); ?>"
+                                    data-image_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_image_mode', true ) ); ?>"
+                                    data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
+                                    data-target_language="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_target_language', true ) ); ?>"
+                                    data-research_scope="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_research_scope', true ) ); ?>"
+                                >✏️ Edit</button>
                                 <button class="button button-small delete-job" data-id="<?php echo $jobs_item->ID; ?>" style="color:#d63638; margin-top:5px;">🗑 Hapus</button>
                             </td>
                         </tr>
@@ -775,9 +791,9 @@ class Flazz_Admin {
                 </tbody>
             </table>
 
-            <!-- Job Creation Form -->
             <div id="flazz-job-form-container" style="display:none; margin-top:30px; background:#fff; padding:25px; border:1px solid #ccd0d4; border-radius:6px;">
-                <h2 style="margin-top:0;">Buat Auto-Job Baru</h2>
+                <h2 id="job-form-title" style="margin-top:0;">Buat Auto-Job Baru</h2>
+                <input type="hidden" id="job_id" value="0">
                 <table class="form-table">
                     <tr>
                         <th>Nama Job <span style="color:red">*</span></th>
