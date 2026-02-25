@@ -68,10 +68,27 @@ async function handlePromptGeneration(apiKey: string, payload: any) {
     let systemPrompt = ""
 
     if (style === 'real_photo') {
-        systemPrompt = "Professional news photo editor. Write a single, focused image generation prompt in English (max 50 words). Focus strictly on the main subject. Avoid showing photographers, people holding cameras, or behind-the-scenes actors. Start the prompt with the main subject. Style: photorealistic, high resolution, sharp focus, news press photography. No preamble."
+        systemPrompt = `You are a professional news photo editor. Your task is to write a concise image generation prompt (max 60 words) for the news article provided.
+
+RULES — follow strictly:
+- Derive the scene DIRECTLY from the article's topic. Do NOT invent unrelated imagery.
+- Describe a calm, neutral, realistic scene typical of professional news/press photography.
+- Mention specific objects, places, or people types relevant to the article (e.g. "businessman in suit signing documents", "street market in Jakarta", "rocket on launch pad").
+- Use adjectives sparingly. Avoid dramatic or exaggerated words like: explosive, chaotic, dramatic, epic, fiery, terrifying, glowing, massive destruction.
+- Style suffix to always include: "photorealistic, sharp focus, natural lighting, Reuters news photo"
+- Output ONLY the prompt. No preamble, no explanation, no quotes.`
     } else {
-        systemPrompt = "Professional editorial illustrator. Write a single flat vector illustration prompt in English (max 50 words). Focus strictly on the main subject. clean geometric shapes, bold outlines, news magazine style. Start the prompt with the main subject. No preamble."
+        systemPrompt = `You are a professional editorial illustrator. Your task is to write a concise flat illustration prompt (max 60 words) for the news article provided.
+
+RULES — follow strictly:
+- Derive the illustration concept DIRECTLY from the article's topic. Do NOT invent unrelated imagery.
+- Describe a clean, simple scene using symbolic or literal objects from the article (e.g. "smartphone with stock chart", "government building with Indonesian flag", "laptop with code on screen").
+- Avoid vague or over-dramatic concepts like: "battle between forces", "explosion of ideas", "dark dystopian city", "glowing magical energy".
+- Style suffix to always include: "flat vector illustration, minimal, bold outlines, news magazine editorial style, white background"
+- Output ONLY the prompt. No preamble, no explanation, no quotes.`
     }
+
+    const snippet = content ? content.slice(0, 600) : ''
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -80,12 +97,13 @@ async function handlePromptGeneration(apiKey: string, payload: any) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: "llama-3-8b-8192", // Use a cheaper model for prompts
+            model: "llama-3.1-8b-instant",
             messages: [
                 { role: "system", content: systemPrompt },
-                { role: "user", content: `Context:\nTitle: ${title}\nContent: ${content}\n\nGenerated Prompt:` }
+                { role: "user", content: `Article Title: ${title}\n\nContent snippet: ${snippet}\n\nImage Prompt:` }
             ],
-            temperature: 0.4
+            temperature: 0.2,
+            max_tokens: 120
         })
     })
 
@@ -93,7 +111,7 @@ async function handlePromptGeneration(apiKey: string, payload: any) {
     if (!response.ok) return NextResponse.json({ success: false, message: 'Groq Error' }, { status: response.status })
 
     let result = data.choices[0].message.content
-    result = result.replace(/^(here is|prompt:)\s*/i, '').replace(/["'`]/g, '').trim()
+    result = result.replace(/^(here is|prompt:|image prompt:)\s*/i, '').replace(/["`]/g, '').trim()
 
     return NextResponse.json({ success: true, data: result })
 }

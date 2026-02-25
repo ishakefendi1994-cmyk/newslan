@@ -265,65 +265,7 @@ class Flazz_Admin {
             $this->generate_and_save_seo_meta( $post_id, $data['title'], $data['content'] );
             $this->send_telegram( $post_id, $data['title'], $post_url );
         }
-
         return $post_id;
-    }
-
-    /**
-     * Try to retrieve the og:image meta from a URL.
-     * Uses Chrome User-Agent and reads 30KB of head to cover most sites.
-     */
-    private function fetch_og_image( $url ) {
-        $this->log( 'fetch_og_image: trying ' . $url );
-
-        $resp = wp_remote_get( $url, array(
-            'timeout'     => 10,
-            'sslverify'   => false,
-            'redirection' => 5,   // follow up to 5 redirects (needed for Google News links)
-            'headers'     => array(
-                'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-            ),
-        ) );
-
-        if ( is_wp_error( $resp ) ) {
-            $this->log( 'fetch_og_image: WP_Error = ' . $resp->get_error_message() );
-            return false;
-        }
-
-        $code = wp_remote_retrieve_response_code( $resp );
-        if ( $code !== 200 ) {
-            $this->log( 'fetch_og_image: HTTP ' . $code . ' — skipping' );
-            return false;
-        }
-
-        // Read first 30KB — enough to capture <head> on most sites
-        $body = substr( wp_remote_retrieve_body( $resp ), 0, 30000 );
-
-        // Pattern 1: property="og:image" content="..."
-        if ( preg_match( '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/', $body, $m ) ) {
-            $this->log( 'fetch_og_image: found og:image (p1) = ' . $m[1] );
-            return $m[1];
-        }
-        // Pattern 2: content="..." property="og:image"  (reversed attribute order)
-        if ( preg_match( '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/', $body, $m ) ) {
-            $this->log( 'fetch_og_image: found og:image (p2) = ' . $m[1] );
-            return $m[1];
-        }
-        // Pattern 3: twitter:image fallback
-        if ( preg_match( '/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/', $body, $m ) ) {
-            $this->log( 'fetch_og_image: found twitter:image = ' . $m[1] );
-            return $m[1];
-        }
-        // Pattern 4: content="..." name="twitter:image"
-        if ( preg_match( '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']/', $body, $m ) ) {
-            $this->log( 'fetch_og_image: found twitter:image (p4) = ' . $m[1] );
-            return $m[1];
-        }
-
-        $this->log( 'fetch_og_image: no og/twitter image found in page head' );
-        return false;
     }
 
     /**
@@ -832,7 +774,8 @@ class Flazz_Admin {
                         parse_str( $parsed['query'], $qp );
                         if ( ! empty( $qp['url'] ) ) $article_url = $qp['url'];
                     }
-                    $og = $this->fetch_og_image( $article_url );
+                    $grabber = Flazz_Grabber::get_instance();
+                    $og      = $grabber->fetch_og_image( $article_url );
                     if ( $og ) {
                         $final_image = $og;
                         $this->log( 'image: Got og:image = ' . $final_image );

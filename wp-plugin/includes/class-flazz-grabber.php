@@ -243,25 +243,67 @@ class Flazz_Grabber {
 
     /**
      * Try to retrieve the og:image meta from a URL.
+     * Hardened to handle Google News redirects and various meta tag formats.
      */
     public function fetch_og_image( $url ) {
+        if ( empty( $url ) ) return false;
+
+        error_log( '[Flazz AI] Grabber::fetch_og_image - URL: ' . $url );
+
+        // If it's a Google News redirect URL, try to follow it
         $resp = wp_remote_get( $url, array(
-            'timeout'     => 10,
+            'timeout'     => 15,
             'sslverify'   => false,
-            'redirection' => 5,
+            'redirection' => 10,
             'headers'     => array(
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
             ),
         ) );
 
-        if ( is_wp_error( $resp ) || wp_remote_retrieve_response_code( $resp ) !== 200 ) return false;
+        if ( is_wp_error( $resp ) ) {
+            error_log( '[Flazz AI] Grabber::fetch_og_image - WP_Error: ' . $resp->get_error_message() );
+            return false;
+        }
 
-        $body = substr( wp_remote_retrieve_body( $resp ), 0, 30000 );
+        $code = wp_remote_retrieve_response_code( $resp );
+        $body = wp_remote_retrieve_body( $resp );
 
-        if ( preg_match( '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/', $body, $m ) ) return $m[1];
-        if ( preg_match( '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/', $body, $m ) ) return $m[1];
-        if ( preg_match( '/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/', $body, $m ) ) return $m[1];
+        if ( $code !== 200 || empty( $body ) ) {
+            error_log( '[Flazz AI] Grabber::fetch_og_image - HTTP ' . $code );
+            return false;
+        }
 
+        // Handle meta-refresh redirects (common on some news sites)
+        if ( preg_match( '/<meta[^>]+http-equiv=["\']refresh["\'][^>]+content=["\']\d+;\s*url=([^"\']+)["\']/i', $body, $refresh_m ) ) {
+            $new_url = str_replace( '&amp;', '&', $refresh_m[1] );
+            error_log( '[Flazz AI] Grabber::fetch_og_image - Meta Refresh to: ' . $new_url );
+            return $this->fetch_og_image( $new_url );
+        }
+
+        // Search for images in head (limit search to first 100KB)
+        $head = substr( $body, 0, 100000 );
+        $patterns = array(
+            '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/',
+            '/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/',
+            '/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/',
+            '/<meta[^>]+name=["\']image["\'][^>]+content=["\']([^"\']+)["\']/',
+            '/<link[^>]+rel=["\']image_src["\'][^>]+href=["\']([^"\']+)["\']/',
+        );
+
+        foreach ( $patterns as $pattern ) {
+            if ( preg_match( $pattern, $head, $m ) ) {
+                $found = html_entity_decode( $m[1] );
+                // Ensure absolute URL
+                if ( ! empty( $found ) && strpos( $found, 'http' ) === 0 ) {
+                    error_log( '[Flazz AI] Grabber::fetch_og_image - Success: ' . $found );
+                    return $found;
+                }
+            }
+        }
+
+        error_log( '[Flazz AI] Grabber::fetch_og_image - No image found' );
         return false;
     }
 
