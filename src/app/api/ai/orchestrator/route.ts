@@ -246,31 +246,48 @@ async function handleGetTrends(payload: any) {
     const url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`
 
     try {
-        const response = await fetch(url)
-        if (!response.ok) return NextResponse.json({ success: false, message: 'Google Trends unreachable' }, { status: response.status })
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        })
+        if (!response.ok) {
+            console.error('Google Trends fetch failed:', response.status, response.statusText)
+            return NextResponse.json({ success: false, message: 'Google Trends unreachable' }, { status: response.status })
+        }
 
         const xml = await response.text()
 
-        // Simple regex-based parsing to avoid heavy XML libs in Edge Runtime
+        // Improved regex-based parsing to handle CDATA and namespaces
         const items = []
         const itemRegex = /<item>([\s\S]*?)<\/item>/g
         let match
 
         while ((match = itemRegex.exec(xml)) !== null) {
             const itemContent = match[1]
-            const titleMatch = itemContent.match(/<title>(.*?)<\/title>/)
-            const trafficMatch = itemContent.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)
 
-            if (titleMatch) {
+            // Match title (handle CDATA if present)
+            let keyword = ''
+            const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)
+            if (titleMatch) keyword = titleMatch[1].trim()
+
+            // Match traffic (handle optional namespace)
+            let traffic = '0'
+            const trafficMatch = itemContent.match(/<(?:ht:)?approx_traffic>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/(?:ht:)?approx_traffic>/)
+            if (trafficMatch) traffic = trafficMatch[1].trim()
+
+            if (keyword) {
                 items.push({
-                    keyword: titleMatch[1],
-                    traffic: trafficMatch ? trafficMatch[1] : ''
+                    keyword: keyword,
+                    traffic: traffic
                 })
             }
         }
 
-        return NextResponse.json({ success: true, data: items.slice(0, 15) })
+        console.log(`[Trends] Fetched ${items.length} items for ${geo}`)
+        return NextResponse.json({ success: true, data: items.slice(0, 20) })
     } catch (err: any) {
+        console.error('handleGetTrends Error:', err)
         return NextResponse.json({ success: false, message: (err as Error).message }, { status: 500 })
     }
 }

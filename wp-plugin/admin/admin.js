@@ -426,8 +426,11 @@ jQuery(document).ready(function ($) {
                     $container.html(html);
                 }
             } else {
-                $container.html('<span class="description" style="color:#d63638;">Gagal memuat tren.</span>');
+                $container.html('<span class="description" style="color:#d63638;">' + (response.data || 'Gagal memuat tren.') + '</span>');
             }
+        }).fail(function (xhr) {
+            console.error('[Flazz AI] Trends Fetch FAIL:', xhr.status);
+            $container.html('<span class="description" style="color:#d63638;">Error ' + xhr.status + ': Gagal menghubungi API.</span>');
         });
     }
 
