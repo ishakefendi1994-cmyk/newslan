@@ -161,7 +161,7 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         },
         body: JSON.stringify({
             // black-forest-labs/flux-schnell (High quality + Great text)
-            version: "f711200ede178e244d01b9794d03be5953046bcbad2448373b9e86c0e252a197",
+            version: "a00f0221462700435907409f0293da2778f6974db37e1a3c75d49603d790757a",
             input: {
                 prompt: finalPrompt,
                 aspect_ratio: "1:1",
