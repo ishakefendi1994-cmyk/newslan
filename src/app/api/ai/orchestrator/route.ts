@@ -193,9 +193,24 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             return NextResponse.json({ success: false, message: 'No output from Replicate.' }, { status: 500 })
         }
 
-        // Output from flux-schnell is an array of strings (URLs)
-        // or a stream depending on the environment.
-        const imageUrl = Array.isArray(output) ? output[0] : (typeof output === 'string' ? output : output.toString())
+        // Output from flux-schnell can be an array of objects with .url() or plain strings
+        let imageUrl = '';
+        if (Array.isArray(output)) {
+            const firstItem = output[0] as any;
+            if (typeof firstItem === 'object' && firstItem !== null && typeof firstItem.url === 'function') {
+                imageUrl = firstItem.url();
+            } else {
+                imageUrl = String(firstItem);
+            }
+        } else if (typeof output === 'object' && output !== null && typeof (output as any).url === 'function') {
+            imageUrl = (output as any).url();
+        } else {
+            imageUrl = String(output);
+        }
+
+        if (!imageUrl || imageUrl === '[object Object]') {
+            return NextResponse.json({ success: false, message: 'Invalid image URL format from Replicate.' }, { status: 500 })
+        }
 
         return NextResponse.json({
             success: true,

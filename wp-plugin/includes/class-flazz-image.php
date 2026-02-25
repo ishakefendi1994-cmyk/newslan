@@ -107,14 +107,14 @@ class Flazz_Image_Generator {
         
         $body = json_decode( $body_text, true );
 
-        if ( isset( $body['success'] ) && $body['success'] === true && !empty( $body['data']['output'] ) ) {
+        if ( isset( $body['success'] ) && $body['success'] === true && ! empty( $body['data']['output'] ) && ! empty( $body['data']['output'][0] ) ) {
             $output = $body['data']['output'];
             $final_url = is_array( $output ) ? $output[0] : $output;
             error_log( '[Flazz AI] generate_image_via_cloud: SUCCESS, final_url=' . $final_url );
             return $final_url;
         }
 
-        $this->last_error = isset( $body['message'] ) ? $body['message'] : 'Orchestrator returned unknown error.';
+        $this->last_error = isset( $body['message'] ) ? $body['message'] : 'Orchestrator returned successful but with invalid or empty image output.';
         error_log( '[Flazz AI] generate_image_via_cloud: FAILED. ' . $this->last_error );
         return false;
     }
