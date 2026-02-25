@@ -19,10 +19,10 @@ class Flazz_Grabber {
      * @param string $url RSS feed URL
      * @return array|false Array of articles or false on failure
      */
-    public function fetch_rss( $url ) {
+    public function fetch_rss( $url, $limit_override = 0 ) {
         error_log( '[Flazz AI] Grabber::fetch_rss - URL: ' . $url );
 
-        $limit = (int) get_option( 'flazz_ai_fetch_limit', 10 );
+        $limit = $limit_override > 0 ? (int) $limit_override : (int) get_option( 'flazz_ai_fetch_limit', 10 );
         if ( $limit < 1 ) $limit = 5;
 
         // ── Step 1: Fetch content via wp_remote_get with custom User-Agent ──

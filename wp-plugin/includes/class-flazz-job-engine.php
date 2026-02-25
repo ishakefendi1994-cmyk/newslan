@@ -135,11 +135,11 @@ class Flazz_Job_Engine {
         if ( $job_type === 'keyword' ) {
             $lang_param = ( $scope === 'global' ) ? 'hl=en&gl=US&ceid=US:en' : 'hl=id&gl=ID&ceid=ID:id';
             $search_url = "https://news.google.com/rss/search?q=" . urlencode( $keyword ) . "&" . $lang_param;
-            $articles = $grabber->fetch_rss( $search_url );
-            if ( ! $articles ) return "Gagal mengambil data dari sumber (RSS/Search).";
+            $articles = $grabber->fetch_rss( $search_url, 50 ); // Deep search (50 items) to find unprocessed variety
+            if ( ! $articles ) return "Gagal mengambil data dari Google News (RSS).";
         } else if ( $job_type === 'rss_watcher' ) {
-            $articles = $grabber->fetch_rss( $rss_url );
-            if ( ! $articles ) return "Gagal mengambil data dari sumber (RSS/Search).";
+            $articles = $grabber->fetch_rss( $rss_url, 50 ); // Deep fetch for RSS to skip duplicates
+            if ( ! $articles ) return "Gagal mengambil data dari sumber RSS.";
         } else if ( $job_type === 'ai_editor' ) {
             if ( empty( $ai_idea ) ) return "Ide Utama kosong. Silakan isi ide artikel.";
             $synthesis = $ai_writer->write_from_idea( $ai_idea, $style, $model, $target_lang );
