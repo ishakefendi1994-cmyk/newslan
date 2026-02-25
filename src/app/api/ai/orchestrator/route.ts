@@ -64,9 +64,9 @@ async function handlePromptGeneration(apiKey: string, payload: any) {
     let systemPrompt = ""
 
     if (style === 'real_photo') {
-        systemPrompt = "Professional news photo editor. Write a single, focused image generation prompt (max 60 words). photorealistic, DSLR press photography, sharp focus. English only. No preamble."
+        systemPrompt = "Professional news photo editor. Write a single, focused image generation prompt in English (max 50 words). Focus strictly on the main subject. Avoid showing photographers, people holding cameras, or behind-the-scenes actors. Start the prompt with the main subject. Style: photorealistic, high resolution, sharp focus, news press photography. No preamble."
     } else {
-        systemPrompt = "Professional editorial illustrator. Write a single flat vector illustration prompt (max 60 words). clean geometric shapes, bold outlines, news magazine style. English only. No preamble."
+        systemPrompt = "Professional editorial illustrator. Write a single flat vector illustration prompt in English (max 50 words). Focus strictly on the main subject. clean geometric shapes, bold outlines, news magazine style. Start the prompt with the main subject. No preamble."
     }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -148,9 +148,19 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
     let finalPrompt = prompt
 
     if (style === 'editorial_vector') {
-        finalPrompt = "Front-page news editorial vector illustration, clean geometric shapes, professional news magazine style, " + prompt
+        // Only add prefix if the prompt is very short (fallback)
+        if (prompt.length < 50) {
+            finalPrompt = "Front-page news editorial vector illustration, clean geometric shapes, professional news magazine style, " + prompt
+        }
     } else {
-        finalPrompt = "Professional news press photography, award-winning journalism style, high resolution, " + prompt
+        // For real_photo, we avoid heavy prefixes that can distract Flux.
+        // Instead, we ensure the subject stays first and add a quality suffix.
+        if (prompt.length < 50) {
+            finalPrompt = "Professional news press photography, award-winning journalism style, " + prompt
+        } else {
+            // Append quality/style rather than prefixing to keep subject prominent
+            finalPrompt = prompt + ", professional news press photography, award-winning journalism style, high resolution, 8k"
+        }
     }
 
     try {
