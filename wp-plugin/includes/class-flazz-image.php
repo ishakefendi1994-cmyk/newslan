@@ -18,9 +18,12 @@ class Flazz_Image_Generator {
      *
      * @param string $title    Article title
      * @param string $content  Article content
-     * @param string $style    'editorial_vector' (default) or 'real_photo'
+     * @param string $style    Optional. If empty, uses 'flazz_ai_image_mode' setting.
      */
-    public function generate_article_image( $title, $content, $style = 'editorial_vector' ) {
+    public function generate_article_image( $title, $content, $style = '' ) {
+        if ( empty( $style ) ) {
+            $style = get_option( 'flazz_ai_image_mode', 'standard' );
+        }
         $replicate_token = get_option( 'flazz_ai_replicate_token' );
         $groq_key        = get_option( 'flazz_ai_groq_key' );
         $license         = get_option( 'flazz_ai_license_key' );

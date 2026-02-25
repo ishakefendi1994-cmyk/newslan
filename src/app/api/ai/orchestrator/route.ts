@@ -97,6 +97,15 @@ RULES — follow strictly:
 - Use adjectives sparingly. Avoid dramatic or exaggerated words like: explosive, chaotic, dramatic, epic, fiery, terrifying, glowing, massive destruction.
 - Style suffix to always include: "photorealistic, sharp focus, natural lighting, Reuters news photo"
 - Output ONLY the prompt. No preamble, no explanation, no quotes.`
+    } else if (style === 'standard') {
+        systemPrompt = `You are a creative prompt engineer. Your task is to write a concise image generation prompt (max 60 words) for the content provided.
+
+RULES:
+- Describe the scene accurately based on the content.
+- Use high-quality visual terms (8k, highly detailed, professional).
+- Do NOT add any "news", "journalism", or "editorial" context unless specifically requested.
+- Style suffix to always include: "high resolution, sharp focus, studio lighting"
+- Output ONLY the prompt. No preamble, no explanation, no quotes.`
     } else {
         systemPrompt = `You are a professional editorial illustrator. Your task is to write a concise flat illustration prompt (max 60 words) for the news article provided.
 
@@ -202,7 +211,10 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
                     image_model === 'flux-dev' ? "black-forest-labs/flux-dev" :
                         "black-forest-labs/flux-schnell"
 
-    if (style === 'editorial_vector') {
+    if (style === 'standard') {
+        // No intervention for standard style
+        finalPrompt = prompt
+    } else if (style === 'editorial_vector') {
         // Only add prefix if the prompt is very short (fallback)
         if (prompt.length < 50) {
             finalPrompt = "Front-page news editorial vector illustration, clean geometric shapes, professional news magazine style, " + prompt

@@ -230,6 +230,7 @@ class Flazz_Admin {
         return $post_id;
     }
 
+
     /**
      * Search Pixabay API for a photo related to a query.
      * Requires: flazz_ai_pixabay_key in Settings.
@@ -331,10 +332,10 @@ class Flazz_Admin {
 
         require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-image.php';
         $generator = Flazz_Image_Generator::get_instance();
+        $style     = get_option( 'flazz_ai_image_mode', 'standard' );
         
-        $this->log( 'ajax_test_ai_image: triggering generate_image_via_cloud' );
-        // Use editorial_vector style for test
-        $image_url = $generator->generate_image_via_cloud( $prompt, 'editorial_vector', $token, $license );
+        $this->log( 'ajax_test_ai_image: triggering generate_image_via_cloud with style=' . $style );
+        $image_url = $generator->generate_image_via_cloud( $prompt, $style, $token, $license );
 
         if ( $image_url ) {
             $this->log( 'ajax_test_ai_image: SUCCESS, url=' . $image_url );
@@ -1430,6 +1431,17 @@ class Flazz_Admin {
                                     <option value="flux-nano" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-nano' ); ?>>🏎️ Nano Mode (Ultra Fast)</option>
                                 </select>
                                 <p class="description">Pilih kualitas gambar AI. Model Pro menghasilkan detail lebih tajam.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>🎨 Gaya Gambar Default</label></th>
+                            <td>
+                                <select name="flazz_ai_image_mode" class="regular-text">
+                                    <option value="standard" <?php selected( get_option( 'flazz_ai_image_mode', 'standard' ), 'standard' ); ?>>🌟 Standard / Universal (No Bias)</option>
+                                    <option value="editorial_vector" <?php selected( get_option( 'flazz_ai_image_mode' ), 'editorial_vector' ); ?>>📰 Editorial Vector (News Illustration)</option>
+                                    <option value="real_photo" <?php selected( get_option( 'flazz_ai_image_mode' ), 'real_photo' ); ?>>📸 Photorealistic News (Press Photo)</option>
+                                </select>
+                                <p class="description">Gaya visual yang akan diterapkan pada gambar artikel.</p>
                                 
                                 <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; max-width: 440px;">
                                     <strong>🧪 Test AI Image Generation</strong>
