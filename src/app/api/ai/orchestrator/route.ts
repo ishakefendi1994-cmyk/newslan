@@ -156,17 +156,38 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
     try {
         const replicate = new Replicate({ auth: apiKey })
 
-        // 1. Run the model (Official SDK handles polling automatically)
-        const output = await replicate.run(
-            "black-forest-labs/flux-schnell",
-            {
-                input: {
-                    prompt: finalPrompt,
-                    aspect_ratio: "1:1",
-                    num_inference_steps: 4
+        // 1. Run the model with a simple retry for 429 (Throttling)
+        let output;
+        try {
+            output = await replicate.run(
+                "black-forest-labs/flux-schnell",
+                {
+                    input: {
+                        prompt: finalPrompt,
+                        aspect_ratio: "1:1",
+                        num_inference_steps: 4
+                    }
                 }
+            )
+        } catch (err: any) {
+            // If throttled (429), wait 2 seconds and try one last time
+            if (err.message?.includes('429') || err.status === 429) {
+                console.log('Throttled by Replicate. Retrying in 2 seconds...')
+                await new Promise(resolve => setTimeout(resolve, 2000))
+                output = await replicate.run(
+                    "black-forest-labs/flux-schnell",
+                    {
+                        input: {
+                            prompt: finalPrompt,
+                            aspect_ratio: "1:1",
+                            num_inference_steps: 4
+                        }
+                    }
+                )
+            } else {
+                throw err
             }
-        )
+        }
 
         if (!output || (Array.isArray(output) && output.length === 0)) {
             return NextResponse.json({ success: false, message: 'No output from Replicate.' }, { status: 500 })
