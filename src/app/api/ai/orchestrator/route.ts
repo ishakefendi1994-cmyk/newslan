@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import Replicate from 'replicate'
 
 export async function GET() {
     return NextResponse.json({
@@ -152,57 +153,42 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         finalPrompt = "Professional news press photography, award-winning journalism style, high resolution, " + prompt
     }
 
-    // 1. Start the prediction
-    const response = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Token ${apiKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            // black-forest-labs/flux-schnell (High quality + Great text)
-            version: "a00f0221462700435907409f0293da2778f6974db37e1a3c75d49603d790757a",
-            input: {
-                prompt: finalPrompt,
-                aspect_ratio: "1:1",
-                num_inference_steps: 4
+    try {
+        const replicate = new Replicate({ auth: apiKey })
+
+        // 1. Run the model (Official SDK handles polling automatically)
+        const output = await replicate.run(
+            "black-forest-labs/flux-schnell",
+            {
+                input: {
+                    prompt: finalPrompt,
+                    aspect_ratio: "1:1",
+                    num_inference_steps: 4
+                }
             }
-        })
-    })
+        )
 
-    let prediction = await response.json()
-    if (!response.ok) {
-        return NextResponse.json({ success: false, message: 'Replicate Error: ' + (prediction.detail || response.statusText) }, { status: response.status })
-    }
-
-    // 2. Poll for results (Wait up to 30 seconds)
-    const pollUrl = prediction.urls.get
-    let attempts = 0
-    const maxAttempts = 30
-
-    while (attempts < maxAttempts) {
-        const pollResponse = await fetch(pollUrl, {
-            headers: { 'Authorization': `Token ${apiKey}` }
-        })
-
-        prediction = await pollResponse.json()
-
-        if (prediction.status === 'succeeded') {
-            return NextResponse.json({ success: true, data: prediction })
-        } else if (prediction.status === 'failed' || prediction.status === 'canceled') {
-            return NextResponse.json({
-                success: false,
-                message: `Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown error'}`
-            }, { status: 500 })
+        if (!output || (Array.isArray(output) && output.length === 0)) {
+            return NextResponse.json({ success: false, message: 'No output from Replicate.' }, { status: 500 })
         }
 
-        // Wait 1 second before next poll
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        attempts++
-    }
+        // Output from flux-schnell is an array of strings (URLs)
+        // or a stream depending on the environment.
+        const imageUrl = Array.isArray(output) ? output[0] : (typeof output === 'string' ? output : output.toString())
 
-    return NextResponse.json({
-        success: false,
-        message: 'Replicate image generation timed out after 15 seconds. The image might still be processing.'
-    }, { status: 504 })
+        return NextResponse.json({
+            success: true,
+            data: {
+                status: 'succeeded',
+                output: [imageUrl]
+            }
+        })
+
+    } catch (err: any) {
+        console.error('Replicate SDK Error:', err)
+        return NextResponse.json({
+            success: false,
+            message: 'Replicate Error: ' + (err.message || 'Unknown error occurred.')
+        }, { status: 500 })
+    }
 }
