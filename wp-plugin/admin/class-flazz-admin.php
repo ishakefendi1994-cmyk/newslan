@@ -69,6 +69,7 @@ class Flazz_Admin {
             'flazz_ai_rss_source_preset', 'flazz_ai_rss_feed_url', 'flazz_ai_fetch_limit',
             'flazz_ai_image_mode', 'flazz_ai_writing_style', 'flazz_ai_article_model',
             'flazz_ai_pixabay_key',
+            'flazz_ai_telegram_token', 'flazz_ai_telegram_chat_id',
         );
         foreach ( $options as $opt ) {
             register_setting( 'flazz_ai_settings', $opt );
@@ -111,6 +112,81 @@ class Flazz_Admin {
         if ( ! Flazz_License_Manager::get_instance()->is_valid() ) {
             wp_send_json_error( 'Lisensi tidak valid atau sudah kadaluarsa. Silakan periksa tab Pengaturan.' );
         }
+    }
+
+    // =========================================================================
+    // HELPER: Telegram Notification
+    // =========================================================================
+
+    private function send_telegram( $post_id, $title, $url ) {
+        $token   = get_option( 'flazz_ai_telegram_token', '' );
+        $chat_id = get_option( 'flazz_ai_telegram_chat_id', '' );
+
+        if ( empty( $token ) || empty( $chat_id ) ) return;
+
+        $text = "📰 *Artikel Baru Terbit!*\n\n" .
+                "*" . esc_html( $title ) . "*\n\n" .
+                "🔗 [Baca Selengkapnya]({$url})\n\n" .
+                "_Dikirim oleh Flazz AI_";
+
+        wp_remote_post( "https://api.telegram.org/bot{$token}/sendMessage", array(
+            'body' => array(
+                'chat_id'    => $chat_id,
+                'text'       => $text,
+                'parse_mode' => 'Markdown',
+            ),
+            'timeout' => 10,
+        ) );
+
+        $this->log( 'send_telegram: sent for post_id=' . $post_id );
+    }
+
+    // =========================================================================
+    // HELPER: Auto SEO Meta Generator (via Groq Orchestrator)
+    // =========================================================================
+
+    private function generate_and_save_seo_meta( $post_id, $title, $content ) {
+        $license = get_option( 'flazz_ai_license_key', '' );
+        $api_key = get_option( 'flazz_ai_groq_key', '' );
+        if ( empty( $license ) || empty( $api_key ) ) return;
+
+        $response = wp_remote_post( 'https://www.cryptotechnews.net/api/ai/orchestrator', array(
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => json_encode( array(
+                'action'      => 'generate_seo',
+                'license_key' => $license,
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
+                'api_key'     => $api_key,
+                'payload'     => array(
+                    'title'   => $title,
+                    'content' => wp_strip_all_tags( substr( $content, 0, 1500 ) ),
+                ),
+            )),
+            'timeout' => 25,
+        ) );
+
+        if ( is_wp_error( $response ) ) return;
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( ! isset( $body['success'] ) || ! $body['success'] ) return;
+
+        $meta = $body['data'];
+
+        // Save Yoast-compatible meta
+        if ( ! empty( $meta['meta_description'] ) ) {
+            update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta['meta_description'] );
+            update_post_meta( $post_id, 'rank_math_description', $meta['meta_description'] );
+        }
+        if ( ! empty( $meta['focus_keyword'] ) ) {
+            update_post_meta( $post_id, '_yoast_wpseo_focuskw', $meta['focus_keyword'] );
+            update_post_meta( $post_id, 'rank_math_focus_keyword', $meta['focus_keyword'] );
+        }
+        if ( ! empty( $meta['seo_title'] ) ) {
+            update_post_meta( $post_id, '_yoast_wpseo_title', $meta['seo_title'] );
+            update_post_meta( $post_id, 'rank_math_title', $meta['seo_title'] );
+        }
+
+        $this->log( 'generate_and_save_seo_meta: saved for post_id=' . $post_id );
     }
 
     private function create_wp_post_direct( $data, $source_url, $image_url ) {
@@ -180,6 +256,14 @@ class Flazz_Admin {
                     $this->log( 'create_wp_post_direct: featured image set, att_id=' . $att_id );
                 }
             }
+        }
+
+        // ── Auto-enrich: SEO Meta + Telegram ─────────────────────────────────
+        if ( $post_id && ! is_wp_error( $post_id ) ) {
+            $post_url = get_permalink( $post_id );
+            // Fire-and-forget (non-blocking for the user)
+            $this->generate_and_save_seo_meta( $post_id, $data['title'], $data['content'] );
+            $this->send_telegram( $post_id, $data['title'], $post_url );
         }
 
         return $post_id;
@@ -1393,6 +1477,25 @@ class Flazz_Admin {
                             <td>
                                 <input type="password" name="flazz_ai_pixabay_key" value="<?php echo esc_attr( get_option( 'flazz_ai_pixabay_key' ) ); ?>" class="regular-text" placeholder="xxxxxxxx-xxxxxxxxxxxxxx">
                                 <p class="description">Gratis, disarankan untuk fallback gambar.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="2" style="background:#f0f6fc; padding: 10px 15px; font-size: 13px; border-top: 2px solid #2271b1;">
+                                📤 Telegram Notification (Opsional)
+                            </th>
+                        </tr>
+                        <tr>
+                            <th><label>Telegram Bot Token</label></th>
+                            <td>
+                                <input type="password" name="flazz_ai_telegram_token" value="<?php echo esc_attr( get_option( 'flazz_ai_telegram_token' ) ); ?>" class="regular-text" placeholder="123456789:AAF...">
+                                <p class="description">Buat bot baru via <a href="https://t.me/botfather" target="_blank">@BotFather</a> di Telegram. Gratis!</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Telegram Chat ID</label></th>
+                            <td>
+                                <input type="text" name="flazz_ai_telegram_chat_id" value="<?php echo esc_attr( get_option( 'flazz_ai_telegram_chat_id' ) ); ?>" class="regular-text" placeholder="-100xxxxxxxxxx">
+                                <p class="description">Chat ID channel/group tujuan. Cari via <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>. Untuk channel, awali dengan <code>-100</code>.</p>
                             </td>
                         </tr>
                         <tr>

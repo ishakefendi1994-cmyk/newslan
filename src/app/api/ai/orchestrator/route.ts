@@ -51,6 +51,8 @@ export async function POST(request: Request) {
             return await handleReplicateProcessing(api_key, payload)
         } else if (action === 'get_trends') {
             return await handleGetTrends(payload)
+        } else if (action === 'generate_seo') {
+            return await handleGenerateSeoMeta(api_key, payload)
         }
 
         return NextResponse.json({ success: false, message: 'Unknown action.' }, { status: 400 })
@@ -238,6 +240,48 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             success: false,
             message: 'Replicate Error: ' + (err.message || 'Unknown error occurred.')
         }, { status: 500 })
+    }
+}
+
+async function handleGenerateSeoMeta(api_key: string, payload: any) {
+    const { title, content } = payload
+    if (!title) return NextResponse.json({ success: false, message: 'Title is required.' }, { status: 400 })
+
+    const snippet = content ? content.slice(0, 800) : title
+    const systemPrompt = `You are an SEO expert. Given an article title and content snippet, respond ONLY with valid JSON (no markdown, no explanation) in this exact format:
+{"seo_title":"...","meta_description":"...","focus_keyword":"..."}
+Rules:
+- seo_title: compelling, 55-65 characters, includes main keyword
+- meta_description: enticing summary for SERP, max 155 characters
+- focus_keyword: single most important keyword phrase (2-4 words)`
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${api_key}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Title: ${title}\n\nContent snippet: ${snippet}` }
+            ],
+            temperature: 0.3,
+            max_tokens: 300,
+        })
+    })
+
+    if (!response.ok) return NextResponse.json({ success: false, message: 'Groq SEO Error' }, { status: 500 })
+
+    const groqData = await response.json()
+    const raw = groqData.choices?.[0]?.message?.content?.trim() || ''
+
+    try {
+        const json = JSON.parse(raw.replace(/```json|```/g, '').trim())
+        return NextResponse.json({ success: true, data: json })
+    } catch {
+        return NextResponse.json({ success: false, message: 'Failed to parse SEO meta from AI.' }, { status: 500 })
     }
 }
 
