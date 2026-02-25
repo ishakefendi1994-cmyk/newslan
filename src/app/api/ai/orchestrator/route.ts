@@ -195,9 +195,12 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
 
     const { prompt, style, image_model } = payload
     let finalPrompt = prompt
-    const replicateModel = image_model === 'flux-pro' ? "black-forest-labs/flux-pro" :
-        image_model === 'flux-dev' ? "black-forest-labs/flux-dev" :
-            "black-forest-labs/flux-schnell"
+    const replicateModel = image_model === 'flux-1.1-pro' ? "black-forest-labs/flux-1.1-pro" :
+        image_model === 'recraft-v3' ? "recraft-ai/recraft-v3" :
+            image_model === 'flux-nano' ? "lucataco/sandbox-flux-nano" :
+                image_model === 'flux-pro' ? "black-forest-labs/flux-pro" :
+                    image_model === 'flux-dev' ? "black-forest-labs/flux-dev" :
+                        "black-forest-labs/flux-schnell"
 
     if (style === 'editorial_vector') {
         // Only add prefix if the prompt is very short (fallback)
@@ -221,13 +224,19 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         // 1. Run the model with a simple retry for 429 (Throttling)
         let output;
         try {
+            const inferenceSteps = image_model === 'flux-1.1-pro' ? 1 : // Flux 1.1 Pro is very fast
+                image_model === 'recraft-v3' ? 20 :
+                    image_model === 'flux-nano' ? 4 :
+                        image_model === 'flux-pro' ? 25 :
+                            image_model === 'flux-dev' ? 20 : 4;
+
             output = await replicate.run(
                 replicateModel as any,
                 {
                     input: {
                         prompt: finalPrompt,
                         aspect_ratio: "1:1",
-                        num_inference_steps: (image_model === 'flux-pro' ? 25 : (image_model === 'flux-dev' ? 20 : 4))
+                        num_inference_steps: inferenceSteps
                     }
                 }
             )
@@ -236,13 +245,20 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             if (err.message?.includes('429') || err.status === 429) {
                 console.log('Throttled by Replicate. Retrying in 2 seconds...')
                 await new Promise(resolve => setTimeout(resolve, 2000))
+
+                const inferenceStepsRetry = image_model === 'flux-1.1-pro' ? 1 :
+                    image_model === 'recraft-v3' ? 20 :
+                        image_model === 'flux-nano' ? 4 :
+                            image_model === 'flux-pro' ? 25 :
+                                image_model === 'flux-dev' ? 20 : 4;
+
                 output = await replicate.run(
                     replicateModel as any,
                     {
                         input: {
                             prompt: finalPrompt,
                             aspect_ratio: "1:1",
-                            num_inference_steps: (image_model === 'flux-pro' ? 25 : (image_model === 'flux-dev' ? 20 : 4))
+                            num_inference_steps: inferenceStepsRetry
                         }
                     }
                 )

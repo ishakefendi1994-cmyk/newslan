@@ -1424,7 +1424,10 @@ class Flazz_Admin {
                                 <select name="flazz_ai_image_model" class="regular-text">
                                     <option value="flux-schnell" <?php selected( get_option( 'flazz_ai_image_model', 'flux-schnell' ), 'flux-schnell' ); ?>>⚡ Flux Schnell (Fast/Default)</option>
                                     <option value="flux-dev" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-dev' ); ?>>👨‍💻 Flux Dev (High Quality)</option>
-                                    <option value="flux-pro" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-pro' ); ?>>💎 Flux Pro (Ultra HD)</option>
+                                    <option value="flux-pro" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-pro' ); ?>>💎 Flux Pro (Premium)</option>
+                                    <option value="flux-1.1-pro" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-1.1-pro' ); ?>>👑 Flux 1.1 Pro (Ultra HD)</option>
+                                    <option value="recraft-v3" <?php selected( get_option( 'flazz_ai_image_model' ), 'recraft-v3' ); ?>>🎨 Recraft V3 (Best for Design)</option>
+                                    <option value="flux-nano" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-nano' ); ?>>🏎️ Nano Mode (Ultra Fast)</option>
                                 </select>
                                 <p class="description">Pilih kualitas gambar AI. Model Pro menghasilkan detail lebih tajam.</p>
                                 
