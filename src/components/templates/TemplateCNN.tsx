@@ -55,6 +55,7 @@ export default function TemplateCNN({
 
     return (
         <div className="flex flex-col bg-white min-h-screen font-sans text-black">
+            <meta name="google-site-verification" content="Qos1JSRySAiuFYjTm_X3eLQRpU1JPRF8EQy-3a03BVY" />
 
 
 
