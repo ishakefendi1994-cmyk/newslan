@@ -146,11 +146,12 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
     let finalPrompt = prompt
 
     if (style === 'editorial_vector') {
-        finalPrompt = "Editorial vector illustration style, clean lines, professional news aesthetic, simple colors, " + prompt
+        finalPrompt = "Front page news editorial flat vector illustration, clean geometric shapes, professional news magazine style, simple corporate colors, high quality, " + prompt
     } else {
-        finalPrompt = "Realistic professional photography, high resolution, 8k, journalistic style, " + prompt
+        finalPrompt = "Professional DSLR press photography, award winning news photo, high resolution, 8k, realistic journalistic style, " + prompt
     }
 
+    // 1. Start the prediction
     const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -158,7 +159,8 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            version: "f4269d3d46761014a09a567c29e6c9867c42dfd8b74a35043810d7a9643d922a", // Flux Dev or similar
+            // black-forest-labs/flux-schnell (Faster and more reliable for web)
+            version: "a00f0221462700435907409f0293da2778f6974db37e1a3c75d49603d790757a",
             input: {
                 prompt: finalPrompt,
                 aspect_ratio: "16:9"
@@ -166,10 +168,39 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         })
     })
 
-    const data = await response.json()
+    let prediction = await response.json()
     if (!response.ok) {
-        return NextResponse.json({ success: false, message: 'Replicate Error: ' + (data.detail || response.statusText) }, { status: response.status })
+        return NextResponse.json({ success: false, message: 'Replicate Error: ' + (prediction.detail || response.statusText) }, { status: response.status })
     }
 
-    return NextResponse.json({ success: true, data: data })
+    // 2. Poll for results (Wait up to 15 seconds)
+    const pollUrl = prediction.urls.get
+    let attempts = 0
+    const maxAttempts = 15
+
+    while (attempts < maxAttempts) {
+        const pollResponse = await fetch(pollUrl, {
+            headers: { 'Authorization': `Token ${apiKey}` }
+        })
+
+        prediction = await pollResponse.json()
+
+        if (prediction.status === 'succeeded') {
+            return NextResponse.json({ success: true, data: prediction })
+        } else if (prediction.status === 'failed' || prediction.status === 'canceled') {
+            return NextResponse.json({
+                success: false,
+                message: `Replicate prediction ${prediction.status}: ${prediction.error || 'Unknown error'}`
+            }, { status: 500 })
+        }
+
+        // Wait 1 second before next poll
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        attempts++
+    }
+
+    return NextResponse.json({
+        success: false,
+        message: 'Replicate image generation timed out after 15 seconds. The image might still be processing.'
+    }, { status: 504 })
 }
