@@ -89,6 +89,8 @@ class Flazz_Job_Engine {
             'research_scope',
             'publish_mode',
             'schedule_interval',
+            'show_image_source',
+            'show_article_source',
         );
 
         foreach ( $fields as $field ) {
@@ -239,6 +241,35 @@ class Flazz_Job_Engine {
 
         // ── Step 6: Internal Linking (SEO Engine) ────────────────────────────
         $content_with_links = $this->add_internal_links( $synthesis['content'], $synthesis['title'] );
+        
+        // ── Step 6.1: Add Attributions (Article Source & Image Source) ───────
+        $show_img_source = get_post_meta( $job_id, '_flazz_job_show_image_source', true ) !== '0'; // Default ON
+        $show_art_source = get_post_meta( $job_id, '_flazz_job_show_article_source', true ) !== '0'; // Default ON
+        
+        $attributions = '';
+        
+        if ( $show_art_source && ! empty( $source_contents[0]['sourceName'] ) ) {
+            $source_name = $source_contents[0]['sourceName'];
+            $source_link = $source_contents[0]['link'];
+            $attributions .= '<li><strong>Sumber Berita:</strong> <a href="' . esc_url( $source_link ) . '" target="_blank" rel="nofollow noopener">' . esc_html( $source_name ) . '</a></li>';
+        }
+        
+        if ( $show_img_source ) {
+            if ( $image_mode === 'generate_ai' ) {
+                $attributions .= '<li><strong>Sumber Foto:</strong> Gambar dibuat oleh Flazz AI (Replicate Flux)</li>';
+            } elseif ( ! empty( $source_contents[0]['image'] ) ) {
+                $source_name = ! empty( $source_contents[0]['sourceName'] ) ? $source_contents[0]['sourceName'] : 'Original Source';
+                $attributions .= '<li><strong>Sumber Foto:</strong> ' . esc_html( $source_name ) . ' / RSS Feed</li>';
+            } elseif ( $image_mode === 'pixabay' ) {
+                $attributions .= '<li><strong>Sumber Foto:</strong> Pixabay (Bebas Royalti)</li>';
+            }
+        }
+        
+        if ( ! empty( $attributions ) ) {
+            $content_with_links .= '<div class="flazz-source-attribution" style="margin-top: 20px; padding: 10px 15px; background: #fefefe; border: 1px dashed #ddd; border-radius: 5px; font-size: 13px; color: #666;">';
+            $content_with_links .= '<ul style="margin: 0; padding: 0; list-style: none;">' . $attributions . '</ul>';
+            $content_with_links .= '</div>';
+        }
 
         // ── Step 7: Create Post ───────────────────────────────────────────────
         $post_data = array(

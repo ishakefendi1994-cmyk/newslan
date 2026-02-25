@@ -888,6 +888,8 @@ class Flazz_Admin {
                                             data-research_scope="<?php echo esc_attr( $scope ); ?>"
                                             data-publish_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_publish_mode', true ) ?: 'publish' ); ?>"
                                             data-schedule_interval="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_schedule_interval', true ) ?: '60' ); ?>"
+                                            data-show_image_source="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_show_image_source', true ) === '0' ? '0' : '1' ); ?>"
+                                            data-show_article_source="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_show_article_source', true ) === '0' ? '0' : '1' ); ?>"
                                         >✏️ Edit</button>
                                         <button title="Hapus" class="delete-job button button-small button-link-delete" data-id="<?php echo $jobs_item->ID; ?>">🗑</button>
                                     </td>
@@ -1021,6 +1023,20 @@ class Flazz_Admin {
                                     <option value="editorial_vector">🎨 Editorial Vector</option>
                                     <option value="real_photo">📸 Real Photo</option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>⚖️ Atribusi & Lisensi</label></th>
+                            <td>
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input type="checkbox" id="job_show_image_source" value="1" checked> 
+                                    Tampilkan Sumber Foto (di bawah artikel)
+                                </label>
+                                <label style="display: block;">
+                                    <input type="checkbox" id="job_show_article_source" value="1" checked> 
+                                    Tampilkan Sumber Berita / Link Asli (SEO Friendly)
+                                </label>
+                                <p class="description">Sangat disarankan untuk menghindari klaim hak cipta.</p>
                             </td>
                         </tr>
                         <tr>
