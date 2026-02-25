@@ -140,6 +140,13 @@ async function handleGroqProcessing(apiKey: string, action: string, payload: any
     if (!apiKey) return NextResponse.json({ success: false, message: 'Groq API Key missing.' }, { status: 400 })
 
     const targetLang = payload.target_language || 'Indonesian'
+    const requestedModel = payload.text_model || 'llama-3.3-70b-versatile'
+
+    // Logic to switch providers if GPT is requested and OpenAI key exists
+    const useOpenAI = requestedModel.startsWith('gpt') && process.env.OPENAI_API_KEY
+    const baseUrl = useOpenAI ? 'https://api.openai.com/v1/chat/completions' : 'https://api.groq.com/openai/v1/chat/completions'
+    const authKey = useOpenAI ? process.env.OPENAI_API_KEY : apiKey
+
     let systemPrompt = `You are a Professional Content Writer and SEO Expert. Output MUST be in ${targetLang}.`
 
     if (action === 'rewrite') {
@@ -156,14 +163,14 @@ async function handleGroqProcessing(apiKey: string, action: string, payload: any
         ? `Title: ${payload.title}\n\nContent:\n${payload.content}`
         : `Ide Utama / Topik: ${payload.idea}`
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch(baseUrl, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${authKey}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: requestedModel,
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userPrompt }
@@ -174,7 +181,7 @@ async function handleGroqProcessing(apiKey: string, action: string, payload: any
 
     const data = await response.json()
     if (!response.ok) {
-        return NextResponse.json({ success: false, message: 'Groq Error: ' + (data.error?.message || response.statusText) }, { status: response.status })
+        return NextResponse.json({ success: false, message: (useOpenAI ? 'OpenAI' : 'Groq') + ' Error: ' + (data.error?.message || response.statusText) }, { status: response.status })
     }
 
     return NextResponse.json({
@@ -186,8 +193,11 @@ async function handleGroqProcessing(apiKey: string, action: string, payload: any
 async function handleReplicateProcessing(apiKey: string, payload: any) {
     if (!apiKey) return NextResponse.json({ success: false, message: 'Replicate API Token missing.' }, { status: 400 })
 
-    const { prompt, style } = payload
+    const { prompt, style, image_model } = payload
     let finalPrompt = prompt
+    const replicateModel = image_model === 'flux-pro' ? "black-forest-labs/flux-pro" :
+        image_model === 'flux-dev' ? "black-forest-labs/flux-dev" :
+            "black-forest-labs/flux-schnell"
 
     if (style === 'editorial_vector') {
         // Only add prefix if the prompt is very short (fallback)
@@ -212,12 +222,12 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         let output;
         try {
             output = await replicate.run(
-                "black-forest-labs/flux-schnell",
+                replicateModel as any,
                 {
                     input: {
                         prompt: finalPrompt,
                         aspect_ratio: "1:1",
-                        num_inference_steps: 4
+                        num_inference_steps: (image_model === 'flux-pro' ? 25 : (image_model === 'flux-dev' ? 20 : 4))
                     }
                 }
             )
@@ -227,12 +237,12 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
                 console.log('Throttled by Replicate. Retrying in 2 seconds...')
                 await new Promise(resolve => setTimeout(resolve, 2000))
                 output = await replicate.run(
-                    "black-forest-labs/flux-schnell",
+                    replicateModel as any,
                     {
                         input: {
                             prompt: finalPrompt,
                             aspect_ratio: "1:1",
-                            num_inference_steps: 4
+                            num_inference_steps: (image_model === 'flux-pro' ? 25 : (image_model === 'flux-dev' ? 20 : 4))
                         }
                     }
                 )

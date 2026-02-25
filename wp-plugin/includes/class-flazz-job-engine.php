@@ -390,6 +390,7 @@ class Flazz_Job_Engine {
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $text_model = get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' );
 
         $response = wp_remote_post( $api_url, array(
             'timeout' => 30,
@@ -402,7 +403,11 @@ class Flazz_Job_Engine {
                 'license_key' => $license,
                 'domain'      => parse_url( home_url(), PHP_URL_HOST ),
                 'api_key'     => $api_key,
-                'payload'     => array( 'title' => $title, 'content' => mb_substr($content, 0, 1000) )
+                'payload'     => array( 
+                    'title' => $title, 
+                    'content' => mb_substr($content, 0, 1000),
+                    'text_model' => $text_model
+                )
             ))
         ));
 
@@ -426,6 +431,7 @@ class Flazz_Job_Engine {
         $license = get_option( 'flazz_ai_license_key' );
         $api_key = get_option( 'flazz_ai_groq_key' );
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $text_model = get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' );
 
         $response = wp_remote_post( $api_url, array(
             'timeout' => 30,
@@ -438,7 +444,12 @@ class Flazz_Job_Engine {
                 'license_key' => $license,
                 'domain'      => parse_url( home_url(), PHP_URL_HOST ),
                 'api_key'     => $api_key,
-                'payload'     => array( 'title' => $title, 'content' => mb_substr($content, 0, 1000), 'categories' => $cat_names )
+                'payload'     => array( 
+                    'title' => $title, 
+                    'content' => mb_substr($content, 0, 1000), 
+                    'categories' => $cat_names,
+                    'text_model' => $text_model
+                )
             ))
         ));
 

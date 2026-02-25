@@ -43,6 +43,7 @@ class Flazz_Image_Generator {
     private function generate_prompt_via_cloud( $title, $content, $groq_key, $license, $style ) {
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $text_model = get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' );
         
         $response = wp_remote_post( $api_url, array(
             'headers' => array( 
@@ -57,7 +58,8 @@ class Flazz_Image_Generator {
                 'payload'     => array(
                     'title'   => $title,
                     'content' => mb_substr( $content, 0, 1000 ),
-                    'style'   => $style
+                    'style'   => $style,
+                    'text_model' => $text_model
                 )
             )),
             'timeout' => 45
@@ -80,6 +82,7 @@ class Flazz_Image_Generator {
     public function generate_image_via_cloud( $prompt, $style, $apiKey, $license ) {
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $image_model = get_option( 'flazz_ai_image_model', 'flux-schnell' );
         $this->last_error = '';
 
         error_log( '[Flazz AI] generate_image_via_cloud: START' );
@@ -97,7 +100,8 @@ class Flazz_Image_Generator {
                 'api_key'     => $apiKey,
                 'payload'     => array(
                     'prompt' => $prompt,
-                    'style'  => $style
+                    'style'  => $style,
+                    'image_model' => $image_model
                 )
             )),
             'timeout' => 60

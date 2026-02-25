@@ -70,6 +70,7 @@ class Flazz_Admin {
             'flazz_ai_image_mode', 'flazz_ai_writing_style', 'flazz_ai_article_model',
             'flazz_ai_pixabay_key',
             'flazz_ai_telegram_token', 'flazz_ai_telegram_chat_id',
+            'flazz_ai_text_model', 'flazz_ai_image_model'
         );
         foreach ( $options as $opt ) {
             register_setting( 'flazz_ai_settings', $opt );
@@ -1399,10 +1400,33 @@ class Flazz_Admin {
                             </td>
                         </tr>
                         <tr>
+                            <th><label>🧠 AI Text Model (Pro)</label></th>
+                            <td>
+                                <select name="flazz_ai_text_model" class="regular-text">
+                                    <option value="llama-3.3-70b-versatile" <?php selected( get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' ), 'llama-3.3-70b-versatile' ); ?>>🦙 Llama 3.3 70B (Versatile/Default)</option>
+                                    <option value="llama-3.1-405b-reasoning" <?php selected( get_option( 'flazz_ai_text_model' ), 'llama-3.1-405b-reasoning' ); ?>>🦙 Llama 3.1 405B (Grand Master)</option>
+                                    <option value="gpt-4o" <?php selected( get_option( 'flazz_ai_text_model' ), 'gpt-4o' ); ?>>🤖 GPT-4o (OpenAI Premium)</option>
+                                    <option value="gpt-4o-mini" <?php selected( get_option( 'flazz_ai_text_model' ), 'gpt-4o-mini' ); ?>>🤖 GPT-4o Mini (Fast & Smart)</option>
+                                </select>
+                                <p class="description">Pilih model untuk penulisan artikel & riset. GPT-4o mungkin membutuhkan kredit tambahan.</p>
+                            </td>
+                        </tr>
+                        <tr>
                             <th><label>Replicate API Token (AI Image)</label></th>
                             <td>
                                 <input type="password" name="flazz_ai_replicate_token" id="flazz_ai_replicate_token" value="<?php echo esc_attr( get_option( 'flazz_ai_replicate_token' ) ); ?>" class="regular-text" placeholder="r8_xxxxxxxx">
                                 <p class="description">Optional — Untuk Replicate Flux. Ambil di <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/api-tokens</a></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>🖼️ AI Image Model (Replicate)</label></th>
+                            <td>
+                                <select name="flazz_ai_image_model" class="regular-text">
+                                    <option value="flux-schnell" <?php selected( get_option( 'flazz_ai_image_model', 'flux-schnell' ), 'flux-schnell' ); ?>>⚡ Flux Schnell (Fast/Default)</option>
+                                    <option value="flux-dev" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-dev' ); ?>>👨‍💻 Flux Dev (High Quality)</option>
+                                    <option value="flux-pro" <?php selected( get_option( 'flazz_ai_image_model' ), 'flux-pro' ); ?>>💎 Flux Pro (Ultra HD)</option>
+                                </select>
+                                <p class="description">Pilih kualitas gambar AI. Model Pro menghasilkan detail lebih tajam.</p>
                                 
                                 <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; max-width: 440px;">
                                     <strong>🧪 Test AI Image Generation</strong>

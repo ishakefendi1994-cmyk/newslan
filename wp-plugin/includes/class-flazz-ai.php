@@ -29,6 +29,7 @@ class Flazz_AI_Writer {
         // Orchestrator API
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $text_model = get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' );
 
         $response = wp_remote_post( $api_url, array(
             'headers' => array( 
@@ -42,10 +43,11 @@ class Flazz_AI_Writer {
                 'api_key'     => $api_key,
                 'payload'     => array(
                     'title'   => $title,
-                    'content' => mb_substr( $content, 0, 3000 ),
+                    'content' => mb_substr($content, 0, 1500),
                     'style'   => $style,
                     'model'   => $model,
-                    'target_language' => $target_language
+                    'target_language' => $target_language,
+                    'text_model' => $text_model
                 )
             )),
             'timeout' => 90
@@ -76,6 +78,7 @@ class Flazz_AI_Writer {
 
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
         $token   = get_option( 'flazz_ai_site_access_token' );
+        $text_model = get_option( 'flazz_ai_text_model', 'llama-3.3-70b-versatile' );
 
         $response = wp_remote_post( $api_url, array(
             'headers' => array( 
@@ -91,7 +94,8 @@ class Flazz_AI_Writer {
                     'idea'  => $idea,
                     'style' => $style,
                     'model' => $model,
-                    'target_language' => $target_language
+                    'target_language' => $target_language,
+                    'text_model' => $text_model
                 )
             )),
             'timeout' => 90
