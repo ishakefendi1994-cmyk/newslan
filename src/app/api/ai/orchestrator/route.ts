@@ -178,10 +178,10 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
         return NextResponse.json({ success: false, message: 'Replicate Error: ' + (prediction.detail || response.statusText) }, { status: response.status })
     }
 
-    // 2. Poll for results (Wait up to 15 seconds)
+    // 2. Poll for results (Wait up to 30 seconds)
     const pollUrl = prediction.urls.get
     let attempts = 0
-    const maxAttempts = 15
+    const maxAttempts = 30
 
     while (attempts < maxAttempts) {
         const pollResponse = await fetch(pollUrl, {
