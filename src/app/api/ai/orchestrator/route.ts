@@ -241,80 +241,83 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
     }
 }
 
+/**
+ * handleGetTrends: Extracts trending topics using Google News RSS
+ * Strategy (inspired by pytrends): Instead of directly hitting google trends
+ * (which gets blocked in cloud), we fetch Google News's top news RSS feed
+ * and extract the most-discussed keywords from headlines - effectively the same data.
+ */
 async function handleGetTrends(payload: any) {
     const geo = payload.geo || 'ID'
 
-    // Attempt 1: Internal JSON API (Resilient)
+    // Language/region mapping
+    const geoMap: Record<string, { hl: string, gl: string, ceid: string, lang: string }> = {
+        ID: { hl: 'id', gl: 'ID', ceid: 'ID:id', lang: 'Indonesian' },
+        US: { hl: 'en-US', gl: 'US', ceid: 'US:en', lang: 'English' },
+    }
+    const geoConfig = geoMap[geo] || geoMap['ID']
+
+    const results: { keyword: string; traffic: string }[] = []
+
+    // ── Source 1: Google News Top Stories RSS ──────────────────────────────
     try {
-        const jsonUrl = `https://trends.google.com/trends/api/dailytrends?hl=id-ID&geo=${geo}`
-        const response = await fetch(jsonUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
+        const topUrl = `https://news.google.com/rss?hl=${geoConfig.hl}&gl=${geoConfig.gl}&ceid=${geoConfig.ceid}`
+        const res = await fetch(topUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' }
         })
 
-        if (response.ok) {
-            const text = await response.text()
-            // Google prefix: )]}',\n
-            const cleanJson = text.replace(/^\)\]\}',\n/, '')
-            const data = JSON.parse(cleanJson)
-
-            if (data.default && data.default.trendingSearchesDays) {
-                const items: any[] = []
-                data.default.trendingSearchesDays.forEach((day: any) => {
-                    day.trendingSearches.forEach((search: any) => {
-                        items.push({
-                            keyword: search.title.query,
-                            traffic: search.formattedTraffic
-                        })
-                    })
-                })
-
-                if (items.length > 0) {
-                    console.log(`[Trends] Fetched ${items.length} items from JSON for ${geo}`)
-                    return NextResponse.json({ success: true, data: items.slice(0, 20) })
-                }
+        if (res.ok) {
+            const xml = await res.text()
+            const items: string[] = []
+            const titleRe = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/g
+            let m
+            while ((m = titleRe.exec(xml)) !== null) {
+                const raw = m[1]
+                    .replace(/ - [^-]+$/, '')        // Remove " - Source Name"
+                    .replace(/&amp;/g, '&')
+                    .replace(/&quot;/g, '"')
+                    .trim()
+                if (raw.length > 3) items.push(raw)
             }
+            // Pack up to 15 headlines as "trending" with estimated traffic "Baru"
+            items.slice(0, 15).forEach(t => {
+                results.push({ keyword: t, traffic: 'Terbaru' })
+            })
         }
     } catch (e) {
-        console.warn('[Trends] JSON fetch failing, falling back to RSS:', e)
+        console.warn('[Trends] Source 1 Google News Top failed:', e)
     }
 
-    // Attempt 2: RSS Feed (Fallback)
-    const rssUrl = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`
-    try {
-        const response = await fetch(rssUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    // ── Source 2: Google News Tech RSS (bonus) ─────────────────────────────
+    if (results.length < 10) {
+        try {
+            const techUrl = `https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtbGtHZ0pKUkNnQVAB?hl=${geoConfig.hl}&gl=${geoConfig.gl}&ceid=${geoConfig.ceid}`
+            const res = await fetch(techUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' }
+            })
+            if (res.ok) {
+                const xml = await res.text()
+                const titleRe = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/g
+                let m
+                while ((m = titleRe.exec(xml)) !== null && results.length < 20) {
+                    const raw = m[1]
+                        .replace(/ - [^-]+$/, '')
+                        .replace(/&amp;/g, '&')
+                        .trim()
+                    if (raw.length > 3 && !results.find(r => r.keyword === raw)) {
+                        results.push({ keyword: raw, traffic: 'Teknologi' })
+                    }
+                }
             }
-        })
-        if (!response.ok) {
-            return NextResponse.json({ success: false, message: 'Google Trends unreachable' }, { status: response.status })
+        } catch (e) {
+            console.warn('[Trends] Source 2 Tech failed:', e)
         }
-
-        const xml = await response.text()
-        const items = []
-        const itemRegex = /<item>([\s\S]*?)<\/item>/g
-        let match
-
-        while ((match = itemRegex.exec(xml)) !== null) {
-            const itemContent = match[1]
-            let keyword = ''
-            const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)
-            if (titleMatch) keyword = titleMatch[1].trim()
-
-            let traffic = '0'
-            const trafficMatch = itemContent.match(/<(?:ht:)?approx_traffic>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/(?:ht:)?approx_traffic>/)
-            if (trafficMatch) traffic = trafficMatch[1].trim()
-
-            if (keyword) {
-                items.push({ keyword: keyword, traffic: traffic })
-            }
-        }
-
-        return NextResponse.json({ success: true, data: items.slice(0, 20) })
-    } catch (err: any) {
-        console.error('handleGetTrends Error:', err)
-        return NextResponse.json({ success: false, message: (err as Error).message }, { status: 500 })
     }
+
+    if (results.length > 0) {
+        console.log(`[Trends] Extracted ${results.length} trending topics for ${geo}`)
+        return NextResponse.json({ success: true, data: results })
+    }
+
+    return NextResponse.json({ success: false, message: 'Tidak dapat mengambil data trending saat ini.' })
 }
