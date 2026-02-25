@@ -215,6 +215,8 @@ jQuery(document).ready(function ($) {
         $('#job_thumbnail_style').val(data.thumbnail_style);
         $('#job_target_language').val(data.target_language);
         $('#job_research_scope').val(data.research_scope);
+        $('#job_publish_mode').val(data.publish_mode).trigger('change');
+        $('#job_schedule_interval').val(data.schedule_interval);
 
         // Show form and scroll
         $('#flazz-job-form-container').hide().slideDown();
@@ -245,6 +247,15 @@ jQuery(document).ready(function ($) {
             $('#row-job-thumbnail-style').show();
         } else {
             $('#row-job-thumbnail-style').hide();
+        }
+    });
+
+    // Toggle job interval row
+    $(document).on('change', '#job_publish_mode', function () {
+        if ($(this).val() === 'future') {
+            $('#row-job-interval').show();
+        } else {
+            $('#row-job-interval').hide();
         }
     });
 
@@ -279,6 +290,8 @@ jQuery(document).ready(function ($) {
             writing_style: $('#job_writing_style').val(),
             target_language: $('#job_target_language').val(),
             research_scope: $('#job_research_scope').val(),
+            publish_mode: $('#job_publish_mode').val(),
+            schedule_interval: $('#job_schedule_interval').val(),
             publish_status: 'publish'
         }, function (response) {
             console.log('[Flazz AI] Save Job Response:', response);

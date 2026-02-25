@@ -913,6 +913,8 @@ class Flazz_Admin {
                                             data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
                                             data-target_language="<?php echo esc_attr( $target_lang ); ?>"
                                             data-research_scope="<?php echo esc_attr( $scope ); ?>"
+                                            data-publish_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_publish_mode', true ) ?: 'publish' ); ?>"
+                                            data-schedule_interval="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_schedule_interval', true ) ?: '60' ); ?>"
                                         >✏️ Edit</button>
                                         <button title="Hapus" class="delete-job button button-small button-link-delete" data-id="<?php echo $jobs_item->ID; ?>">🗑</button>
                                     </td>
@@ -1045,6 +1047,23 @@ class Flazz_Admin {
                                     <option value="editorial_vector">🎨 Editorial Vector</option>
                                     <option value="real_photo">📸 Real Photo</option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Status Publikasi</label></th>
+                            <td>
+                                <select id="job_publish_mode" class="regular-text">
+                                    <option value="publish">🚀 Terbit Langsung (Sekaligus)</option>
+                                    <option value="future">📅 Jadwalkan (Smart Queue)</option>
+                                </select>
+                                <p class="description">"Jadwalkan" akan menyebar waktu terbit artikel agar terlihat lebih natural (baik untuk SEO).</p>
+                            </td>
+                        </tr>
+                        <tr id="row-job-interval" style="display:none;">
+                            <th><label>Interval Antar Post (Menit)</label></th>
+                            <td>
+                                <input type="number" id="job_schedule_interval" value="60" min="5" step="5" style="width: 80px;">
+                                <span class="description">Jarak waktu antar artikel yang diterbitkan (dalam menit).</span>
                             </td>
                         </tr>
                     </table>

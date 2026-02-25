@@ -87,6 +87,8 @@ class Flazz_Job_Engine {
             'ai_idea',
             'target_language',
             'research_scope',
+            'publish_mode',
+            'schedule_interval',
         );
 
         foreach ( $fields as $field ) {
@@ -213,7 +215,7 @@ class Flazz_Job_Engine {
                 $final_image = $source_contents[0]['image'];
             }
             // Priority 2: OG:Image from actual URL
-            if ( $image_mode === 'rss' && empty( $final_image ) ) {
+            if ( $image_mode === 'rss' && empty( $final_image ) && ! empty( $source_contents[0]['link'] ) ) {
                 $final_image = $grabber->fetch_og_image( $source_contents[0]['link'] );
             }
             // Fallback Priority 3: Pixabay
@@ -222,13 +224,32 @@ class Flazz_Job_Engine {
             }
         }
 
-        // 5. Create Post
+        // ── Step 5: Determine Publishing Time (Smart Scheduler) ───────────────
+        $publish_mode = get_post_meta( $job_id, '_flazz_job_publish_mode', true );
+        $interval     = intval( get_post_meta( $job_id, '_flazz_job_schedule_interval', true ) );
+        if ( $interval < 5 ) $interval = 60; // Default 1 hour if too low
+
+        $post_status = 'publish';
+        $post_date   = '';
+
+        if ( $publish_mode === 'future' ) {
+            $post_status = 'future';
+            $post_date   = $this->get_next_scheduled_date( $interval );
+        }
+
+        // ── Step 6: Create Post ───────────────────────────────────────────────
         $post_data = array(
             'post_title'    => $synthesis['title'],
             'post_content'  => $synthesis['content'],
-            'post_status'   => $status,
+            'post_status'   => $post_status,
             'post_category' => array( $category ),
         );
+
+        if ( ! empty( $post_date ) ) {
+            $post_data['post_date']     = $post_date;
+            $post_data['post_date_gmt'] = get_gmt_from_date( $post_date );
+            $post_data['edit_date']     = true;
+        }
 
         $new_post_id = wp_insert_post( $post_data );
 
@@ -248,10 +269,45 @@ class Flazz_Job_Engine {
             foreach ( $processed_links as $link ) {
                 add_post_meta( $new_post_id, '_flazz_source_url', $link );
             }
-            return "Success: Berhasil memposting artikel \"" . $synthesis['title'] . "\"";
+
+            $success_msg = "Success: Berhasil memposting artikel \"" . $synthesis['title'] . "\"";
+            if ( $post_status === 'future' ) {
+                $success_msg .= " (Dijadwalkan untuk: " . $post_date . ")";
+            }
+            return $success_msg;
         }
 
         return "Internal Error: Gagal membuat artikel di WordPress.";
+    }
+
+    /**
+     * Calculate the next available slot for a future post.
+     * Finds the latest scheduled post and adds the interval.
+     */
+    private function get_next_scheduled_date( $interval_minutes ) {
+        if ( $interval_minutes < 1 ) $interval_minutes = 60;
+
+        // Find the latest 'future' post
+        $latest = get_posts( array(
+            'post_type'      => 'post',
+            'post_status'    => 'future',
+            'posts_per_page' => 1,
+            'orderby'        => 'post_date',
+            'order'          => 'DESC',
+        ) );
+
+        $base_time = current_time( 'timestamp' );
+
+        if ( ! empty( $latest ) ) {
+            $latest_time = strtotime( $latest[0]->post_date );
+            // If the latest scheduled post is still in the future, use it as baseline
+            if ( $latest_time > $base_time ) {
+                $base_time = $latest_time;
+            }
+        }
+
+        $next_time = $base_time + ( $interval_minutes * 60 );
+        return date( 'Y-m-d H:i:s', $next_time );
     }
 
     private function is_link_processed( $link ) {
