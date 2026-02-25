@@ -157,13 +157,38 @@ class Flazz_Job_Engine {
                 
                 if ( $this->is_link_processed( $article['link'] ) ) continue;
 
-                $extracted = $grabber->extract_content( $article['link'] );
-                if ( $extracted && strlen( $extracted['content'] ) > 200 ) {
+                $content = '';
+                $title   = $article['title'];
+                $image   = $article['image'];
+
+                if ( $job_type === 'keyword' ) {
+                    // Use RSS description (Summary) directly for resilience (same as manual tools)
+                    $desc    = ! empty( $article['description'] ) ? $article['description'] : '';
+                    $content = wp_strip_all_tags( html_entity_decode( $desc, ENT_QUOTES, 'UTF-8' ) );
+                    $content = trim( preg_replace( '/\s+/', ' ', $content ) );
+
+                    // Clean title (remove "- Source Name")
+                    $title = preg_replace( '/\s*[-–]\s*[^-–]+$/', '', $title );
+                    
+                    if ( strlen( $content ) < 30 ) {
+                        $content = $title . '. Dipublikasikan oleh ' . $article['source'] . '.';
+                    }
+                } else {
+                    // For RSS Watcher, try full extraction
+                    $extracted = $grabber->extract_content( $article['link'] );
+                    if ( $extracted && strlen( $extracted['content'] ) > 200 ) {
+                        $content = $extracted['content'];
+                        $title   = $extracted['title'] ?: $title;
+                        $image   = $extracted['image'] ?: $image;
+                    }
+                }
+
+                if ( ! empty( $content ) ) {
                     $source_contents[] = array(
-                        'title'      => $extracted['title'] ?: $article['title'],
-                        'content'    => $extracted['content'],
+                        'title'      => $title,
+                        'content'    => $content,
                         'sourceName' => $article['source'],
-                        'image'      => $extracted['image'],
+                        'image'      => $image,
                         'link'       => $article['link']
                     );
                     $processed_links[] = $article['link'];

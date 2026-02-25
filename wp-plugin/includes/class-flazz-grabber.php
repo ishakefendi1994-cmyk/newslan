@@ -87,11 +87,12 @@ class Flazz_Grabber {
             }
 
             $articles[] = array(
-                'title'  => $title,
-                'link'   => $link,
-                'date'   => $pub_date,
-                'source' => $source_name,
-                'image'  => $image,
+                'title'       => $title,
+                'link'        => $link,
+                'description' => $description,
+                'date'        => $pub_date,
+                'source'      => $source_name,
+                'image'       => $image,
             );
         }
 
