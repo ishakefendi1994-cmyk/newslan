@@ -243,48 +243,75 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
 
 async function handleGetTrends(payload: any) {
     const geo = payload.geo || 'ID'
-    const url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`
 
+    // Attempt 1: Internal JSON API (Resilient)
     try {
-        const response = await fetch(url, {
+        const jsonUrl = `https://trends.google.com/trends/api/dailytrends?hl=id-ID&geo=${geo}`
+        const response = await fetch(jsonUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        })
+
+        if (response.ok) {
+            const text = await response.text()
+            // Google prefix: )]}',\n
+            const cleanJson = text.replace(/^\)\]\}',\n/, '')
+            const data = JSON.parse(cleanJson)
+
+            if (data.default && data.default.trendingSearchesDays) {
+                const items: any[] = []
+                data.default.trendingSearchesDays.forEach((day: any) => {
+                    day.trendingSearches.forEach((search: any) => {
+                        items.push({
+                            keyword: search.title.query,
+                            traffic: search.formattedTraffic
+                        })
+                    })
+                })
+
+                if (items.length > 0) {
+                    console.log(`[Trends] Fetched ${items.length} items from JSON for ${geo}`)
+                    return NextResponse.json({ success: true, data: items.slice(0, 20) })
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[Trends] JSON fetch failing, falling back to RSS:', e)
+    }
+
+    // Attempt 2: RSS Feed (Fallback)
+    const rssUrl = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`
+    try {
+        const response = await fetch(rssUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
         })
         if (!response.ok) {
-            console.error('Google Trends fetch failed:', response.status, response.statusText)
             return NextResponse.json({ success: false, message: 'Google Trends unreachable' }, { status: response.status })
         }
 
         const xml = await response.text()
-
-        // Improved regex-based parsing to handle CDATA and namespaces
         const items = []
         const itemRegex = /<item>([\s\S]*?)<\/item>/g
         let match
 
         while ((match = itemRegex.exec(xml)) !== null) {
             const itemContent = match[1]
-
-            // Match title (handle CDATA if present)
             let keyword = ''
             const titleMatch = itemContent.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/)
             if (titleMatch) keyword = titleMatch[1].trim()
 
-            // Match traffic (handle optional namespace)
             let traffic = '0'
             const trafficMatch = itemContent.match(/<(?:ht:)?approx_traffic>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/(?:ht:)?approx_traffic>/)
             if (trafficMatch) traffic = trafficMatch[1].trim()
 
             if (keyword) {
-                items.push({
-                    keyword: keyword,
-                    traffic: traffic
-                })
+                items.push({ keyword: keyword, traffic: traffic })
             }
         }
 
-        console.log(`[Trends] Fetched ${items.length} items for ${geo}`)
         return NextResponse.json({ success: true, data: items.slice(0, 20) })
     } catch (err: any) {
         console.error('handleGetTrends Error:', err)
