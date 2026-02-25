@@ -166,8 +166,8 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
                 prompt: finalPrompt,
                 width: 512,
                 height: 512,
-                num_inference_steps: 15,
-                guidance_scale: 6,
+                num_inference_steps: 4, // Sweet spot for Turbo
+                guidance_scale: 1.5,      // Turbo models need very low CFG (1-2)
                 scheduler: "K_EULER"
             }
         })
