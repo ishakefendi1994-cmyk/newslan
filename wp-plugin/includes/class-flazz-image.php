@@ -48,7 +48,7 @@ class Flazz_Image_Generator {
             'body'    => json_encode( array(
                 'action'      => 'generate_prompt',
                 'license_key' => $license,
-                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
                 'api_key'     => $groq_key,
                 'payload'     => array(
                     'title'   => $title,
@@ -64,15 +64,28 @@ class Flazz_Image_Generator {
         return ( isset( $body['success'] ) && $body['success'] === true ) ? $body['data'] : false;
     }
 
-    private function generate_image_via_cloud( $prompt, $style, $token, $license ) {
+    private $last_error = '';
+
+    public function get_last_error() {
+        return $this->last_error;
+    }
+
+    /**
+     * Call the Cloud Orchestrator to generate the image via Replicate
+     */
+    public function generate_image_via_cloud( $prompt, $style, $token, $license ) {
         $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+        $this->last_error = '';
+
+        error_log( '[Flazz AI] generate_image_via_cloud: START' );
+        error_log( '[Flazz AI] payload action=generate_image, style=' . $style . ', prompt=' . $prompt );
 
         $response = wp_remote_post( $api_url, array(
             'headers' => array( 'Content-Type' => 'application/json' ),
             'body'    => json_encode( array(
                 'action'      => 'generate_image',
                 'license_key' => $license,
-                'domain'      => isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '',
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
                 'api_key'     => $token,
                 'payload'     => array(
                     'prompt' => $prompt,
@@ -82,14 +95,27 @@ class Flazz_Image_Generator {
             'timeout' => 60
         ));
 
-        if ( is_wp_error( $response ) ) return false;
-        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( is_wp_error( $response ) ) {
+            $this->last_error = 'WP_Error: ' . $response->get_error_message();
+            error_log( '[Flazz AI] generate_image_via_cloud: ' . $this->last_error );
+            return false;
+        }
+
+        $body_text = wp_remote_retrieve_body( $response );
+        $code      = wp_remote_retrieve_response_code( $response );
+        error_log( '[Flazz AI] generate_image_via_cloud: HTTP Code ' . $code );
+        
+        $body = json_decode( $body_text, true );
 
         if ( isset( $body['success'] ) && $body['success'] === true && !empty( $body['data']['output'] ) ) {
             $output = $body['data']['output'];
-            return is_array( $output ) ? $output[0] : $output;
+            $final_url = is_array( $output ) ? $output[0] : $output;
+            error_log( '[Flazz AI] generate_image_via_cloud: SUCCESS, final_url=' . $final_url );
+            return $final_url;
         }
 
+        $this->last_error = isset( $body['message'] ) ? $body['message'] : 'Orchestrator returned unknown error.';
+        error_log( '[Flazz AI] generate_image_via_cloud: FAILED. ' . $this->last_error );
         return false;
     }
 }

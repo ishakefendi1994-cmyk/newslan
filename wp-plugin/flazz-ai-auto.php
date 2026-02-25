@@ -3,7 +3,7 @@
  * Plugin Name: Flazz AI Auto & RSS Grabber
  * Plugin URI: https://www.cryptotechnews.net
  * Description: Automated news grabbing from RSS feeds with AI rewriting and auto-posting features. Powered by Flazz AI Cloud.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Flazz Team
  * License: Commercial
  * Text Domain: flazz-ai-auto
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define Constants
-define( 'FLAZZ_AI_VERSION', '1.1.0' );
+define( 'FLAZZ_AI_VERSION', '1.1.1' );
 define( 'FLAZZ_AI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FLAZZ_AI_URL', plugin_dir_url( __FILE__ ) );
 

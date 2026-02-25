@@ -29,6 +29,7 @@ class Flazz_Admin {
         add_action( 'wp_ajax_flazz_test_api',        array( $this, 'ajax_test_api' ) );
         add_action( 'wp_ajax_flazz_manual_fetch',    array( $this, 'ajax_manual_fetch' ) );
         add_action( 'wp_ajax_flazz_research_keyword',array( $this, 'ajax_research_keyword' ) );
+        add_action( 'wp_ajax_flazz_test_ai_image',   array( $this, 'ajax_test_ai_image' ) );
     }
 
     // =========================================================================
@@ -56,6 +57,9 @@ class Flazz_Admin {
 
         add_submenu_page( 'flazz-ai', 'Global Settings', 'Settings', 'manage_options',
             'flazz-settings', array( $this, 'render_settings_page' ) );
+
+        add_submenu_page( 'flazz-ai', '📖 Panduan & Dokumentasi', 'Dokumentasi', 'manage_options',
+            'flazz-docs', array( $this, 'render_documentation_page' ) );
     }
 
     public function register_settings() {
@@ -315,6 +319,43 @@ class Flazz_Admin {
 
 
 
+    public function ajax_test_ai_image() {
+        $this->log( 'ajax_test_ai_image: START' );
+        $this->check_permission();
+        
+        $prompt = isset( $_POST['prompt'] ) ? sanitize_text_field( $_POST['prompt'] ) : '';
+        if ( empty( $prompt ) ) {
+            $this->log( 'ajax_test_ai_image: prompt empty' );
+            wp_send_json_error( 'Prompt tidak boleh kosong.' );
+        }
+
+        $token    = get_option( 'flazz_ai_replicate_token' );
+        $license  = get_option( 'flazz_ai_license_key' );
+
+        $this->log( 'ajax_test_ai_image: token_len=' . strlen($token) . ' license=' . $license );
+
+        if ( empty( $token ) ) {
+            $this->log( 'ajax_test_ai_image: token missing' );
+            wp_send_json_error( 'Replicate API Token belum diisi.' );
+        }
+
+        require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-image.php';
+        $generator = Flazz_Image_Generator::get_instance();
+        
+        $this->log( 'ajax_test_ai_image: triggering generate_image_via_cloud' );
+        // Use editorial_vector style for test
+        $image_url = $generator->generate_image_via_cloud( $prompt, 'editorial_vector', $token, $license );
+
+        if ( $image_url ) {
+            $this->log( 'ajax_test_ai_image: SUCCESS, url=' . $image_url );
+            wp_send_json_success( $image_url );
+        } else {
+            $err = $generator->get_last_error();
+            $this->log( 'ajax_test_ai_image: FAILED. Error: ' . $err );
+            wp_send_json_error( 'Gagal generate gambar: ' . $err );
+        }
+    }
+
     // =========================================================================
     // AJAX: Test API
     // =========================================================================
@@ -337,6 +378,7 @@ class Flazz_Admin {
                 'body'    => json_encode( array(
                     'action'      => 'rewrite',
                     'license_key' => $license,
+                    'domain'      => parse_url( home_url(), PHP_URL_HOST ),
                     'api_key'     => $api_key,
                     'payload'     => array(
                         'title'   => 'Test Sync',
@@ -722,85 +764,111 @@ class Flazz_Admin {
             'smart_trend' => '📈 Trending',
         );
         ?>
-        <div class="wrap" id="flazz-job-manager">
+        <div class="wrap">
             <h1>📋 Auto-Jobs Manager</h1>
-            <p class="description">Buat dan kelola job otomasi berita. Setiap job akan mencari dan memposting artikel secara otomatis.</p>
+            <p>Buat dan kelola job otomasi berita cerdas Anda.</p>
 
-            <div style="margin: 20px 0;">
-                <button id="flazz-open-job-form" class="button button-primary button-large">➕ Buat Job Baru</button>
+            <div style="margin-bottom: 20px;">
+                <button id="flazz-open-job-form" class="button button-primary">
+                    + Buat Job Baru
+                </button>
             </div>
 
-            <table class="wp-list-table widefat fixed striped posts">
-                <thead>
-                    <tr>
-                        <th style="width:20%;">Nama Job</th>
-                        <th style="width:15%;">Tipe</th>
-                        <th style="width:20%;">Keyword / Idea / URL</th>
-                        <th style="width:30%;">Cron URL / Trigger</th>
-                        <th style="width:15%;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ( empty( $jobs ) ) : ?>
-                        <tr><td colspan="5" style="text-align:center; padding:20px;">Belum ada Job. Klik "Buat Job Baru" untuk memulai.</td></tr>
-                    <?php else : ?>
-                        <?php foreach ( $jobs as $jobs_item ) :
-                            $type     = get_post_meta( $jobs_item->ID, '_flazz_job_job_type', true );
-                            $keyword  = get_post_meta( $jobs_item->ID, '_flazz_job_keyword', true );
-                            $rss      = get_post_meta( $jobs_item->ID, '_flazz_job_rss_url', true );
-                            $ai_idea  = get_post_meta( $jobs_item->ID, '_flazz_job_ai_idea', true );
-                            $secret   = get_post_meta( $jobs_item->ID, '_flazz_job_secret', true );
-                            
-                            $detail = $rss;
-                            if ( $type === 'keyword' ) $detail = $keyword;
-                            if ( $type === 'ai_editor' ) $detail = $ai_idea;
+            <!-- Job Manager Table -->
+            <div class="card" style="padding: 0; margin-bottom: 20px;">
+                <?php if ( empty( $jobs ) ) : ?>
+                    <div style="padding: 20px; text-align: center; color: #666;">
+                        <p>Belum ada Job. Klik "Buat Job Baru" untuk memulai.</p>
+                    </div>
+                <?php else : ?>
+                    <table class="widefat striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Nama Job</th>
+                                <th style="width: 15%;">Tipe</th>
+                                <th style="width: 35%; word-break: break-all;">Konfigurasi</th>
+                                <th style="width: 15%;">Target / Language</th>
+                                <th style="width: 15%; text-align: right;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ( $jobs as $jobs_item ) :
+                                $type     = get_post_meta( $jobs_item->ID, '_flazz_job_job_type', true );
+                                $keyword  = get_post_meta( $jobs_item->ID, '_flazz_job_keyword', true );
+                                $rss      = get_post_meta( $jobs_item->ID, '_flazz_job_rss_url', true );
+                                $ai_idea  = get_post_meta( $jobs_item->ID, '_flazz_job_ai_idea', true );
+                                $secret   = get_post_meta( $jobs_item->ID, '_flazz_job_secret', true );
+                                $target_lang = get_post_meta( $jobs_item->ID, '_flazz_job_target_language', true ) ?: 'Indonesian';
+                                $scope       = get_post_meta( $jobs_item->ID, '_flazz_job_research_scope', true ) ?: 'local';
+                                
+                                $detail = $rss;
+                                if ( $type === 'keyword' ) $detail = $keyword . ($scope === 'global' ? ' (Global)' : ' (Lokal)');
+                                if ( $type === 'ai_editor' ) $detail = mb_substr($ai_idea, 0, 50) . '...';
 
-                            $cron_url = site_url( '/?flazz_run_job=' . $jobs_item->ID . '&key=' . $secret );
-                        ?>
-                        <tr>
-                            <td><strong><?php echo esc_html( $jobs_item->post_title ); ?></strong></td>
-                            <td><?php echo esc_html( isset( $type_labels[$type] ) ? $type_labels[$type] : $type ); ?></td>
-                            <td style="font-size:11px; color:#666; word-break:break-all;"><?php echo esc_html( $detail ); ?></td>
-                            <td>
-                                <code style="font-size:10px; background:#f0f0f1; padding:3px; display:block; word-break:break-all;"><?php echo esc_html( $cron_url ); ?></code>
-                                <p class="description" style="margin-top:5px; font-size:10px;">Gunakan URL ini di crontab sistem (curl/wget).</p>
-                            </td>
-                            <td>
-                                <button class="button button-small run-job" data-id="<?php echo $jobs_item->ID; ?>">▶ Jalankan</button>
-                                <button class="button button-small edit-job" 
-                                    data-id="<?php echo $jobs_item->ID; ?>"
-                                    data-name="<?php echo esc_attr( $jobs_item->post_title ); ?>"
-                                    data-type="<?php echo esc_attr( $type ); ?>"
-                                    data-keyword="<?php echo esc_attr( $keyword ); ?>"
-                                    data-rss_url="<?php echo esc_attr( $rss ); ?>"
-                                    data-ai_idea="<?php echo esc_attr( $ai_idea ); ?>"
-                                    data-category="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_category', true ) ); ?>"
-                                    data-max_articles="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_max_articles', true ) ); ?>"
-                                    data-writing_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_writing_style', true ) ); ?>"
-                                    data-article_model="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_article_model', true ) ); ?>"
-                                    data-image_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_image_mode', true ) ); ?>"
-                                    data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
-                                    data-target_language="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_target_language', true ) ); ?>"
-                                    data-research_scope="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_research_scope', true ) ); ?>"
-                                >✏️ Edit</button>
-                                <button class="button button-small delete-job" data-id="<?php echo $jobs_item->ID; ?>" style="color:#d63638; margin-top:5px;">🗑 Hapus</button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                                $cron_url = site_url( '/?flazz_run_job=' . $jobs_item->ID . '&key=' . $secret );
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo esc_html( $jobs_item->post_title ); ?></strong>
+                                    <p class="description" style="font-size: 10px; margin-top: 5px;">
+                                        <a href="javascript:void(0);" onclick="navigator.clipboard.writeText('<?php echo $cron_url; ?>'); alert('Cron URL copied!');">COPY CRON URL</a>
+                                    </p>
+                                </td>
+                                <td>
+                                    <code><?php echo esc_html( isset( $type_labels[$type] ) ? $type_labels[$type] : $type ); ?></code>
+                                </td>
+                                <td>
+                                    <span class="description" style="word-break: break-all;"><?php echo esc_html( $detail ); ?></span>
+                                </td>
+                                <td>
+                                    <strong><?php echo strtoupper($target_lang); ?></strong><br>
+                                    <span class="description">Cat ID: <?php echo get_post_meta( $jobs_item->ID, '_flazz_job_category', true ); ?></span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <button title="Run" class="run-job button button-small" data-id="<?php echo $jobs_item->ID; ?>">▶ Run</button>
+                                    <button title="Edit" class="edit-job button button-small" 
+                                        data-id="<?php echo $jobs_item->ID; ?>"
+                                        data-name="<?php echo esc_attr( $jobs_item->post_title ); ?>"
+                                        data-type="<?php echo esc_attr( $type ); ?>"
+                                        data-keyword="<?php echo esc_attr( $keyword ); ?>"
+                                        data-rss_url="<?php echo esc_attr( $rss ); ?>"
+                                        data-ai_idea="<?php echo esc_attr( $ai_idea ); ?>"
+                                        data-category="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_category', true ) ); ?>"
+                                        data-max_articles="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_max_articles', true ) ); ?>"
+                                        data-writing_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_writing_style', true ) ); ?>"
+                                        data-article_model="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_article_model', true ) ); ?>"
+                                        data-image_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_image_mode', true ) ); ?>"
+                                        data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
+                                        data-target_language="<?php echo esc_attr( $target_lang ); ?>"
+                                        data-research_scope="<?php echo esc_attr( $scope ); ?>"
+                                    >✏️ Edit</button>
+                                    <button title="Hapus" class="delete-job button button-small button-link-delete" data-id="<?php echo $jobs_item->ID; ?>">🗑</button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
 
-            <div id="flazz-job-form-container" style="display:none; margin-top:30px; background:#fff; padding:25px; border:1px solid #ccd0d4; border-radius:6px;">
-                <h2 id="job-form-title" style="margin-top:0;">Buat Auto-Job Baru</h2>
+            <!-- Job Form -->
+            <div id="flazz-job-form-container" class="card" style="display:none; padding: 20px; margin-bottom: 20px; max-width: 800px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">
+                    <h2 id="job-form-title" style="margin: 0;">Buat Auto-Job Baru</h2>
+                    <button id="flazz-close-job-form" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+                </div>
+                
                 <input type="hidden" id="job_id" value="0">
+                
                 <table class="form-table">
                     <tr>
-                        <th>Nama Job <span style="color:red">*</span></th>
-                        <td><input type="text" id="job_name" class="regular-text" placeholder="Contoh: Tech News Auto-Publisher"></td>
+                        <th><label>Nama Job <span style="color: red;">*</span></label></th>
+                        <td>
+                            <input type="text" id="job_name" class="regular-text" placeholder="Misal: Berita Teknologi Harian">
+                        </td>
                     </tr>
                     <tr>
-                        <th>Tipe Job</th>
+                        <th><label>Tipe Job</label></th>
                         <td>
                             <select id="job_type" class="regular-text">
                                 <option value="keyword">🔍 Keyword Search (cari dari Google News)</option>
@@ -810,49 +878,43 @@ class Flazz_Admin {
                         </td>
                     </tr>
                     <tr id="row-keyword">
-                        <th>Kata Kunci</th>
+                        <th><label>Kata Kunci</label></th>
                         <td>
-                            <input type="text" id="job_keyword" class="regular-text" placeholder="Contoh: teknologi AI, harga emas">
-                            <p class="description">Sistem akan mencari berita terkait kata kunci ini setiap kali job dijalankan.</p>
+                            <input type="text" id="job_keyword" class="regular-text" placeholder="teknologi AI, gaya hidup sehat">
                         </td>
                     </tr>
                     <tr id="row-research-scope">
-                        <th>Cakupan Riset</th>
+                        <th><label>Cakupan Riset</label></th>
                         <td>
                             <select id="job_research_scope" class="regular-text">
                                 <option value="local">🇮🇩 Lokal Indonesia</option>
                                 <option value="global">🌐 Global International (English Sources)</option>
                             </select>
-                            <p class="description">Hanya berlaku untuk tipe Keyword Search.</p>
                         </td>
                     </tr>
                     <tr id="row-target-language">
-                        <th>Bahasa Output</th>
+                        <th><label>Bahasa Output</label></th>
                         <td>
                             <select id="job_target_language" class="regular-text">
                                 <option value="Indonesian">Bahasa Indonesia</option>
                                 <option value="English">English</option>
                             </select>
-                            <p class="description">AI akan menulis artikel dalam bahasa yang dipilih.</p>
                         </td>
                     </tr>
                     <tr id="row-rss" style="display:none;">
-                        <th>RSS Feed URL</th>
-                        <td><input type="url" id="job_rss_url" class="large-text" placeholder="https://example.com/feed/rss"></td>
+                        <th><label>RSS Feed URL</label></th>
+                        <td>
+                            <input type="url" id="job_rss_url" class="regular-text" placeholder="https://kompas.com/feed/news">
+                        </td>
                     </tr>
                     <tr id="row-ai-idea" style="display:none;">
-                        <th>Ide Utama / Topik</th>
+                        <th><label>Ide Utama / Prompt AI</label></th>
                         <td>
-                            <textarea id="job_ai_idea" class="large-text" rows="3" placeholder="Contoh: Manfaat minum air putih bagi kesehatan kulit di pagi hari..."></textarea>
-                            <p class="description">AI akan mengembangkan ide ini menjadi artikel lengkap secara otomatis.</p>
+                            <textarea id="job_ai_idea" class="regular-text" style="height: 100px;" placeholder="Tulis rincian atau poin-poin yang ingin dikembangkan AI menjadi artikel..."></textarea>
                         </td>
                     </tr>
                     <tr>
-                        <th>Max Artikel / Run</th>
-                        <td><input type="number" id="job_max_articles" value="3" min="1" max="10"> artikel per sekali jalan</td>
-                    </tr>
-                    <tr>
-                        <th>Pilih Kategori <span style="color:red">*</span></th>
+                        <th><label>Pilih Kategori <span style="color: red;">*</span></label></th>
                         <td>
                             <select id="job_category" class="regular-text">
                                 <option value="">-- Pilih Kategori --</option>
@@ -866,51 +928,58 @@ class Flazz_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th>Model Artikel AI</th>
+                        <th><label>Max Artikel / Run</label></th>
                         <td>
-                            <select id="job_article_model">
-                                <option value="Straight News">Straight News (Berita Lempeng)</option>
-                                <option value="In-depth Analysis">In-depth Analysis (Analisis Mendalam)</option>
-                                <option value="Editorial/Opinion">Editorial / Opini</option>
-                                <option value="Listicle">Listicle (Poin-poin)</option>
+                            <input type="number" id="job_max_articles" value="3" min="1" max="10" style="width: 60px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Style Penulisan</label></th>
+                        <td>
+                            <select id="job_writing_style" class="regular-text">
+                                <option value="Professional">Professional</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Investigative">Investigative</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <th>Sumber Foto / Featured Image</th>
+                        <th><label>Model Artikel AI</label></th>
                         <td>
-                            <select id="job_image_mode">
-                                <option value="rss">Otomatis dari RSS / OG Image</option>
-                                <option value="pixabay">🖼️ Pixabay Image Search (FREE)</option>
-                                <option value="generate_ai">🤖 Generate dengan AI (Replicate)</option>
+                            <select id="job_article_model" class="regular-text">
+                                <option value="Straight News">Straight News</option>
+                                <option value="In-depth Analysis">In-depth Analysis</option>
+                                <option value="Editorial/Opinion">Editorial / Opini</option>
+                                <option value="Listicle">Listicle</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Sumber Foto</label></th>
+                        <td>
+                            <select id="job_image_mode" class="regular-text">
+                                <option value="rss">Otomatis RSS / Pixabay</option>
+                                <option value="pixabay">🖼️ Pixabay Image Search</option>
+                                <option value="generate_ai">🤖 AI Image (Replicate Flux)</option>
                                 <option value="none">Tanpa Foto</option>
                             </select>
-                            <p class="description">Gunakan logika yang sama dengan Manual Tools.</p>
                         </td>
                     </tr>
                     <tr id="row-job-thumbnail-style" style="display:none;">
-                        <th>Style Thumbnail AI</th>
+                        <th><label>Style Thumbnail AI</label></th>
                         <td>
-                            <select id="job_thumbnail_style">
-                                <option value="editorial_vector">🎨 Editorial Vector (Majalah Satiris)</option>
-                                <option value="real_photo">📸 Real Photo (Foto Realistis)</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Gaya Penulisan</th>
-                        <td>
-                            <select id="job_writing_style">
-                                <option value="Professional">Professional</option>
-                                <option value="Casual">Casual / Santai</option>
-                                <option value="Investigative">Investigatif</option>
+                            <select id="job_thumbnail_style" class="regular-text">
+                                <option value="editorial_vector">🎨 Editorial Vector</option>
+                                <option value="real_photo">📸 Real Photo</option>
                             </select>
                         </td>
                     </tr>
                 </table>
-                <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button id="flazz-save-job" class="button button-primary button-large">💾 Simpan Job</button>
-                    <button id="flazz-close-job-form" class="button button-large">Batal</button>
+
+                <div style="margin-top: 20px;">
+                    <button id="flazz-save-job" class="button button-primary">
+                        💾 Simpan Konfigurasi Job
+                    </button>
                 </div>
             </div>
         </div>
@@ -930,18 +999,15 @@ class Flazz_Admin {
         ?>
         <div class="wrap">
             <h1>🛠 Manual Tools</h1>
-            <p class="description">Jalankan proses berita secara manual tanpa harus membuat Auto-Job atau menunggu jadwal cron.</p>
+            <p>Jalankan proses konten secara instan tanpa menunggu jadwal otomatis.</p>
 
-            <!-- SECTION 1: RSS Fetch -->
-            <div class="card" style="max-width:800px; margin-top:20px; padding:20px;">
-                <h2>📡 Fetch RSS Sekarang</h2>
-                <p>Ambil berita dari RSS feed, tulis ulang dengan AI, dan posting ke WordPress.</p>
-
-                <table class="form-table" style="margin:0;">
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2>📡 Fetch RSS Feed</h2>
+                <table class="form-table">
                     <tr>
-                        <th style="width:150px;">Pilih Sumber Preset</th>
+                        <th><label>Pilih Sumber Preset</label></th>
                         <td>
-                            <select id="flazz_manual_preset" style="width:100%; max-width:400px;">
+                            <select id="flazz_manual_preset" style="width: 100%; max-width: 400px;">
                                 <option value="">-- Pilih Preset atau Input Manual --</option>
                                 <?php foreach ( $preset_urls as $key => $url ) : ?>
                                     <option value="<?php echo esc_attr( $url ); ?>"><?php echo strtoupper( $key ); ?> — <?php echo esc_html( $url ); ?></option>
@@ -950,60 +1016,67 @@ class Flazz_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th>URL RSS Manual</th>
+                        <th><label>Target Kategori</label></th>
                         <td>
-                            <input type="url" id="flazz_manual_rss_url" class="large-text" placeholder="https://example.com/rss" value="<?php echo esc_attr( $current_url ); ?>">
-                            <p class="description">Input URL RSS di sini jika tidak ada di daftar preset di atas.</p>
+                            <?php wp_dropdown_categories( array( 'hide_empty' => 0, 'name' => 'flazz_manual_cat', 'id' => 'flazz_manual_cat', 'class' => 'postform' ) ); ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>URL RSS Manual</label></th>
+                        <td>
+                            <input type="url" id="flazz_manual_rss_url" class="regular-text" style="width: 100%; max-width: 400px;" placeholder="https://..." value="<?php echo esc_attr( $current_url ); ?>">
                         </td>
                     </tr>
                 </table>
-                <button id="flazz-manual-fetch" class="button button-primary button-large" style="margin-top:10px;">▶ Fetch & Proses Sekarang</button>
-                <div id="flazz-fetch-status" style="margin-top:15px; font-weight:bold;"></div>
+                <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                    <button id="flazz-manual-fetch" class="button button-primary">
+                        🚀 Fetch & Proses Sekarang
+                    </button>
+                    <div id="flazz-fetch-status" style="font-weight: bold;"></div>
+                </div>
             </div>
 
-            <!-- SECTION 2: Keyword Research -->
-            <div class="card" style="max-width:800px; margin-top:20px; padding:20px;">
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
                 <h2>🔍 Riset Cepat (Keyword)</h2>
-                <p>Masukkan kata kunci → sistem cari 4 berita terbaru di Google News → AI mensintesiskan jadi artikel → langsung posting.</p>
-                <p style="color:#666; font-size:13px;">💡 Tidak perlu scraping situs sumber — langsung pakai ringkasan dari Google News RSS.</p>
-
-                <table class="form-table" style="margin:0;">
+                <table class="form-table">
                     <tr>
-                        <th style="width:180px;">Kata Kunci <span style="color:red">*</span></th>
-                        <td><input type="text" id="flazz_research_keyword" class="regular-text" placeholder="Contoh: Timnas Indonesia U-23" style="width:100%; max-width:400px;"></td>
+                        <th><label>Kata Kunci <span style="color: red;">*</span></label></th>
+                        <td>
+                            <input type="text" id="flazz_research_keyword" class="regular-text" style="width: 100%; max-width: 400px;" placeholder="Misal: Timnas Indonesia U-23">
+                        </td>
                     </tr>
                     <tr>
-                        <th>Cakupan Riset</th>
+                        <th><label>Cakupan Riset</label></th>
                         <td>
-                            <select id="flazz_research_scope">
+                            <select id="flazz_research_scope" class="regular-text">
                                 <option value="local">🇮🇩 Lokal Indonesia</option>
                                 <option value="global">🌐 Global International (English Sources)</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <th>Bahasa Output</th>
+                        <th><label>Bahasa Output</label></th>
                         <td>
-                            <select id="flazz_research_language">
+                            <select id="flazz_research_language" class="regular-text">
                                 <option value="Indonesian">Bahasa Indonesia</option>
                                 <option value="English">English</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <th>Gaya Penulisan</th>
+                        <th><label>Style Penulisan</label></th>
                         <td>
-                            <select id="flazz_research_style">
-                                <option value="Professional">Professional (Formal &amp; Lugas)</option>
-                                <option value="Casual">Casual (Santai &amp; Gaul)</option>
-                                <option value="Investigative">Investigatif (Mendalam &amp; Kritis)</option>
+                            <select id="flazz_research_style" class="regular-text">
+                                <option value="Professional">Professional (Formal & Lugas)</option>
+                                <option value="Casual">Casual (Santai & Gaul)</option>
+                                <option value="Investigative">Investigatif (Mendalam & Kritis)</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <th>Tone / Model Artikel</th>
+                        <th><label>Tone / Model Artikel</label></th>
                         <td>
-                            <select id="flazz_research_model">
+                            <select id="flazz_research_model" class="regular-text">
                                 <option value="Straight News">Straight News (Berita Langsung)</option>
                                 <option value="Feature Story">Feature Story (Narasi Mendalam)</option>
                                 <option value="Opinion">Opinion / Opini</option>
@@ -1012,97 +1085,107 @@ class Flazz_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th>Sumber Foto / Featured Image</th>
+                        <th><label>Sumber Foto</label></th>
                         <td>
-                            <select id="flazz_research_image_mode">
-                                <option value="rss">Otomatis dari RSS / OG Image Artikel</option>
+                            <select id="flazz_research_image_mode" class="regular-text">
+                                <option value="rss">Otomatis dari RSS / OG Image</option>
                                 <option value="pixabay">🖼️ Pixabay Image Search (FREE)</option>
                                 <option value="generate_ai">🤖 Generate dengan AI (Replicate)</option>
                                 <option value="none">Tanpa Foto</option>
                             </select>
-                            <p class="description">
-                                <strong>Otomatis RSS:</strong> Coba ambil dari media RSS → og:image → Pixabay.<br>
-                                <strong>Pixabay:</strong> Cari foto langsung dari Pixabay (butuh Pixabay API Key di Settings, gratis).<br>
-                                <strong>Generate AI:</strong> Buat gambar baru via Replicate (butuh Replicate Token di Settings).
-                            </p>
                         </td>
                     </tr>
                     <tr id="row-thumbnail-style" style="display:none;">
-                        <th>Style Thumbnail AI</th>
+                        <th><label>Style Thumbnail AI</label></th>
                         <td>
-                            <select id="flazz_research_thumbnail_style">
+                            <select id="flazz_research_thumbnail_style" class="regular-text">
                                 <option value="editorial_vector">🎨 Editorial Vector (Majalah Satiris)</option>
                                 <option value="real_photo">📸 Real Photo (Foto Realistis)</option>
                             </select>
-                            <p class="description">
-                                <strong>Editorial Vector:</strong> Gaya ilustrasi vektor satirikal ala sampul majalah berita.<br>
-                                <strong>Real Photo:</strong> Gaya foto press/DSLR realistis dengan pencahayaan natural.
-                            </p>
                         </td>
                     </tr>
                 </table>
-                <button id="flazz-start-research" class="button button-secondary button-large" style="margin-top:10px;">🔬 Mulai Riset & Posting</button>
-                <div id="flazz-research-status" style="margin-top:15px; font-weight:bold;"></div>
+                <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                    <button id="flazz-start-research" class="button button-primary">
+                        🔬 Mulai Riset & Posting
+                    </button>
+                    <div id="flazz-research-status" style="font-weight: bold;"></div>
+                </div>
+            </div>
+
+            <!-- ACTIVITY LOG -->
+            <div id="manual-log" class="card" style="display:none; background: #1e1e1e; color: #00ff00; padding: 20px; font-family: monospace; max-width: 800px; border-radius: 4px;">
+                <div style="border-bottom: 1px solid #333; margin-bottom: 10px; padding-bottom: 5px; color: #aaa; font-size: 11px; text-transform: uppercase;">
+                    Activity Log / Output Console
+                </div>
+                <div id="manual-log-content" style="max-height: 300px; overflow-y: auto; line-height: 1.4;"></div>
             </div>
         </div>
         <?php
     }
 
     public function render_settings_page() {
-        $license_status = get_option( 'flazz_ai_license_status', 'invalid' );
         $has_dom        = class_exists( 'DOMDocument' );
+        $license_status = get_option( 'flazz_ai_license_status', 'invalid' );
         $has_curl       = function_exists( 'curl_init' );
         $has_simplexml  = function_exists( 'simplexml_load_string' );
         ?>
         <div class="wrap">
             <h1>⚙️ Global Settings</h1>
+            <p>Konfigurasi API, Lisensi, dan optimasi server Anda di sini.</p>
 
-            <!-- Server Compatibility -->
-            <div class="card" style="max-width:700px; margin-top:20px; padding:20px;">
-                <h2 style="margin-top:0;">🖥 Server Compatibility Check</h2>
-                <table class="widefat">
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2>🖥 Server Compatibility Check</h2>
+                <table class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Komponen</th>
+                            <th>Detail</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <tr>
                             <td><strong>PHP Version</strong></td>
                             <td><?php echo PHP_VERSION; ?></td>
-                            <td><?php echo version_compare( PHP_VERSION, '7.4', '>=' ) ? '✅ OK' : '❌ Perlu PHP 7.4+'; ?></td>
+                            <td><?php echo version_compare( PHP_VERSION, '7.4', '>=' ) ? '<span style="color: green; font-weight: bold;">✅ OK</span>' : '<span style="color: red; font-weight: bold;">❌ Perlu PHP 7.4+</span>'; ?></td>
                         </tr>
                         <tr>
                             <td><strong>php-dom</strong></td>
                             <td><?php echo $has_dom ? 'Tersedia' : 'Tidak tersedia'; ?></td>
-                            <td><?php echo $has_dom ? '✅ OK' : '⚠️ Tidak wajib (ada fallback)'; ?></td>
+                            <td><?php echo $has_dom ? '<span style="color: green; font-weight: bold;">✅ OK</span>' : '<span style="color: orange; font-weight: bold;">⚠️ Fallback</span>'; ?></td>
                         </tr>
                         <tr>
                             <td><strong>cURL</strong></td>
                             <td><?php echo $has_curl ? 'Tersedia' : 'Tidak tersedia'; ?></td>
-                            <td><?php echo $has_curl ? '✅ OK' : '❌ Wajib — hubungi hosting'; ?></td>
+                            <td><?php echo $has_curl ? '<span style="color: green; font-weight: bold;">✅ OK</span>' : '<span style="color: red; font-weight: bold;">❌ Wajib</span>'; ?></td>
                         </tr>
                         <tr>
                             <td><strong>SimpleXML</strong></td>
                             <td><?php echo $has_simplexml ? 'Tersedia' : 'Tidak tersedia'; ?></td>
-                            <td><?php echo $has_simplexml ? '✅ OK' : '❌ Wajib untuk Riset Keyword'; ?></td>
+                            <td><?php echo $has_simplexml ? '<span style="color: green; font-weight: bold;">✅ OK</span>' : '<span style="color: red; font-weight: bold;">❌ Wajib</span>'; ?></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Settings Form -->
-            <div class="card" style="max-width:700px; margin-top:20px; padding:20px;">
-                <h2 style="margin-top:0;">🔑 API Keys & Configuration</h2>
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2>🔑 API Keys & Configuration</h2>
                 <form method="post" action="options.php">
                     <?php settings_fields( 'flazz_ai_settings' ); ?>
+                    
                     <table class="form-table">
                         <tr>
-                            <th>License Key</th>
+                            <th><label>License Key</label></th>
                             <td>
-                                <input type="text" name="flazz_ai_license_key" value="<?php echo esc_attr( get_option( 'flazz_ai_license_key' ) ); ?>" class="regular-text">
-                                <span style="margin-left:10px; font-weight:bold; color:<?php echo $license_status === 'valid' ? 'green' : '#d63638'; ?>">
+                                <input type="text" name="flazz_ai_license_key" value="<?php echo esc_attr( get_option( 'flazz_ai_license_key' ) ); ?>" class="regular-text" placeholder="FLAZZ-XXXX-XXXX-XXXX">
+                                <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: <?php echo $license_status === 'valid' ? '#d4edda; color: #155724;' : '#f8d7da; color: #721c24;'; ?>">
                                     <?php echo strtoupper( $license_status ); ?>
                                 </span>
                                 <?php if ( $license_status === 'valid' ) :
                                     $info = Flazz_License_Manager::get_instance()->get_license_info();
                                     if ( !empty( $info ) ) : ?>
-                                        <p class="description" style="color:green; font-weight:bold;">
+                                        <p class="description" style="color: green; font-weight: bold;">
                                             ✅ Teraktivasi: <?php echo $info['activations_count']; ?> / <?php echo $info['max_domains']; ?> Domain
                                             <?php if (isset($info['expires_at'])) echo ' | Exp: ' . date('d M Y', strtotime($info['expires_at'])); ?>
                                         </p>
@@ -1111,40 +1194,40 @@ class Flazz_Admin {
                             </td>
                         </tr>
                         <tr>
-                            <th>Groq API Key</th>
+                            <th><label>Groq API Key</label></th>
                             <td>
-                                <input type="password" name="flazz_ai_groq_key" value="<?php echo esc_attr( get_option( 'flazz_ai_groq_key' ) ); ?>" class="regular-text">
-                                <button type="button" id="flazz-test-api" class="button" style="margin-left:10px;">🧪 Test Koneksi</button>
-                                <span id="test-api-status" style="margin-left:10px; font-weight:bold;"></span>
-                                <p class="description">Dapatkan API key gratis di <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+                                <input type="password" name="flazz_ai_groq_key" value="<?php echo esc_attr( get_option( 'flazz_ai_groq_key' ) ); ?>" class="regular-text" placeholder="gsk_xxxxxxxx"><br>
+                                <button type="button" id="flazz-test-api" class="button button-secondary" style="margin-top: 5px;">🧪 Test Koneksi AI</button>
+                                <span id="test-api-status" style="margin-left: 10px; font-weight: bold;"></span>
+                                <p class="description">Ambil di <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
                             </td>
                         </tr>
                         <tr>
-                            <th>Replicate API Token <span style="color:#888; font-size:12px; font-weight:normal;">(opsional)</span></th>
+                            <th><label>Replicate API Token (AI Image)</label></th>
                             <td>
-                                <input type="password" name="flazz_ai_replicate_token" value="<?php echo esc_attr( get_option( 'flazz_ai_replicate_token' ) ); ?>" class="regular-text">
-                                <p class="description">
-                                    Diperlukan jika Bapak ingin generate gambar AI (Replicate Flux).<br>
-                                    Dapatkan token di <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/account/api-tokens</a>
-                                </p>
+                                <input type="password" name="flazz_ai_replicate_token" id="flazz_ai_replicate_token" value="<?php echo esc_attr( get_option( 'flazz_ai_replicate_token' ) ); ?>" class="regular-text" placeholder="r8_xxxxxxxx">
+                                <p class="description">Optional — Untuk Replicate Flux. Ambil di <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/api-tokens</a></p>
+                                
+                                <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; max-width: 440px;">
+                                    <strong>🧪 Test AI Image Generation</strong>
+                                    <p class="description">Masukkan prompt singkat untuk mengetes API Replicate Anda.</p>
+                                    <input type="text" id="flazz-test-image-prompt" class="regular-text" style="width: 100%; margin-bottom: 10px;" placeholder="Misal: A cute robot writing a news article">
+                                    <button type="button" id="flazz-test-ai-image" class="button button-secondary">🚀 Generate Test Image</button>
+                                    <div id="test-image-status" style="margin-top: 10px;"></div>
+                                </div>
                             </td>
                         </tr>
-
                         <tr>
-                            <th>Pixabay API Key <span style="color:#888; font-size:12px; font-weight:normal;">(Image Search, gratis)</span></th>
+                            <th><label>Pixabay API Key (Free Image)</label></th>
                             <td>
-                                <input type="password" name="flazz_ai_pixabay_key" value="<?php echo esc_attr( get_option( 'flazz_ai_pixabay_key' ) ); ?>" class="regular-text">
-                                <p class="description">
-                                    Untuk fitur <strong>Pixabay Image Search</strong> — gratis tanpa batas.<br>
-                                    Daftar + ambil API key di <a href="https://pixabay.com/api/docs/" target="_blank">pixabay.com/api/docs</a> (cukup register, langsung dapat key).
-                                </p>
+                                <input type="password" name="flazz_ai_pixabay_key" value="<?php echo esc_attr( get_option( 'flazz_ai_pixabay_key' ) ); ?>" class="regular-text" placeholder="xxxxxxxx-xxxxxxxxxxxxxx">
+                                <p class="description">Gratis, disarankan untuk fallback gambar.</p>
                             </td>
                         </tr>
-
                         <tr>
-                            <th>Gaya Penulisan Default</th>
+                            <th><label>Gaya Penulisan Default</label></th>
                             <td>
-                                <select name="flazz_ai_writing_style">
+                                <select name="flazz_ai_writing_style" class="regular-text">
                                     <?php foreach ( array( 'Professional', 'Casual', 'Investigative' ) as $s ) : ?>
                                         <option value="<?php echo $s; ?>" <?php selected( get_option( 'flazz_ai_writing_style', 'Professional' ), $s ); ?>><?php echo $s; ?></option>
                                     <?php endforeach; ?>
@@ -1152,15 +1235,77 @@ class Flazz_Admin {
                             </td>
                         </tr>
                         <tr>
-                            <th>Max Artikel per Fetch</th>
+                            <th><label>Max Artikel per Fetch</label></th>
                             <td>
-                                <input type="number" name="flazz_ai_fetch_limit" value="<?php echo esc_attr( get_option( 'flazz_ai_fetch_limit', 5 ) ); ?>" min="1" max="20" style="width:80px;">
-                                <p class="description">Jumlah maksimal artikel yang diproses per satu kali fetch/run.</p>
+                                <input type="number" name="flazz_ai_fetch_limit" value="<?php echo esc_attr( get_option( 'flazz_ai_fetch_limit', 5 ) ); ?>" min="1" max="20" style="width: 60px;">
+                                <p class="description">Limit pemrosesan artikel secara bulk.</p>
                             </td>
                         </tr>
                     </table>
-                    <?php submit_button( 'Simpan Semua Pengaturan' ); ?>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="button button-primary">
+                            💾 SIMPAN SEMUA PENGATURAN
+                        </button>
+                    </div>
                 </form>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function render_documentation_page() {
+        ?>
+        <div class="wrap">
+            <h1>📖 Panduan & Dokumentasi Flazz AI</h1>
+            <p>Pelajari cara menyiapkan API Key untuk memaksimalkan fitur otomasi berita Anda.</p>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🤖 1. Cara Mendapatkan Groq API Key (Otak AI)</h2>
+                <p>Groq digunakan untuk memproses data, meriset berita, dan menulis artikel secara cerdas.</p>
+                <ol>
+                    <li>Buka <strong><a href="https://console.groq.com" target="_blank">console.groq.com</a></strong>.</li>
+                    <li>Login menggunakan akun Google atau email Anda.</li>
+                    <li>Klik menu <strong>"API Keys"</strong> di sidebar kiri.</li>
+                    <li>Klik tombol <strong>"+ Create API Key"</strong>.</li>
+                    <li>Beri nama (misal: "Flazz AI Plugin") lalu klik <strong>"Submit"</strong>.</li>
+                    <li>Salin kode yang muncul (berawalan <code>gsk_...</code>) dan tempel di <a href="<?php echo admin_url('admin.php?page=flazz-settings'); ?>">Halaman Settings</a>.</li>
+                </ol>
+                <p><em>*Groq saat ini menyediakan kuota gratis yang sangat cepat bagi pengguna baru.</em></p>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🎨 2. Cara Mendapatkan Replicate API Token (AI Image)</h2>
+                <p>Replicate (khususnya model Flux) digunakan untuk membuat gambar thumbnail artikel yang unik dan HD.</p>
+                <ol>
+                    <li>Buka <strong><a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/api-tokens</a></strong>.</li>
+                    <li>Login dengan akun <strong>GitHub</strong> Anda.</li>
+                    <li>Di bagian <strong>"API Tokens"</strong>, Anda akan melihat token default atau bisa buat baru.</li>
+                    <li>Klik ikon <strong>Copy</strong> pada token tersebut (berawalan <code>r8_...</code>).</li>
+                    <li>Tempel di <a href="<?php echo admin_url('admin.php?page=flazz-settings'); ?>">Halaman Settings</a> pada kolom Replicate.</li>
+                </ol>
+                <p><strong>Penting:</strong> Replicate bersifat berbayar (pay-per-use), pastikan Anda sudah memasukkan metode pembayaran di akun Replicate Anda agar API bisa berjalan.</p>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🖼️ 3. Cara Mendapatkan Pixabay API Key (Gambar Gratis)</h2>
+                <p>Pixabay digunakan sebagai sumber gambar alternatif/gratis jika Anda tidak ingin menggunakan AI Image.</p>
+                <ol>
+                    <li>Buka <strong><a href="https://pixabay.com/api/docs/" target="_blank">pixabay.com/api/docs/</a></strong>.</li>
+                    <li>Daftar akun gratis atau login terlebih dahulu.</li>
+                    <li>Scroll ke bawah ke bagian <strong>"Parameters"</strong>.</li>
+                    <li>Cari tulisan <strong>"key (required)"</strong>, di sebelah kanannya akan muncul API Key Anda secara otomatis.</li>
+                    <li>Salin kode tersebut dan tempel di <a href="<?php echo admin_url('admin.php?page=flazz-settings'); ?>">Halaman Settings</a>.</li>
+                </ol>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px; background: #fff8e5;">
+                <h2>💡 Tips Penggunaan</h2>
+                <ul style="list-style-type: disc; margin-left: 20px;">
+                    <li>Gunakan fitur <strong>"Test Koneksi AI"</strong> di Settings untuk memastikan Groq sudah aktif.</li>
+                    <li>Gunakan fitur <strong>"Generate Test Image"</strong> untuk memastikan Replicate sudah siap digunakan.</li>
+                    <li>Jika terjadi error "HTTP 401" atau "Unauthorized", periksa kembali apakah API Key Anda sudah dicopy dengan benar tanpa spasi tambahan.</li>
+                </ul>
             </div>
         </div>
         <?php

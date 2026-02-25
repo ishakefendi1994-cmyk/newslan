@@ -138,6 +138,43 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    // SETTINGS: Test AI Image
+    $(document).on('click', '#flazz-test-ai-image', function (e) {
+        e.preventDefault();
+        console.log('[Flazz AI] Test AI Image clicked');
+
+        var $btn = $(this);
+        var $status = $('#test-image-status');
+        var prompt = $('#flazz-test-image-prompt').val().trim();
+
+        if (!prompt) {
+            alert('Masukkan prompt terlebih dahulu.');
+            return;
+        }
+
+        console.log('[Flazz AI] Starting image test with prompt:', prompt);
+        $btn.prop('disabled', true).text('⏳ Generating Image...');
+        $status.html('<span style="color:#666;">Menghubungi Cloud Orchestrator & Replicate... (bisa 30-60 detik)</span>');
+
+        $.post(flazzData.ajax_url, {
+            action: 'flazz_test_ai_image',
+            nonce: flazzData.nonce,
+            prompt: prompt
+        }, function (response) {
+            console.log('[Flazz AI] AI Image Test Response:', response);
+            $btn.prop('disabled', false).text('🚀 Generate Test Image');
+            if (response.success) {
+                $status.html('<div style="margin-top:10px;"><p style="color:green; font-weight:bold;">✅ Berhasil!</p><img src="' + response.data + '" style="max-width:100%; border-radius:8px; border:1px solid #ddd; margin-top:5px;"></div>');
+            } else {
+                $status.html('<span style="color:#d63638;">❌ ' + response.data + '</span>');
+            }
+        }).fail(function (xhr, status, error) {
+            console.error('[Flazz AI] AI Image Test FAIL:', status, error, xhr.responseText);
+            $btn.prop('disabled', false).text('🚀 Generate Test Image');
+            $status.html('<span style="color:#d63638;">❌ HTTP ' + xhr.status + ' — ' + error + '</span>');
+        });
+    });
+
     // AUTO-JOBS: Open / Close form
     // ==========================================================================
     $(document).on('click', '#flazz-open-job-form', function () {
@@ -147,7 +184,7 @@ jQuery(document).ready(function ($) {
         $('#job_name, #job_keyword, #job_rss_url, #job_ai_idea').val('');
         $('#job_type').val('keyword').trigger('change');
 
-        $('#flazz-job-form-container').slideDown();
+        $('#flazz-job-form-container').hide().slideDown();
         $(this).hide();
     });
 
@@ -180,7 +217,7 @@ jQuery(document).ready(function ($) {
         $('#job_research_scope').val(data.research_scope);
 
         // Show form and scroll
-        $('#flazz-job-form-container').slideDown();
+        $('#flazz-job-form-container').hide().slideDown();
         $('#flazz-open-job-form').hide();
         $('html, body').animate({
             scrollTop: $("#flazz-job-form-container").offset().top - 50

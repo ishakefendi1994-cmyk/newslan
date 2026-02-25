@@ -160,11 +160,15 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            // black-forest-labs/flux-schnell (Faster and more reliable for web)
-            version: "a00f0221462700435907409f0293da2778f6974db37e1a3c75d49603d790757a",
+            // stabilityai/sdxl-turbo (via jyoung105)
+            version: "521267bca99a59f8b16b812755603e23b7a5412767568d47c915920eabd9ef90",
             input: {
                 prompt: finalPrompt,
-                aspect_ratio: "16:9"
+                width: 512,
+                height: 512,
+                num_inference_steps: 15,
+                guidance_scale: 6,
+                scheduler: "K_EULER"
             }
         })
     })
