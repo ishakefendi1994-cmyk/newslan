@@ -345,4 +345,85 @@ jQuery(document).ready(function ($) {
             alert('❌ HTTP Error ' + xhr.status);
         });
     });
+
+    // AUTO-JOBS: Tab Switching
+    // ==========================================================================
+    $(document).on('click', '.nav-tab', function (e) {
+        e.preventDefault();
+        var $tab = $(this);
+        var target = $tab.attr('href');
+
+        $('.nav-tab').removeClass('nav-tab-active');
+        $tab.addClass('nav-tab-active');
+
+        $('.tab-content').hide();
+        $(target).show();
+    });
+
+    // RSS DATABASE: Use URL
+    // ==========================================================================
+    $(document).on('click', '.use-rss-url', function () {
+        var url = $(this).data('url');
+
+        // Switch to Jobs tab
+        $('.nav-tab[href="#flazz-tab-jobs"]').trigger('click');
+
+        // Open Job form if hidden
+        if ($('#flazz-job-form-container').is(':hidden')) {
+            $('#flazz-open-job-form').trigger('click');
+        }
+
+        // Set type to RSS Watcher and fill URL
+        $('#job_type').val('rss_watcher').trigger('change');
+        $('#job_rss_url').val(url);
+
+        // Scroll to form
+        $('html, body').animate({
+            scrollTop: $("#flazz-job-form-container").offset().top - 50
+        }, 500);
+    });
+
+    // GOOGLE TRENDS: Fetch and Render
+    // ==========================================================================
+    function fetchGoogleTrends(geo, selector) {
+        var $container = $(selector);
+        if (!$container.length) return;
+
+        console.log('[Flazz AI] Fetching trends for:', geo);
+        $.post(flazzData.ajax_url, {
+            action: 'flazz_get_trends',
+            nonce: flazzData.nonce,
+            geo: geo
+        }, function (response) {
+            if (response.success && response.data.length > 0) {
+                var html = '<div style="margin-top:5px; font-weight:bold; color:#444; font-size:11px; margin-bottom:5px;">Trend Saat Ini (' + geo + '):</div>';
+                response.data.forEach(function (t) {
+                    html += '<span class="trend-badge" data-keyword="' + t.keyword + '">' +
+                        t.keyword + '<span class="trend-traffic">📈 ' + t.traffic + '+</span></span>';
+                });
+                $container.html(html);
+            } else {
+                $container.html('<span class="description" style="color:#d63638;">Gagal memuat tren.</span>');
+            }
+        });
+    }
+
+    // Load trends on page load
+    fetchGoogleTrends('ID', '#manual-keyword-trends');
+    fetchGoogleTrends('ID', '#job-keyword-trends');
+
+    // Trend badge click handler
+    $(document).on('click', '.trend-badge', function () {
+        var keyword = $(this).data('keyword');
+
+        // Manual tools page
+        if ($('#flazz_research_keyword').length) {
+            $('#flazz_research_keyword').val(keyword);
+        }
+
+        // Auto-jobs job form
+        if ($('#job_keyword').length) {
+            $('#job_keyword').val(keyword);
+        }
+    });
 });

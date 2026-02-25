@@ -28,8 +28,9 @@ class Flazz_Admin {
         add_action( 'wp_ajax_flazz_run_job',         array( $this, 'ajax_run_job' ) );
         add_action( 'wp_ajax_flazz_test_api',        array( $this, 'ajax_test_api' ) );
         add_action( 'wp_ajax_flazz_manual_fetch',    array( $this, 'ajax_manual_fetch' ) );
-        add_action( 'wp_ajax_flazz_research_keyword',array( $this, 'ajax_research_keyword' ) );
-        add_action( 'wp_ajax_flazz_test_ai_image',   array( $this, 'ajax_test_ai_image' ) );
+        add_action( 'wp_ajax_flazz_research_keyword', array( $this, 'ajax_research_keyword' ) );
+        add_action( 'wp_ajax_flazz_test_ai_image', array( $this, 'ajax_test_ai_image' ) );
+        add_action( 'wp_ajax_flazz_get_trends', array( $this, 'ajax_get_trends' ) );
     }
 
     // =========================================================================
@@ -532,6 +533,35 @@ class Flazz_Admin {
     // AJAX: Research by Keyword (Google News RSS → AI Synthesize → Post)
     // =========================================================================
 
+    public function ajax_get_trends() {
+        check_ajax_referer( 'flazz_ai_nonce', 'nonce' );
+
+        $geo = isset( $_POST['geo'] ) ? sanitize_text_field( $_POST['geo'] ) : 'ID';
+        $api_url = 'https://www.cryptotechnews.net/api/ai/orchestrator';
+
+        $response = wp_remote_post( $api_url, array(
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => json_encode( array(
+                'action'      => 'get_trends',
+                'license_key' => get_option( 'flazz_ai_license_key' ),
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
+                'payload'     => array( 'geo' => $geo )
+            )),
+            'timeout' => 30
+        ));
+
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( $response->get_error_message() );
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $body['success'] ) && $body['success'] === true ) {
+            wp_send_json_success( $body['data'] );
+        }
+
+        wp_send_json_error( isset( $body['message'] ) ? $body['message'] : 'Failed to fetch trends' );
+    }
+
     public function ajax_research_keyword() {
         $this->log( 'ajax_research_keyword: START' );
         $this->check_permission();
@@ -768,222 +798,306 @@ class Flazz_Admin {
             <h1>📋 Auto-Jobs Manager</h1>
             <p>Buat dan kelola job otomasi berita cerdas Anda.</p>
 
-            <div style="margin-bottom: 20px;">
-                <button id="flazz-open-job-form" class="button button-primary">
-                    + Buat Job Baru
-                </button>
-            </div>
+            <h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">
+                <a href="#flazz-tab-jobs" class="nav-tab nav-tab-active">📋 Daftar Auto-Jobs</a>
+                <a href="#flazz-tab-rss-db" class="nav-tab">📡 Database RSS Rekomendasi</a>
+            </h2>
 
-            <!-- Job Manager Table -->
-            <div class="card" style="padding: 0; margin-bottom: 20px;">
-                <?php if ( empty( $jobs ) ) : ?>
-                    <div style="padding: 20px; text-align: center; color: #666;">
-                        <p>Belum ada Job. Klik "Buat Job Baru" untuk memulai.</p>
-                    </div>
-                <?php else : ?>
-                    <table class="widefat striped">
-                        <thead>
-                            <tr>
-                                <th style="width: 20%;">Nama Job</th>
-                                <th style="width: 15%;">Tipe</th>
-                                <th style="width: 35%; word-break: break-all;">Konfigurasi</th>
-                                <th style="width: 15%;">Target / Language</th>
-                                <th style="width: 15%; text-align: right;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ( $jobs as $jobs_item ) :
-                                $type     = get_post_meta( $jobs_item->ID, '_flazz_job_job_type', true );
-                                $keyword  = get_post_meta( $jobs_item->ID, '_flazz_job_keyword', true );
-                                $rss      = get_post_meta( $jobs_item->ID, '_flazz_job_rss_url', true );
-                                $ai_idea  = get_post_meta( $jobs_item->ID, '_flazz_job_ai_idea', true );
-                                $secret   = get_post_meta( $jobs_item->ID, '_flazz_job_secret', true );
-                                $target_lang = get_post_meta( $jobs_item->ID, '_flazz_job_target_language', true ) ?: 'Indonesian';
-                                $scope       = get_post_meta( $jobs_item->ID, '_flazz_job_research_scope', true ) ?: 'local';
-                                
-                                $detail = $rss;
-                                if ( $type === 'keyword' ) $detail = $keyword . ($scope === 'global' ? ' (Global)' : ' (Lokal)');
-                                if ( $type === 'ai_editor' ) $detail = mb_substr($ai_idea, 0, 50) . '...';
-
-                                $cron_url = site_url( '/?flazz_run_job=' . $jobs_item->ID . '&key=' . $secret );
-                            ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo esc_html( $jobs_item->post_title ); ?></strong>
-                                    <p class="description" style="font-size: 10px; margin-top: 5px;">
-                                        <a href="javascript:void(0);" onclick="navigator.clipboard.writeText('<?php echo $cron_url; ?>'); alert('Cron URL copied!');">COPY CRON URL</a>
-                                    </p>
-                                </td>
-                                <td>
-                                    <code><?php echo esc_html( isset( $type_labels[$type] ) ? $type_labels[$type] : $type ); ?></code>
-                                </td>
-                                <td>
-                                    <span class="description" style="word-break: break-all;"><?php echo esc_html( $detail ); ?></span>
-                                </td>
-                                <td>
-                                    <strong><?php echo strtoupper($target_lang); ?></strong><br>
-                                    <span class="description">Cat ID: <?php echo get_post_meta( $jobs_item->ID, '_flazz_job_category', true ); ?></span>
-                                </td>
-                                <td style="text-align: right;">
-                                    <button title="Run" class="run-job button button-small" data-id="<?php echo $jobs_item->ID; ?>">▶ Run</button>
-                                    <button title="Edit" class="edit-job button button-small" 
-                                        data-id="<?php echo $jobs_item->ID; ?>"
-                                        data-name="<?php echo esc_attr( $jobs_item->post_title ); ?>"
-                                        data-type="<?php echo esc_attr( $type ); ?>"
-                                        data-keyword="<?php echo esc_attr( $keyword ); ?>"
-                                        data-rss_url="<?php echo esc_attr( $rss ); ?>"
-                                        data-ai_idea="<?php echo esc_attr( $ai_idea ); ?>"
-                                        data-category="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_category', true ) ); ?>"
-                                        data-max_articles="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_max_articles', true ) ); ?>"
-                                        data-writing_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_writing_style', true ) ); ?>"
-                                        data-article_model="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_article_model', true ) ); ?>"
-                                        data-image_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_image_mode', true ) ); ?>"
-                                        data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
-                                        data-target_language="<?php echo esc_attr( $target_lang ); ?>"
-                                        data-research_scope="<?php echo esc_attr( $scope ); ?>"
-                                    >✏️ Edit</button>
-                                    <button title="Hapus" class="delete-job button button-small button-link-delete" data-id="<?php echo $jobs_item->ID; ?>">🗑</button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
-
-            <!-- Job Form -->
-            <div id="flazz-job-form-container" class="card" style="display:none; padding: 20px; margin-bottom: 20px; max-width: 800px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">
-                    <h2 id="job-form-title" style="margin: 0;">Buat Auto-Job Baru</h2>
-                    <button id="flazz-close-job-form" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
-                </div>
-                
-                <input type="hidden" id="job_id" value="0">
-                
-                <table class="form-table">
-                    <tr>
-                        <th><label>Nama Job <span style="color: red;">*</span></label></th>
-                        <td>
-                            <input type="text" id="job_name" class="regular-text" placeholder="Misal: Berita Teknologi Harian">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Tipe Job</label></th>
-                        <td>
-                            <select id="job_type" class="regular-text">
-                                <option value="keyword">🔍 Keyword Search (cari dari Google News)</option>
-                                <option value="rss_watcher">📡 RSS Watcher (monitor RSS feed)</option>
-                                <option value="ai_editor">✍️ AI Post Writer (input ide/topik saja)</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr id="row-keyword">
-                        <th><label>Kata Kunci</label></th>
-                        <td>
-                            <input type="text" id="job_keyword" class="regular-text" placeholder="teknologi AI, gaya hidup sehat">
-                        </td>
-                    </tr>
-                    <tr id="row-research-scope">
-                        <th><label>Cakupan Riset</label></th>
-                        <td>
-                            <select id="job_research_scope" class="regular-text">
-                                <option value="local">🇮🇩 Lokal Indonesia</option>
-                                <option value="global">🌐 Global International (English Sources)</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr id="row-target-language">
-                        <th><label>Bahasa Output</label></th>
-                        <td>
-                            <select id="job_target_language" class="regular-text">
-                                <option value="Indonesian">Bahasa Indonesia</option>
-                                <option value="English">English</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr id="row-rss" style="display:none;">
-                        <th><label>RSS Feed URL</label></th>
-                        <td>
-                            <input type="url" id="job_rss_url" class="regular-text" placeholder="https://kompas.com/feed/news">
-                        </td>
-                    </tr>
-                    <tr id="row-ai-idea" style="display:none;">
-                        <th><label>Ide Utama / Prompt AI</label></th>
-                        <td>
-                            <textarea id="job_ai_idea" class="regular-text" style="height: 100px;" placeholder="Tulis rincian atau poin-poin yang ingin dikembangkan AI menjadi artikel..."></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Pilih Kategori <span style="color: red;">*</span></label></th>
-                        <td>
-                            <select id="job_category" class="regular-text">
-                                <option value="">-- Pilih Kategori --</option>
-                                <?php
-                                $categories = get_categories( array( 'hide_empty' => 0 ) );
-                                foreach ( $categories as $cat ) {
-                                    echo '<option value="' . esc_attr( $cat->term_id ) . '">' . esc_html( $cat->name ) . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Max Artikel / Run</label></th>
-                        <td>
-                            <input type="number" id="job_max_articles" value="3" min="1" max="10" style="width: 60px;">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Style Penulisan</label></th>
-                        <td>
-                            <select id="job_writing_style" class="regular-text">
-                                <option value="Professional">Professional</option>
-                                <option value="Casual">Casual</option>
-                                <option value="Investigative">Investigative</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Model Artikel AI</label></th>
-                        <td>
-                            <select id="job_article_model" class="regular-text">
-                                <option value="Straight News">Straight News</option>
-                                <option value="In-depth Analysis">In-depth Analysis</option>
-                                <option value="Editorial/Opinion">Editorial / Opini</option>
-                                <option value="Listicle">Listicle</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label>Sumber Foto</label></th>
-                        <td>
-                            <select id="job_image_mode" class="regular-text">
-                                <option value="rss">Otomatis RSS / Pixabay</option>
-                                <option value="pixabay">🖼️ Pixabay Image Search</option>
-                                <option value="generate_ai">🤖 AI Image (Replicate Flux)</option>
-                                <option value="none">Tanpa Foto</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr id="row-job-thumbnail-style" style="display:none;">
-                        <th><label>Style Thumbnail AI</label></th>
-                        <td>
-                            <select id="job_thumbnail_style" class="regular-text">
-                                <option value="editorial_vector">🎨 Editorial Vector</option>
-                                <option value="real_photo">📸 Real Photo</option>
-                            </select>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="margin-top: 20px;">
-                    <button id="flazz-save-job" class="button button-primary">
-                        💾 Simpan Konfigurasi Job
+            <!-- TAB 1: JOB MANAGER -->
+            <div id="flazz-tab-jobs" class="tab-content">
+                <div style="margin-bottom: 20px;">
+                    <button id="flazz-open-job-form" class="button button-primary">
+                        + Buat Job Baru
                     </button>
                 </div>
+
+                <!-- Job Manager Table -->
+                <div class="card" style="padding: 0; margin-bottom: 20px;">
+                    <?php if ( empty( $jobs ) ) : ?>
+                        <div style="padding: 20px; text-align: center; color: #666;">
+                            <p>Belum ada Job. Klik "Buat Job Baru" untuk memulai.</p>
+                        </div>
+                    <?php else : ?>
+                        <table class="widefat striped">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Nama Job</th>
+                                    <th style="width: 15%;">Tipe</th>
+                                    <th style="width: 35%; word-break: break-all;">Konfigurasi</th>
+                                    <th style="width: 15%;">Target / Language</th>
+                                    <th style="width: 15%; text-align: right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ( $jobs as $jobs_item ) :
+                                    $type     = get_post_meta( $jobs_item->ID, '_flazz_job_job_type', true );
+                                    $keyword  = get_post_meta( $jobs_item->ID, '_flazz_job_keyword', true );
+                                    $rss      = get_post_meta( $jobs_item->ID, '_flazz_job_rss_url', true );
+                                    $ai_idea  = get_post_meta( $jobs_item->ID, '_flazz_job_ai_idea', true );
+                                    $secret   = get_post_meta( $jobs_item->ID, '_flazz_job_secret', true );
+                                    $target_lang = get_post_meta( $jobs_item->ID, '_flazz_job_target_language', true ) ?: 'Indonesian';
+                                    $scope       = get_post_meta( $jobs_item->ID, '_flazz_job_research_scope', true ) ?: 'local';
+                                    
+                                    $detail = $rss;
+                                    if ( $type === 'keyword' ) $detail = $keyword . ($scope === 'global' ? ' (Global)' : ' (Lokal)');
+                                    if ( $type === 'ai_editor' ) $detail = mb_substr($ai_idea, 0, 50) . '...';
+
+                                    $cron_url = site_url( '/?flazz_run_job=' . $jobs_item->ID . '&key=' . $secret );
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo esc_html( $jobs_item->post_title ); ?></strong>
+                                        <p class="description" style="font-size: 10px; margin-top: 5px;">
+                                            <a href="javascript:void(0);" onclick="navigator.clipboard.writeText('<?php echo $cron_url; ?>'); alert('Cron URL copied!');">COPY CRON URL</a>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <code><?php echo esc_html( isset( $type_labels[$type] ) ? $type_labels[$type] : $type ); ?></code>
+                                    </td>
+                                    <td>
+                                        <span class="description" style="word-break: break-all;"><?php echo esc_html( $detail ); ?></span>
+                                    </td>
+                                    <td>
+                                        <strong><?php echo strtoupper($target_lang); ?></strong><br>
+                                        <span class="description">Cat ID: <?php echo get_post_meta( $jobs_item->ID, '_flazz_job_category', true ); ?></span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button title="Run" class="run-job button button-small" data-id="<?php echo $jobs_item->ID; ?>">▶ Run</button>
+                                        <button title="Edit" class="edit-job button button-small" 
+                                            data-id="<?php echo $jobs_item->ID; ?>"
+                                            data-name="<?php echo esc_attr( $jobs_item->post_title ); ?>"
+                                            data-type="<?php echo esc_attr( $type ); ?>"
+                                            data-keyword="<?php echo esc_attr( $keyword ); ?>"
+                                            data-rss_url="<?php echo esc_attr( $rss ); ?>"
+                                            data-ai_idea="<?php echo esc_attr( $ai_idea ); ?>"
+                                            data-category="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_category', true ) ); ?>"
+                                            data-max_articles="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_max_articles', true ) ); ?>"
+                                            data-writing_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_writing_style', true ) ); ?>"
+                                            data-article_model="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_article_model', true ) ); ?>"
+                                            data-image_mode="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_image_mode', true ) ); ?>"
+                                            data-thumbnail_style="<?php echo esc_attr( get_post_meta( $jobs_item->ID, '_flazz_job_thumbnail_style', true ) ); ?>"
+                                            data-target_language="<?php echo esc_attr( $target_lang ); ?>"
+                                            data-research_scope="<?php echo esc_attr( $scope ); ?>"
+                                        >✏️ Edit</button>
+                                        <button title="Hapus" class="delete-job button button-small button-link-delete" data-id="<?php echo $jobs_item->ID; ?>">🗑</button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Job Form -->
+                <div id="flazz-job-form-container" class="card" style="display:none; padding: 20px; margin-bottom: 20px; max-width: 800px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">
+                        <h2 id="job-form-title" style="margin: 0;">Buat Auto-Job Baru</h2>
+                        <button id="flazz-close-job-form" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+                    </div>
+                    
+                    <input type="hidden" id="job_id" value="0">
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th><label>Nama Job <span style="color: red;">*</span></label></th>
+                            <td>
+                                <input type="text" id="job_name" class="regular-text" placeholder="Misal: Berita Teknologi Harian">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Tipe Job</label></th>
+                            <td>
+                                <select id="job_type" class="regular-text">
+                                    <option value="keyword">🔍 Keyword Search (cari dari Google News)</option>
+                                    <option value="rss_watcher">📡 RSS Watcher (monitor RSS feed)</option>
+                                    <option value="ai_editor">✍️ AI Post Writer (input ide/topik saja)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="row-keyword">
+                            <th><label>Kata Kunci</label></th>
+                            <td>
+                                <input type="text" id="job_keyword" class="regular-text" placeholder="teknologi AI, gaya hidup sehat">
+                                <div id="job-keyword-trends" style="margin-top: 10px;"></div>
+                            </td>
+                        </tr>
+                        <tr id="row-research-scope">
+                            <th><label>Cakupan Riset</label></th>
+                            <td>
+                                <select id="job_research_scope" class="regular-text">
+                                    <option value="local">🇮🇩 Lokal Indonesia</option>
+                                    <option value="global">🌐 Global International (English Sources)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="row-target-language">
+                            <th><label>Bahasa Output</label></th>
+                            <td>
+                                <select id="job_target_language" class="regular-text">
+                                    <option value="Indonesian">Bahasa Indonesia</option>
+                                    <option value="English">English</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="row-rss" style="display:none;">
+                            <th><label>RSS Feed URL</label></th>
+                            <td>
+                                <input type="url" id="job_rss_url" class="regular-text" placeholder="https://kompas.com/feed/news">
+                            </td>
+                        </tr>
+                        <tr id="row-ai-idea" style="display:none;">
+                            <th><label>Ide Utama / Prompt AI</label></th>
+                            <td>
+                                <textarea id="job_ai_idea" class="regular-text" style="height: 100px;" placeholder="Tulis rincian atau poin-poin yang ingin dikembangkan AI menjadi artikel..."></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Pilih Kategori <span style="color: red;">*</span></label></th>
+                            <td>
+                                <select id="job_category" class="regular-text">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    <?php
+                                    $categories = get_categories( array( 'hide_empty' => 0 ) );
+                                    foreach ( $categories as $cat ) {
+                                        echo '<option value="' . esc_attr( $cat->term_id ) . '">' . esc_html( $cat->name ) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Max Artikel / Run</label></th>
+                            <td>
+                                <input type="number" id="job_max_articles" value="3" min="1" max="10" style="width: 60px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Style Penulisan</label></th>
+                            <td>
+                                <select id="job_writing_style" class="regular-text">
+                                    <option value="Professional">Professional</option>
+                                    <option value="Casual">Casual</option>
+                                    <option value="Investigative">Investigative</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Model Artikel AI</label></th>
+                            <td>
+                                <select id="job_article_model" class="regular-text">
+                                    <option value="Straight News">Straight News</option>
+                                    <option value="In-depth Analysis">In-depth Analysis</option>
+                                    <option value="Editorial/Opinion">Editorial / Opini</option>
+                                    <option value="Listicle">Listicle</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label>Sumber Foto</label></th>
+                            <td>
+                                <select id="job_image_mode" class="regular-text">
+                                    <option value="rss">Otomatis RSS / Pixabay</option>
+                                    <option value="pixabay">🖼️ Pixabay Image Search</option>
+                                    <option value="generate_ai">🤖 AI Image (Replicate Flux)</option>
+                                    <option value="none">Tanpa Foto</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="row-job-thumbnail-style" style="display:none;">
+                            <th><label>Style Thumbnail AI</label></th>
+                            <td>
+                                <select id="job_thumbnail_style" class="regular-text">
+                                    <option value="editorial_vector">🎨 Editorial Vector</option>
+                                    <option value="real_photo">📸 Real Photo</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 20px;">
+                        <button id="flazz-save-job" class="button button-primary">
+                            💾 Simpan Konfigurasi Job
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <!-- TAB 2: RSS DATABASE -->
+            <div id="flazz-tab-rss-db" class="tab-content" style="display:none;">
+                <div class="card">
+                    <p>Pilih dari sumber berita terpercaya untuk mendapatkan konten berkualitas secara otomatis.</p>
+                    
+                    <?php
+                    $recoms = $this->get_rss_recommendations();
+                    foreach ( $recoms as $group_name => $feeds ) :
+                    ?>
+                        <h3 style="border-bottom: 2px solid #2271b1; padding-bottom: 5px; margin-top: 30px; display: inline-block;">
+                            <?php echo esc_html( $group_name ); ?>
+                        </h3>
+                        <table class="widefat striped" style="margin-bottom: 20px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Nama Sumber</th>
+                                    <th>RSS Feed URL</th>
+                                    <th style="width: 15%; text-align: right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ( $feeds as $f ) : ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html( $f['name'] ); ?></strong></td>
+                                    <td><code><?php echo esc_html( $f['url'] ); ?></code></td>
+                                    <td style="text-align: right;">
+                                        <button class="button button-small use-rss-url" data-url="<?php echo esc_attr( $f['url'] ); ?>">Gunakan URL</button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <style>
+                .tab-content { background: #fff; border: 1px solid #ccd0d4; border-top: none; padding: 20px; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+                .nav-tab-wrapper { margin-bottom: 0 !important; }
+                .trend-badge { display: inline-block; padding: 5px 12px; background: #f0f0f1; border: 1px solid #ccd0d4; border-radius: 20px; margin: 3px; cursor: pointer; transition: all 0.2s; font-size: 12px; }
+                .trend-badge:hover { background: #2271b1; color: #fff; border-color: #2271b1; }
+                .trend-traffic { font-size: 10px; opacity: 0.7; margin-left: 5px; }
+            </style>
         </div>
         <?php
+    }
+
+    private function get_rss_recommendations() {
+        return array(
+            '🇮🇩 Berita Nasional (Lokal)' => array(
+                array( 'name' => 'Detik Berita', 'url' => 'https://www.detik.com/rss' ),
+                array( 'name' => 'Kompas News', 'url' => 'https://www.kompas.com/feed' ),
+                array( 'name' => 'Liputan6', 'url' => 'https://www.liputan6.com/rss' ),
+                array( 'name' => 'Tempo Nasional', 'url' => 'https://www.tempo.co/rss/nasional' ),
+                array( 'name' => 'CNN Indonesia', 'url' => 'https://www.cnnindonesia.com/nasional/rss' ),
+            ),
+            '🔌 Teknologi & Gadget' => array(
+                array( 'name' => 'Kompas Tekno', 'url' => 'https://tekno.kompas.com/feed' ),
+                array( 'name' => 'The Verge (Global)', 'url' => 'https://www.theverge.com/rss/index.xml' ),
+                array( 'name' => 'TechCrunch (Global)', 'url' => 'https://techcrunch.com/feed/' ),
+                array( 'name' => 'Wired Science', 'url' => 'https://www.wired.com/feed/category/science/latest/rss' ),
+                array( 'name' => 'Engadget', 'url' => 'https://www.engadget.com/rss.xml' ),
+            ),
+            '💰 Bisnis & Finansial' => array(
+                array( 'name' => 'CNBC Indonesia', 'url' => 'https://www.cnbcindonesia.com/news/rss' ),
+                array( 'name' => 'Kontan Nasional', 'url' => 'https://nasional.kontan.co.id/rss' ),
+                array( 'name' => 'Forbes Tech (Global)', 'url' => 'https://www.forbes.com/business/feed/' ),
+                array( 'name' => 'Wall Street Journal', 'url' => 'https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml' ),
+            ),
+            '🌍 Berita Internasional (English)' => array(
+                array( 'name' => 'BBC World News', 'url' => 'http://feeds.bbci.co.uk/news/world/rss.xml' ),
+                array( 'name' => 'Reuters Top News', 'url' => 'http://feeds.reuters.com/reuters/topNews' ),
+                array( 'name' => 'Al Jazeera English', 'url' => 'https://www.aljazeera.com/xml/rss/all.xml' ),
+                array( 'name' => 'NASA News', 'url' => 'https://www.nasa.gov/rss/dyn/breaking_news.rss' ),
+            )
+        );
     }
 
     public function render_manual_tools_page() {
@@ -1102,6 +1216,14 @@ class Flazz_Admin {
                                 <option value="editorial_vector">🎨 Editorial Vector (Majalah Satiris)</option>
                                 <option value="real_photo">📸 Real Photo (Foto Realistis)</option>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Trending Hari Ini</label></th>
+                        <td>
+                            <div id="manual-keyword-trends">
+                                <span class="description">⏳ Mengambil tren dari Google...</span>
+                            </div>
                         </td>
                     </tr>
                 </table>

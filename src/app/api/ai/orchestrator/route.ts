@@ -49,6 +49,8 @@ export async function POST(request: Request) {
             return await handlePromptGeneration(api_key, payload)
         } else if (action === 'generate_image') {
             return await handleReplicateProcessing(api_key, payload)
+        } else if (action === 'get_trends') {
+            return await handleGetTrends(payload)
         }
 
         return NextResponse.json({ success: false, message: 'Unknown action.' }, { status: 400 })
@@ -236,5 +238,39 @@ async function handleReplicateProcessing(apiKey: string, payload: any) {
             success: false,
             message: 'Replicate Error: ' + (err.message || 'Unknown error occurred.')
         }, { status: 500 })
+    }
+}
+
+async function handleGetTrends(payload: any) {
+    const geo = payload.geo || 'ID'
+    const url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`
+
+    try {
+        const response = await fetch(url)
+        if (!response.ok) return NextResponse.json({ success: false, message: 'Google Trends unreachable' }, { status: response.status })
+
+        const xml = await response.text()
+
+        // Simple regex-based parsing to avoid heavy XML libs in Edge Runtime
+        const items = []
+        const itemRegex = /<item>([\s\S]*?)<\/item>/g
+        let match
+
+        while ((match = itemRegex.exec(xml)) !== null) {
+            const itemContent = match[1]
+            const titleMatch = itemContent.match(/<title>(.*?)<\/title>/)
+            const trafficMatch = itemContent.match(/<ht:approx_traffic>(.*?)<\/ht:approx_traffic>/)
+
+            if (titleMatch) {
+                items.push({
+                    keyword: titleMatch[1],
+                    traffic: trafficMatch ? trafficMatch[1] : ''
+                })
+            }
+        }
+
+        return NextResponse.json({ success: true, data: items.slice(0, 15) })
+    } catch (err: any) {
+        return NextResponse.json({ success: false, message: (err as Error).message }, { status: 500 })
     }
 }
