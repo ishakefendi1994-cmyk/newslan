@@ -43,7 +43,8 @@ jQuery(document).ready(function ($) {
         $.post(flazzData.ajax_url, {
             action: 'flazz_manual_fetch',
             nonce: flazzData.nonce,
-            rss_url: rssUrl
+            rss_url: rssUrl,
+            category: $('#flazz_manual_cat').val()
         }, function (response) {
             console.log('[Flazz AI] Fetch Response:', response);
             $btn.prop('disabled', false).text('▶ Fetch & Proses Sekarang');
@@ -93,7 +94,8 @@ jQuery(document).ready(function ($) {
             image_mode: imgMode,
             thumbnail_style: thumbStyle,
             research_scope: $('#flazz_research_scope').val(),
-            target_language: $('#flazz_research_language').val()
+            target_language: $('#flazz_research_language').val(),
+            category: $('#flazz_manual_cat').val()
         }, function (response) {
             console.log('[Flazz AI] Research Response:', response);
             $btn.prop('disabled', false).text('🔬 Mulai Riset & Posting');

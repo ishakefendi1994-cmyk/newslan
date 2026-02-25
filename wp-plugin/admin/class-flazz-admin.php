@@ -205,6 +205,10 @@ class Flazz_Admin {
         if ( $post_id && ! is_wp_error( $post_id ) ) {
             update_post_meta( $post_id, '_flazz_source_url', $source_url );
 
+            // ── AI Enrichment (SEO, Tags, Taxonomy, Telegram) ───────────────────
+            $target_cat_raw = isset( $_POST['category'] ) ? $_POST['category'] : 'auto';
+            $job_engine->enrich_post( $post_id, $data['title'], $data['content'], ($target_cat_raw === 'auto') );
+
             if ( ! empty( $image_url ) ) {
                 require_once ABSPATH . 'wp-admin/includes/image.php';
                 require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -997,6 +1001,7 @@ class Flazz_Admin {
                             <td>
                                 <select id="job_category" class="regular-text">
                                     <option value="">-- Pilih Kategori --</option>
+                                    <option value="auto">🤖 AI Auto (Pilih Terbaik)</option>
                                     <?php
                                     $categories = get_categories( array( 'hide_empty' => 0 ) );
                                     foreach ( $categories as $cat ) {
@@ -1231,7 +1236,14 @@ class Flazz_Admin {
                     <tr>
                         <th><label>Target Kategori</label></th>
                         <td>
-                            <?php wp_dropdown_categories( array( 'hide_empty' => 0, 'name' => 'flazz_manual_cat', 'id' => 'flazz_manual_cat', 'class' => 'postform' ) ); ?>
+                            <?php wp_dropdown_categories( array( 
+                                'hide_empty'        => 0, 
+                                'name'              => 'flazz_manual_cat', 
+                                'id'                => 'flazz_manual_cat', 
+                                'class'             => 'postform',
+                                'show_option_none'  => '🤖 AI Auto (Pilih Terbaik)',
+                                'option_none_value' => 'auto'
+                            ) ); ?>
                         </td>
                     </tr>
                     <tr>

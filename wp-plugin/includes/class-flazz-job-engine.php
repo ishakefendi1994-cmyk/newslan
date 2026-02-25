@@ -268,6 +268,12 @@ class Flazz_Job_Engine {
                     set_post_thumbnail( $new_post_id, $id );
                 }
             }
+
+            // ── Step 8: AI Enrichment (SEO, Tags, Telegram) ─────────────────────
+            $is_auto_cat = ( get_post_meta( $job_id, '_flazz_job_category', true ) === 'auto' );
+            $this->log( "run_job: Post $new_post_id created, starting enrichment (auto_cat: " . ($is_auto_cat ? 'YES' : 'NO') . ")" );
+            $this->enrich_post( $new_post_id, $synthesis['title'], $synthesis['content'], $is_auto_cat );
+
             // Mark all sources as processed
             foreach ( $processed_links as $link ) {
                 add_post_meta( $new_post_id, '_flazz_source_url', $link );
@@ -364,6 +370,107 @@ class Flazz_Job_Engine {
         return $content;
     }
 
+    /**
+     * AI Article Enrichment:
+     * Handles SEO, Taxonomy (Tags/Category), and Notifications in one go.
+     */
+    public function enrich_post( $post_id, $title, $content, $force_auto_cat = false ) {
+        // Step 1: SEO Meta
+        $this->generate_and_save_seo_meta( $post_id, $title, $content );
+
+        // Step 2: Taxonomy (Tags & Auto-Category)
+        $this->suggest_and_apply_taxonomy( $post_id, $title, $content, $force_auto_cat );
+
+        // Step 3: Telegram Notification
+        $this->send_telegram( $post_id, $title, get_permalink( $post_id ) );
+    }
+
+    private function generate_and_save_seo_meta( $post_id, $title, $content ) {
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $license = get_option( 'flazz_ai_license_key' );
+        $api_key = get_option( 'flazz_ai_groq_key' );
+
+        $response = wp_remote_post( $api_url, array(
+            'timeout' => 30,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => json_encode( array(
+                'action'      => 'generate_seo',
+                'license_key' => $license,
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
+                'api_key'     => $api_key,
+                'payload'     => array( 'title' => $title, 'content' => mb_substr($content, 0, 1000) )
+            ))
+        ));
+
+        if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $body['success'] ) && $body['success'] === true && ! empty( $body['data'] ) ) {
+                $seo = $body['data'];
+                update_post_meta( $post_id, '_yoast_wpseo_title', $seo['title'] );
+                update_post_meta( $post_id, '_yoast_wpseo_metadesc', $seo['description'] );
+                update_post_meta( $post_id, '_rank_math_title', $seo['title'] );
+                update_post_meta( $post_id, '_rank_math_description', $seo['description'] );
+            }
+        }
+    }
+
+    private function suggest_and_apply_taxonomy( $post_id, $title, $content, $force_auto_cat = false ) {
+        $categories = get_categories( array( 'hide_empty' => 0 ) );
+        $cat_names  = array_map( function($c){ return $c->name; }, $categories );
+
+        $api_url = 'https://ishakefendi1994-cmyk-new-newslan.vercel.app/api/ai/orchestrator';
+        $license = get_option( 'flazz_ai_license_key' );
+        $api_key = get_option( 'flazz_ai_groq_key' );
+
+        $response = wp_remote_post( $api_url, array(
+            'timeout' => 30,
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body'    => json_encode( array(
+                'action'      => 'suggest_taxonomy',
+                'license_key' => $license,
+                'domain'      => parse_url( home_url(), PHP_URL_HOST ),
+                'api_key'     => $api_key,
+                'payload'     => array( 'title' => $title, 'content' => mb_substr($content, 0, 1000), 'categories' => $cat_names )
+            ))
+        ));
+
+        if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $body['success'] ) && $body['success'] === true && ! empty( $body['data'] ) ) {
+                $data = $body['data'];
+                if ( ! empty( $data['tags'] ) ) {
+                    wp_set_post_tags( $post_id, $data['tags'], true );
+                }
+                if ( $force_auto_cat && isset( $data['category_index'] ) ) {
+                    $idx = (int) $data['category_index'];
+                    if ( isset( $categories[$idx] ) ) {
+                        wp_set_post_categories( $post_id, array( $categories[$idx]->term_id ) );
+                    }
+                }
+            }
+        }
+    }
+
+    public function send_telegram( $post_id, $title, $url ) {
+        $token   = get_option( 'flazz_ai_telegram_token' );
+        $chat_id = get_option( 'flazz_ai_telegram_chat_id' );
+
+        if ( empty( $token ) || empty( $chat_id ) ) return;
+
+        $message = "🚀 *Berita Baru Terbit!*\n\n";
+        $message .= "📌 *{$title}*\n\n";
+        $message .= "🔗 [Baca Selengkapnya]({$url})";
+
+        wp_remote_post( "https://api.telegram.org/bot{$token}/sendMessage", array(
+            'body' => array(
+                'chat_id'                  => $chat_id,
+                'text'                     => $message,
+                'parse_mode'               => 'Markdown',
+                'disable_web_page_preview' => false,
+            )
+        ));
+    }
+
     public function get_jobs() {
         return get_posts( array(
             'post_type'      => 'flazz_job',
@@ -372,6 +479,14 @@ class Flazz_Job_Engine {
             'orderby'        => 'date',
             'order'          => 'DESC'
         ));
+    }
+
+    private function log( $msg ) {
+        if ( class_exists( 'Flazz_Admin' ) ) {
+            Flazz_Admin::get_instance()->log( $msg );
+        } else {
+            error_log( '[Flazz AI] ' . $msg );
+        }
     }
 
     public function delete_job( $job_id ) {
