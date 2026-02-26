@@ -97,7 +97,7 @@ class Flazz_Admin {
     // HELPERS
     // =========================================================================
 
-    private function log( $msg ) {
+    public function log( $msg ) {
         error_log( '[Flazz AI] ' . $msg );
     }
 
@@ -220,13 +220,7 @@ class Flazz_Admin {
             }
         }
 
-        // ── Auto-enrich: SEO Meta + Telegram ─────────────────────────────────
-        if ( $post_id && ! is_wp_error( $post_id ) ) {
-            $post_url = get_permalink( $post_id );
-            // Fire-and-forget (non-blocking for the user)
-            $this->generate_and_save_seo_meta( $post_id, $data['title'], $data['content'] );
-            $this->send_telegram( $post_id, $data['title'], $post_url );
-        }
+        // ── Auto-enrich: SEO Meta + Telegram handled by $job_engine->enrich_post above ───────────
         return $post_id;
     }
 
@@ -426,7 +420,7 @@ class Flazz_Admin {
             } else {
                 wp_send_json_error( 'Gagal menyimpan Job.' );
             }
-        } catch ( Exception $e ) {
+        } catch ( Throwable $e ) {
             $this->log( 'ajax_save_job: Exception = ' . $e->getMessage() );
             wp_send_json_error( 'Exception: ' . $e->getMessage() );
         }
@@ -469,7 +463,14 @@ class Flazz_Admin {
                 wp_send_json_error( 'Job ID tidak valid.' );
             }
 
+            if ( ! class_exists( 'FZ_Auth_Guard' ) ) {
+                $this->log( 'ajax_run_job: CRITICAL - FZ_Auth_Guard NOT FOUND!' );
+                require_once plugin_dir_path( __FILE__ ) . '../includes/class-flazz-license.php';
+            }
+
+            $this->log( 'ajax_run_job: Initializing Job Engine' );
             $job_engine = Flazz_Job_Engine::get_instance();
+            $this->log( 'ajax_run_job: Running Job' );
             $result     = $job_engine->run_job( $job_id );
 
             $this->log( 'ajax_run_job: result = ' . print_r( $result, true ) );
@@ -479,7 +480,7 @@ class Flazz_Admin {
             } else {
                 wp_send_json_error( is_string( $result ) ? $result : 'Error tidak diketahui.' );
             }
-        } catch ( Exception $e ) {
+        } catch ( Throwable $e ) {
             $this->log( 'ajax_run_job: Exception = ' . $e->getMessage() );
             wp_send_json_error( 'Exception: ' . $e->getMessage() );
         }
@@ -579,6 +580,7 @@ class Flazz_Admin {
 
         try {
             $keyword = isset( $_POST['keyword'] ) ? sanitize_text_field( $_POST['keyword'] ) : '';
+            $target_language = isset( $_POST['target_language'] ) ? sanitize_text_field( $_POST['target_language'] ) : 'Indonesian';
 
             if ( empty( $keyword ) ) {
                 wp_send_json_error( 'Keyword tidak boleh kosong.' );
@@ -781,7 +783,7 @@ class Flazz_Admin {
 
             wp_send_json_success( 'Berhasil! Artikel "' . esc_html( $synthesis['title'] ) . '" sudah diposting.' );
 
-        } catch ( Exception $e ) {
+        } catch ( Throwable $e ) {
             $this->log( 'ajax_research_keyword: Exception = ' . $e->getMessage() );
             wp_send_json_error( 'PHP Exception: ' . $e->getMessage() );
         }
@@ -1392,7 +1394,7 @@ class Flazz_Admin {
                         <tr>
                             <th><label>License Key</label></th>
                             <td>
-                                <input type="text" name="flazz_ai_license_key" value="<?php echo esc_attr( get_option( 'flazz_ai_license_key' ) ); ?>" class="regular-text" placeholder="FLAZZ-XXXX-XXXX-XXXX">
+                                <input type="password" name="flazz_ai_license_key" value="<?php echo esc_attr( get_option( 'flazz_ai_license_key' ) ); ?>" class="regular-text" placeholder="FLAZZ-XXXX-XXXX-XXXX">
                                 <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: <?php echo $license_status === 'valid' ? '#d4edda; color: #155724;' : '#f8d7da; color: #721c24;'; ?>">
                                     <?php echo strtoupper( $license_status ); ?>
                                 </span>
@@ -1476,25 +1478,6 @@ class Flazz_Admin {
                             </td>
                         </tr>
                         <tr>
-                            <th colspan="2" style="background:#f0f6fc; padding: 10px 15px; font-size: 13px; border-top: 2px solid #2271b1;">
-                                📤 Telegram Notification (Opsional)
-                            </th>
-                        </tr>
-                        <tr>
-                            <th><label>Telegram Bot Token</label></th>
-                            <td>
-                                <input type="password" name="flazz_ai_telegram_token" value="<?php echo esc_attr( get_option( 'flazz_ai_telegram_token' ) ); ?>" class="regular-text" placeholder="123456789:AAF...">
-                                <p class="description">Buat bot baru via <a href="https://t.me/botfather" target="_blank">@BotFather</a> di Telegram. Gratis!</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label>Telegram Chat ID</label></th>
-                            <td>
-                                <input type="text" name="flazz_ai_telegram_chat_id" value="<?php echo esc_attr( get_option( 'flazz_ai_telegram_chat_id' ) ); ?>" class="regular-text" placeholder="-100xxxxxxxxxx">
-                                <p class="description">Chat ID channel/group tujuan. Cari via <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>. Untuk channel, awali dengan <code>-100</code>.</p>
-                            </td>
-                        </tr>
-                        <tr>
                             <th><label>Gaya Penulisan Default</label></th>
                             <td>
                                 <select name="flazz_ai_writing_style" class="regular-text">
@@ -1528,10 +1511,25 @@ class Flazz_Admin {
         ?>
         <div class="wrap">
             <h1>📖 Panduan & Dokumentasi Flazz AI</h1>
-            <p>Pelajari cara menyiapkan API Key untuk memaksimalkan fitur otomasi berita Anda.</p>
+            <p>Ikuti panduan di bawah ini untuk mengaktifkan lisensi dan menyiapkan API Key agar fitur otomasi berjalan maksimal.</p>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px; border-left: 4px solid #2271b1;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🔑 1. Cara Mengaktifkan Lisensi Flazz AI</h2>
+                <p>Langkah pertama sebelum menggunakan plugin adalah mengaktifkan lisensi Anda secara legal.</p>
+                <ol>
+                    <li>Buka menu <a href="<?php echo admin_url('admin.php?page=flazz-settings'); ?>"><strong>Flazz AI &gt; Settings</strong></a>.</li>
+                    <li>Di bagian <strong>Pengaturan Lisensi</strong>, masukkan <strong>License Key</strong> yang Anda dapatkan saat pembelian.</li>
+                    <li>Klik tombol <strong>"Simpan & Verifikasi"</strong>.</li>
+                    <li>Tunggu beberapa saat. Jika berhasil, status akan berubah menjadi <span style="color: green; font-weight: bold;">[VALID]</span>.</li>
+                </ol>
+                <div style="background: #fbeaea; border-left: 4px solid #dc3232; padding: 12px; margin-top: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #dc3232;">⚠️ PERINGATAN KERAS</h4>
+                    <p style="margin: 0; font-size: 13px;">Lisensi Flazz AI yang Anda miliki bersifat eksklusif. <strong>DILARANG KERAS MENJUAL ULANG (RESELL) ATAU MEMBAGIKAN LISENSI INI SECARA GRATIS</strong>. Sistem kami dilengkapi dengan <em>Domain Locking</em> dan pemantauan aktif. Pelanggaran terhadap ketentuan ini akan mengakibatkan <strong>PENCABUTAN LISENSI SECARA PERMANEN TANPA PENGEMBALIAN DANA (NO REFUND)</strong> pada seluruh domain Anda.</p>
+                </div>
+            </div>
 
             <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
-                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🤖 1. Cara Mendapatkan Groq API Key (Otak AI)</h2>
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🤖 2. Cara Mendapatkan Groq API Key (Otak AI)</h2>
                 <p>Groq digunakan untuk memproses data, meriset berita, dan menulis artikel secara cerdas.</p>
                 <ol>
                     <li>Buka <strong><a href="https://console.groq.com" target="_blank">console.groq.com</a></strong>.</li>
@@ -1545,7 +1543,7 @@ class Flazz_Admin {
             </div>
 
             <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
-                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🎨 2. Cara Mendapatkan Replicate API Token (AI Image)</h2>
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🎨 3. Cara Mendapatkan Replicate API Token (AI Image)</h2>
                 <p>Replicate (khususnya model Flux) digunakan untuk membuat gambar thumbnail artikel yang unik dan HD.</p>
                 <ol>
                     <li>Buka <strong><a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/api-tokens</a></strong>.</li>
@@ -1558,7 +1556,7 @@ class Flazz_Admin {
             </div>
 
             <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
-                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🖼️ 3. Cara Mendapatkan Pixabay API Key (Gambar Gratis)</h2>
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">🖼️ 4. Cara Mendapatkan Pixabay API Key (Gambar Gratis)</h2>
                 <p>Pixabay digunakan sebagai sumber gambar alternatif/gratis jika Anda tidak ingin menggunakan AI Image.</p>
                 <ol>
                     <li>Buka <strong><a href="https://pixabay.com/api/docs/" target="_blank">pixabay.com/api/docs/</a></strong>.</li>
@@ -1566,6 +1564,49 @@ class Flazz_Admin {
                     <li>Scroll ke bawah ke bagian <strong>"Parameters"</strong>.</li>
                     <li>Cari tulisan <strong>"key (required)"</strong>, di sebelah kanannya akan muncul API Key Anda secara otomatis.</li>
                     <li>Salin kode tersebut dan tempel di <a href="<?php echo admin_url('admin.php?page=flazz-settings'); ?>">Halaman Settings</a>.</li>
+                </ol>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">📝 5. Cara Membuat Job: Berdasarkan Keyword</h2>
+                <p>Gunakan opsi ini jika Anda ingin AI meriset berita berdasarkan kata kunci pencarian di Google News.</p>
+                <ol>
+                    <li>Buka menu <strong>Auto-Jobs</strong>.</li>
+                    <li>Klik <strong>+ Buat Job Baru</strong> dan pilih tipe <strong>Keyword Search</strong>.</li>
+                    <li>Masukkan kata kunci yang spesifik (contoh: <em>IHSG hari ini</em>, <em>Harga Emas terbaru</em>, atau <em>Transfer Manchester United</em>).</li>
+                    <li>Pilih <strong>Cakupan Berita</strong> (Lokal Indonesia atau Global).</li>
+                    <li>Pilih <strong>Target Bahasa</strong>, <strong>Model Penulisan</strong>, dan sumber <strong>Gambar Artikel</strong>.</li>
+                    <li>Abaikan form URL RSS dan Ide Manual.</li>
+                    <li>Tentukan frekuensi posting di kolom <strong>Schedule Interval</strong> (dalam jam).</li>
+                    <li>Simpan pekerjaan. Sistem akan otomatis mensintesis berita dari Google News berdasarkan keyword tersebut.</li>
+                </ol>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">📡 6. Cara Membuat Job: Berdasarkan RSS Feed</h2>
+                <p>Opsi ini sangat cocok jika Anda ingin mengambil sumber artikel dari website spesifik yang menyediakan feed RSS (seperti media nasional atau blog niche).</p>
+                <ol>
+                    <li>Buka menu <strong>Auto-Jobs</strong>.</li>
+                    <li>Klik <strong>+ Buat Job Baru</strong> dan pilih tipe <strong>RSS Watcher</strong>.</li>
+                    <li>Masukkan tautan RSS yang valid di kolom <strong>RSS Feed URL</strong> (contoh: <code>https://www.cnbcindonesia.com/market/rss</code>). <em>Abaikan form Keyword dan Ide Manual.</em></li>
+                    <li>Pilih opsi sumber gambar. Sangat disarankan memilih <strong>Gunakan Gambar dari Sumbe RSS / Artikel Asli</strong> agar gambar sesuai dengan berita.</li>
+                    <li>Tentukan jadwal seberapa sering sistem harus mengecek RSS tersebut.</li>
+                    <li>Sistem hanya akan memproses artikel baru yang belum pernah di-publish di web Anda.</li>
+                </ol>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin-bottom: 20px; padding: 20px;">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">💡 7. Cara Membuat Job: AI Editor (Ide Manual)</h2>
+                <p>Gunakan fitur ini jika Anda memiliki ide spesifik, prompt panjang, atau sumber teks sendiri untuk dijadikan satu artikel utuh.</p>
+                <ol>
+                    <li>Buka menu <strong>Auto-Jobs</strong>.</li>
+                    <li>Walaupun menu ini ada di Auto-Jobs, tipe <strong>AI Editor</strong> ini lebih cocok di-trigger secara manual (tombol Run). Pilih tipe <strong>AI Editor (From Idea)</strong>.</li>
+                    <li>Isi kolom <strong>Ide Utama / Konteks Tambahan</strong> dengan perintah Anda secara detail. Contoh:<br>
+                       <code>Tuliskan artikel opini tentang dampak pemangkasan suku bunga The Fed terhadap startup di Indonesia. Fokus pada faktor pendanaan. Panjang 500 kata.</code></li>
+                    <li>Pilih gaya bahasa yang sesuai dengan instruksi Anda (misalnya Analitis atau Opini).</li>
+                    <li>Pilih <strong>Model AI</strong> yang lebih pintar (seperti GPT-4o atau Llama 405B) untuk hasil tulisan manual yang lebih baik.</li>
+                    <li>Abaikan form Keyword dan RSS. Simpan job tersebut.</li>
+                    <li>Sistem tidak akan melakukan riset web, melainkan AI akan langsung merespon prompt/ide yang Anda berikan.</li>
                 </ol>
             </div>
 

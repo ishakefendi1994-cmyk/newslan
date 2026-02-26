@@ -61,7 +61,10 @@ class FZ_Auth_Guard {
             ) )
         ) );
 
-        if ( is_wp_error( $r ) ) return false;
+        if ( is_wp_error( $r ) ) {
+            error_log( '[Flazz AI] License Sync WP_Error: ' . $r->get_error_message() );
+            return false;
+        }
 
         $sc = wp_remote_retrieve_response_code( $r );
         $bd = json_decode( wp_remote_retrieve_body( $r ), true );

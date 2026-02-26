@@ -10,6 +10,10 @@ export default function AdminLicensesPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
     const [showModal, setShowModal] = useState(false)
+    const [isUnlocked, setIsUnlocked] = useState(false)
+    const [pinInput, setPinInput] = useState('')
+    const [pinError, setPinError] = useState(false)
+    const SECURE_PIN = 'flazz2026'
     const [newLicenseData, setNewLicenseData] = useState({
         client_name: '',
         max_domains: 1,
@@ -19,8 +23,21 @@ export default function AdminLicensesPage() {
     const [generating, setGenerating] = useState(false)
 
     useEffect(() => {
-        fetchLicenses()
-    }, [])
+        if (isUnlocked) {
+            fetchLicenses()
+        }
+    }, [isUnlocked])
+
+    const handleUnlock = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (pinInput === SECURE_PIN) {
+            setIsUnlocked(true)
+            setPinError(false)
+        } else {
+            setPinError(true)
+            setPinInput('')
+        }
+    }
 
     async function fetchLicenses() {
         try {
@@ -99,8 +116,46 @@ export default function AdminLicensesPage() {
         l.license_key.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
+    if (!isUnlocked) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-center mb-6">
+                        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-inner">
+                            <Shield className="w-8 h-8" />
+                        </div>
+                    </div>
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">Area Terbatas</h2>
+                        <p className="text-slate-500 text-sm">Halaman ini berisi akses rahasia lisensi client. Masukkan PIN keamanan untuk melanjutkan.</p>
+                    </div>
+                    <form onSubmit={handleUnlock} className="space-y-4">
+                        <div className="space-y-2">
+                            <input
+                                type="password"
+                                value={pinInput}
+                                onChange={(e) => setPinInput(e.target.value)}
+                                placeholder="Masukkan PIN..."
+                                className={`w-full text-center tracking-widest px-4 py-4 rounded-xl bg-slate-50 border-2 focus:bg-white focus:outline-none transition-all text-lg font-mono ${pinError ? 'border-rose-300 focus:border-rose-500 text-rose-600' : 'border-transparent focus:border-primary/50'}`}
+                                autoFocus
+                            />
+                            {pinError && <p className="text-rose-500 text-xs font-medium text-center animate-pulse">PIN tidak valid!</p>}
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg"
+                        >
+                            <Key className="w-5 h-5" />
+                            <span>Buka Gembok</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">Plugin Licenses</h1>
@@ -224,8 +279,8 @@ export default function AdminLicensesPage() {
                                             <button
                                                 onClick={() => toggleStatus(l.id, l.status)}
                                                 className={`p-2 rounded-xl border transition-all ${l.status === 'active'
-                                                        ? 'hover:bg-rose-50 border-transparent hover:border-rose-100 text-slate-400 hover:text-rose-600'
-                                                        : 'hover:bg-emerald-50 border-transparent hover:border-emerald-100 text-slate-400 hover:text-emerald-600'
+                                                    ? 'hover:bg-rose-50 border-transparent hover:border-rose-100 text-slate-400 hover:text-rose-600'
+                                                    : 'hover:bg-emerald-50 border-transparent hover:border-emerald-100 text-slate-400 hover:text-emerald-600'
                                                     }`}
                                                 title={l.status === 'active' ? 'Suspend' : 'Activate'}
                                             >
