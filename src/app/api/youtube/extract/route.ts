@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, getYouTubeMetadata, downloadYouTubeAudio, transcribeAudio } from '@/lib/youtube';
+import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, downloadYouTubeAudio, transcribeAudio } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
     try {
@@ -17,20 +17,36 @@ export async function POST(request: NextRequest) {
         // 1. Get Metadata first (Fast)
         const metadata = await getYouTubeMetadata(videoID);
 
-        // 2. Transcribe via Whisper (Primary Method)
+        // 2. Try Fast Scraper first (Vercel-friendly)
         let transcript = '';
         try {
-            console.log(`[YouTube API] Starting Whisper transcription for ${videoID}`);
-            const audioPath = await downloadYouTubeAudio(videoID);
-            transcript = await transcribeAudio(audioPath);
-        } catch (transcribeError: any) {
-            console.error('[YouTube API] Whisper failed:', transcribeError);
-            // We could fallback to scraping here if we wanted, 
-            // but user said "pakai whisper aja"
-            return NextResponse.json({
-                success: false,
-                error: 'Gagal melakukan transkripsi AI (Whisper). ' + (transcribeError.message || '')
-            }, { status: 500 });
+            console.log(`[YouTube API] Attempting native scraping for ${videoID}`);
+            transcript = await getYouTubeTranscript(videoID);
+        } catch (scrapeError) {
+            console.warn('[YouTube API] Native scraping failed, will try Whisper.', scrapeError);
+        }
+
+        // 3. Fallback to Whisper if scraping failed or returned empty
+        if (!transcript) {
+            try {
+                console.log(`[YouTube API] Scraping failed or empty. Starting Whisper fallback for ${videoID}`);
+                const audioPath = await downloadYouTubeAudio(videoID);
+                transcript = await transcribeAudio(audioPath);
+            } catch (transcribeError: any) {
+                console.error('[YouTube API] Whisper failed:', transcribeError);
+
+                let errorMessage = 'Gagal melakukan transkripsi AI.';
+                if (transcribeError.message?.includes('command not found')) {
+                    errorMessage = 'Akses Whisper (Download) tidak tersedia di server ini (yt-dlp tidak terinstall). Hubungi admin atau gunakan platform VPS/Local.';
+                } else {
+                    errorMessage += ' ' + (transcribeError.message || '');
+                }
+
+                return NextResponse.json({
+                    success: false,
+                    error: errorMessage
+                }, { status: 500 });
+            }
         }
 
         return NextResponse.json({

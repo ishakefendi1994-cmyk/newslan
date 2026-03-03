@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, downloadYouTubeAudio, transcribeAudio, getYouTubeMetadata } from '@/lib/youtube';
+import { getYouTubeID, downloadYouTubeAudio, transcribeAudio, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
 import { rewriteYouTubeTranscript } from '@/lib/ai/rewriter';
 import { sendMessage, editMessageText, answerCallbackQuery, saveDraft, getDraft, deleteDraft } from '@/lib/telegram';
 import { createClient } from '@/lib/supabase/server';
@@ -45,11 +45,26 @@ async function handleMessage(message: any) {
         const title = metadata?.title || 'Video Tanpa Judul';
 
         // 2. Transcribe
-        const audioPath = await downloadYouTubeAudio(videoId);
-        const transcript = await transcribeAudio(audioPath);
+        let transcript = '';
+        try {
+            console.log(`[Telegram Bot] Attempting native scraping for ${videoId}`);
+            transcript = await getYouTubeTranscript(videoId);
+        } catch (scrapeError) {
+            console.warn('[Telegram Bot] Native scraping failed, will try Whisper.', scrapeError);
+        }
+
+        // Fallback to Whisper
+        if (!transcript) {
+            try {
+                const audioPath = await downloadYouTubeAudio(videoId);
+                transcript = await transcribeAudio(audioPath);
+            } catch (whisperError) {
+                console.error('[Telegram Bot] Whisper failed:', whisperError);
+            }
+        }
 
         if (!transcript) {
-            await sendMessage(chatId, '❌ Gagal mengekstrak transkrip dari video ini.');
+            await sendMessage(chatId, '❌ Gagal mengekstrak transkrip dari video ini (Metode Scraping & Whisper gagal).');
             return NextResponse.json({ ok: true });
         }
 

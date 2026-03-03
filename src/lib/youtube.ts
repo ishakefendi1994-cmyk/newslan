@@ -110,21 +110,66 @@ export async function transcribeAudio(audioPath: string): Promise<string> {
 }
 
 /**
- * Fetch Transcript (Experimental / Best Effort)
- * Using a public 3rd party service as fallback if local extraction fails
+ * Fetch Transcript (Robust Native Scraper)
+ * Works by fetching the YouTube page and extracting the caption tracks from player response.
  */
 export async function getYouTubeTranscript(videoID: string): Promise<string> {
     try {
-        console.log(`[YouTube Lib] Fetching transcript for ${videoID}`);
+        console.log(`[YouTube Lib] Native fetching transcript for ${videoID}`);
+        const url = `https://www.youtube.com/watch?v=${videoID}`;
 
-        // Attempt 1: youtube-transcript library
-        const { YoutubeTranscript } = require('youtube-transcript');
-        const transcript = await YoutubeTranscript.fetchTranscript(videoID);
-        if (transcript && transcript.length > 0) {
-            return transcript.map((t: any) => t.text).join(' ');
+        // Fetch the page HTML
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+            }
+        });
+
+        const html = response.data;
+        const regex = /ytInitialPlayerResponse\s*=\s*({.+?});/;
+        const match = html.match(regex);
+
+        if (!match) {
+            console.warn('[YouTube Lib] No player response found.');
+            return '';
         }
-    } catch (err) {
-        console.warn('[YouTube Lib] Local transcript extraction failed.');
+
+        const json = JSON.parse(match[1]);
+        const tracks = json.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+
+        if (!tracks || tracks.length === 0) {
+            console.warn('[YouTube Lib] No caption tracks found.');
+            return '';
+        }
+
+        // Prefer English or Indonesian if available. Otherwise take first.
+        const track = tracks.find((t: any) => t.languageCode === 'id') ||
+            tracks.find((t: any) => t.languageCode === 'en') ||
+            tracks[0];
+
+        const captionUrl = track.baseUrl + '&fmt=json3';
+        console.log(`[YouTube Lib] Fetching captions from: ${track.languageCode}`);
+
+        const captionResponse = await axios.get(captionUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Origin': 'https://www.youtube.com',
+                'Referer': 'https://www.youtube.com/'
+            }
+        });
+
+        if (captionResponse.data && captionResponse.data.events) {
+            const transcript = captionResponse.data.events
+                .filter((e: any) => e.segs)
+                .map((e: any) => e.segs.map((s: any) => s.utf8).join(''))
+                .join(' ');
+
+            return transcript.trim();
+        }
+    } catch (err: any) {
+        console.warn(`[YouTube Lib] Native transcript extraction failed: ${err.message}`);
     }
 
     return '';
