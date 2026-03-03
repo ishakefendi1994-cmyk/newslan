@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Transcribe
         try {
-            const transcript = await transcribeAudio(audioPath);
+            const transcript = await transcribeAudio(audioPath, videoId);
             return NextResponse.json({ transcript });
         } catch (transcribeError: any) {
             return NextResponse.json({
