@@ -94,7 +94,19 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
 
     try {
         console.log(`[YouTube Lib] Downloading audio for ${videoID}...`);
-        const command = `${ytDlpCommand} -x --audio-format mp3 --output "${outputPath}" --max-filesize 20M "${youtubeUrl}"`;
+
+        let ffmpegArgs = '';
+        try {
+            const ffmpeg = require('ffmpeg-static');
+            if (ffmpeg) {
+                console.log(`[YouTube Lib] Using ffmpeg-static at ${ffmpeg}`);
+                ffmpegArgs = `--ffmpeg-location "${ffmpeg}"`;
+            }
+        } catch (e) {
+            console.warn('[YouTube Lib] ffmpeg-static not found or error loading:', e);
+        }
+
+        const command = `${ytDlpCommand} ${ffmpegArgs} -x --audio-format mp3 --output "${outputPath}" --max-filesize 20M "${youtubeUrl}"`;
 
         const { stdout, stderr } = await execPromise(command);
         if (stdout) console.log(`[YouTube Lib] yt-dlp stdout: ${stdout}`);
@@ -105,6 +117,11 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
             return outputPath;
         } else {
             console.error(`[YouTube Lib] File NOT found at ${outputPath} after command execution.`);
+            // List files in tempDir for debugging
+            try {
+                const files = fs.readdirSync(tempDir);
+                console.log(`[YouTube Lib] Files in ${tempDir}:`, files);
+            } catch (e) { }
             throw new Error('Audio file not found after download');
         }
     } catch (error: any) {
