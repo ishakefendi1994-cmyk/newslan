@@ -95,15 +95,22 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
     try {
         console.log(`[YouTube Lib] Downloading audio for ${videoID}...`);
         const command = `${ytDlpCommand} -x --audio-format mp3 --output "${outputPath}" --max-filesize 20M "${youtubeUrl}"`;
-        await execPromise(command);
+
+        const { stdout, stderr } = await execPromise(command);
+        if (stdout) console.log(`[YouTube Lib] yt-dlp stdout: ${stdout}`);
+        if (stderr) console.warn(`[YouTube Lib] yt-dlp stderr: ${stderr}`);
 
         if (fs.existsSync(outputPath)) {
             console.log(`[YouTube Lib] Audio downloaded successfully: ${outputPath}`);
             return outputPath;
+        } else {
+            console.error(`[YouTube Lib] File NOT found at ${outputPath} after command execution.`);
+            throw new Error('Audio file not found after download');
         }
-        throw new Error('Audio file not found after download');
     } catch (error: any) {
-        console.error('[YouTube Lib] Download failed:', error);
+        console.error('[YouTube Lib] Download failed:', error.message);
+        if (error.stdout) console.log(`[YouTube Lib] Error stdout: ${error.stdout}`);
+        if (error.stderr) console.error(`[YouTube Lib] Error stderr: ${error.stderr}`);
         if (error.message?.includes('403')) {
             throw new Error('YouTube memblokir akses otomatis (403). Silakan coba jalankan "yt-dlp --cookies-from-browser chrome" di terminal Anda untuk sinkronisasi akses.');
         }
