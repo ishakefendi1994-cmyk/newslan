@@ -26,7 +26,8 @@ import {
     Bell,
     Newspaper,
     Sparkles,
-    Key
+    Key,
+    Youtube
 } from 'lucide-react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -76,6 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'RSS Auto-Grab', href: '/admin/rss-manager', icon: Newspaper },
         { name: 'RSS Auto-Jobs', href: '/admin/rss-jobs', icon: Newspaper },
         { name: 'AI Writer', href: '/admin/ai-writer', icon: Sparkles },
+        { name: 'YouTube to News', href: '/admin/youtube-to-news', icon: Youtube },
         { name: 'AI Auto-Jobs', href: '/admin/ai-auto-jobs', icon: Sparkles },
         { name: 'Licenses', href: '/admin/licenses', icon: Key },
         { name: 'Aduan', href: '/admin/complaints', icon: Megaphone },

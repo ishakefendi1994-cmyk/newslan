@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local temp
+/tmp/
+/scripts/*.py
+/177251*.js
+/test-*.js
+/check-db.js
+/extract-*.js
+/run_migration.js
+/obfuscate.php
+/supabase_backup.sql
+/supabase_full_schema_backup.sql
+/supabase_schema.sql
+/supabase_schema_update.sql
+/database_setup.sql

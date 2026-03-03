@@ -431,3 +431,109 @@ Return ONLY the tagged format.`
 
     throw new Error('Unexpected synthesis error')
 }
+
+/**
+ * Special function to transform YouTube transcript into a News Article
+ */
+export async function rewriteYouTubeTranscript(
+    transcript: string,
+    videoTitle: string,
+    language: string = 'id',
+    writingStyle: string = 'Professional',
+    articleModel: string = 'Straight News'
+): Promise<RewriteResult> {
+    const settings = await getSiteSettings()
+    const apiKey = settings.groq_api_key || DEFAULT_GROQ_API_KEY
+
+    console.log(`[AI Rewriter] Transforming YouTube Transcript`)
+
+    const systemPrompt = `You are a Senior Journalist and Technical Editor. 
+Your task is to transform a raw, messy YouTube video transcript into a high-quality news article.
+
+CHARACTERISTICS OF TRANSCRIPTS:
+- They lack punctuation and capitalization.
+- They are repetitive and contain filler words.
+- They are conversational.
+
+YOUR MISSION:
+1. **Punctuation & Structure**: Infer the correct punctuation, sentences, and structure from the stream of words.
+2. **Fact Refining**: Extract the core facts, data, and narrative from the video.
+3. **Style: ${writingStyle}** (Apply consistently).
+4. **Model: ${articleModel}** (Apply structure).
+5. **Language**: Output must be in ${language === 'en' ? 'English' : 'Indonesian'}.
+
+STRICT RULES:
+- **NO CHITCHAT**: Do not mention "In this video" or "The speaker said". Write it as a proper news report.
+- **HTML ONLY**: Use <p> and <h2> only.
+- **Length**: 400-600 words of dense information.
+
+OUTPUT FORMAT (STRICT):
+[TITLE] (New compelling title) [/TITLE]
+[EXCERPT] (Short summary) [/EXCERPT]
+[CONTENT] (HTML processed article) [/CONTENT]`
+
+    const userPrompt = `Video Title Reference: ${videoTitle}
+
+Transcript Content:
+${transcript.substring(0, 15000)}
+
+Transform this transcript into a structured news article.`
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await fetch(GROQ_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    temperature: 0.5,
+                    max_tokens: 4000
+                })
+            })
+
+            if (!response.ok) {
+                if (response.status === 429 && attempt < MAX_RETRIES) {
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+                    continue
+                }
+                throw new Error(`Groq API Error: ${response.status}`)
+            }
+
+            const data = await response.json()
+            const aiResponse = data.choices[0].message.content
+
+            // Reuse the parsing logic from rewriteArticle (simplified here)
+            const titleMatch = aiResponse.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/i)
+            const excerptMatch = aiResponse.match(/\[EXCERPT\]([\s\S]*?)\[\/EXCERPT\]/i)
+            const contentMatch = aiResponse.match(/\[CONTENT\]([\s\S]*?)\[\/CONTENT\]/i)
+
+            let finalTitle = titleMatch ? titleMatch[1].trim() : videoTitle
+            let finalExcerpt = excerptMatch ? excerptMatch[1].trim() : finalTitle.substring(0, 160)
+            let finalContent = contentMatch ? contentMatch[1].trim() : aiResponse
+
+            // Ensure HTML
+            if (!finalContent.includes('<p>')) {
+                finalContent = finalContent.split('\n\n').filter((p: string) => p.trim()).map((p: string) => `<p>${p.trim()}</p>`).join('')
+            }
+
+            return {
+                title: finalTitle,
+                content: finalContent,
+                excerpt: finalExcerpt
+            }
+
+        } catch (error) {
+            if (attempt === MAX_RETRIES) throw error
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+        }
+    }
+
+    throw new Error('Synthesis failed')
+}
