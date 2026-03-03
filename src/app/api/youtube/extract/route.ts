@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
             try {
                 console.log(`[YouTube API] Scraping failed or empty. Starting Whisper fallback for ${videoID}`);
                 const audioPath = await downloadYouTubeAudio(videoID);
-                transcript = await transcribeAudio(audioPath);
+                transcript = await transcribeAudio(audioPath, videoID);
             } catch (transcribeError: any) {
                 console.error('[YouTube API] Whisper failed:', transcribeError);
 

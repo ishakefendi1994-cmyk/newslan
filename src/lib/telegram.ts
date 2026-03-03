@@ -44,6 +44,8 @@ export async function editMessageText(chatId: number, messageId: number, text: s
     }
 }
 
+import { createClient } from './supabase/server';
+
 interface ArticleDraft {
     title: string;
     content: string;
@@ -51,33 +53,65 @@ interface ArticleDraft {
     videoId: string;
 }
 
-const DRAFT_DIR = path.join(os.tmpdir(), 'telegram_drafts');
+/**
+ * Save article draft to Supabase telegram_drafts table
+ */
+export async function saveDraft(chatId: number, draft: ArticleDraft): Promise<string> {
+    const supabase = await createClient();
+    const draftId = `${chatId}_${Date.now().toString().slice(-6)}`;
 
-export function saveDraft(chatId: number, draft: ArticleDraft): string {
-    if (!fs.existsSync(DRAFT_DIR)) {
-        fs.mkdirSync(DRAFT_DIR, { recursive: true });
+    const { error } = await supabase.from('telegram_drafts').insert({
+        id: draftId,
+        chat_id: chatId,
+        title: draft.title,
+        content: draft.content,
+        excerpt: draft.excerpt,
+        video_id: draft.videoId
+    });
+
+    if (error) {
+        console.error('[Telegram Lib] Error saving draft to DB:', error);
+        throw error;
     }
 
-    // Use a short ID (last 8 of videoId + timestamp)
-    const draftId = `${chatId}_${Date.now().toString().slice(-6)}`;
-    const filePath = path.join(DRAFT_DIR, `${draftId}.json`);
-
-    fs.writeFileSync(filePath, JSON.stringify(draft, null, 2));
     return draftId;
 }
 
-export function getDraft(draftId: string): ArticleDraft | null {
-    const filePath = path.join(DRAFT_DIR, `${draftId}.json`);
-    if (fs.existsSync(filePath)) {
-        const data = fs.readFileSync(filePath, 'utf-8');
-        return JSON.parse(data);
+/**
+ * Get article draft from Supabase
+ */
+export async function getDraft(draftId: string): Promise<ArticleDraft | null> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('telegram_drafts')
+        .select('*')
+        .eq('id', draftId)
+        .single();
+
+    if (error || !data) {
+        console.error('[Telegram Lib] Error fetching draft from DB:', error);
+        return null;
     }
-    return null;
+
+    return {
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        videoId: data.video_id
+    };
 }
 
-export function deleteDraft(draftId: string) {
-    const filePath = path.join(DRAFT_DIR, `${draftId}.json`);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+/**
+ * Delete article draft from Supabase
+ */
+export async function deleteDraft(draftId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('telegram_drafts')
+        .delete()
+        .eq('id', draftId);
+
+    if (error) {
+        console.warn('[Telegram Lib] Error deleting draft from DB:', error);
     }
 }

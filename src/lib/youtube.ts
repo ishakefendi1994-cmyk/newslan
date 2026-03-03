@@ -6,7 +6,41 @@ import { promisify } from 'util';
 import FormData from 'form-data';
 import os from 'os';
 
+import { createClient } from './supabase/server';
+
 const execPromise = promisify(exec);
+
+/**
+ * Upload audio to Supabase Storage (news-audio bucket)
+ */
+async function uploadAudioToSupabase(filePath: string, videoID: string): Promise<string> {
+    try {
+        const supabase = await createClient();
+        const fileContent = fs.readFileSync(filePath);
+        const fileName = `${videoID}_${Date.now()}.mp3`;
+
+        const { data, error } = await supabase.storage
+            .from('news-audio')
+            .upload(fileName, fileContent, {
+                contentType: 'audio/mpeg',
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('news-audio')
+            .getPublicUrl(fileName);
+
+        console.log(`[YouTube Lib] Audio uploaded to Supabase: ${publicUrl}`);
+        return publicUrl;
+    } catch (err: any) {
+        console.error('[YouTube Lib] Error uploading to Supabase:', err.message);
+        throw err;
+    }
+}
 
 /**
  * Extract YouTube Video ID from various URL formats
@@ -41,12 +75,26 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
     const outputPath = path.join(tempDir, `audio_${videoID}.mp3`);
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoID}`;
 
+    const localBinPath = path.join(process.cwd(), 'bin', 'yt-dlp');
+    let ytDlpCommand = 'yt-dlp';
+
+    // Use local binary if it exists (for Vercel/Cloud)
+    if (fs.existsSync(localBinPath)) {
+        console.log(`[YouTube Lib] Using local yt-dlp binary at ${localBinPath}`);
+        // Ensure it's executable (if on Linux)
+        if (process.platform !== 'win32') {
+            try {
+                fs.chmodSync(localBinPath, '755');
+            } catch (e) {
+                console.warn('[YouTube Lib] Failed to chmod local binary:', e);
+            }
+        }
+        ytDlpCommand = `"${localBinPath}"`;
+    }
+
     try {
         console.log(`[YouTube Lib] Downloading audio for ${videoID}...`);
-        // We use -x for extract audio, --audio-format mp3
-        // --max-filesize 20M to stay within Groq's 25MB limit
-        // DO NOT provide a custom User-Agent as it causes 403 errors with modern yt-dlp
-        const command = `yt-dlp -x --audio-format mp3 --output "${outputPath}" --max-filesize 20M "${youtubeUrl}"`;
+        const command = `${ytDlpCommand} -x --audio-format mp3 --output "${outputPath}" --max-filesize 20M "${youtubeUrl}"`;
         await execPromise(command);
 
         if (fs.existsSync(outputPath)) {
@@ -66,11 +114,22 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
 /**
  * Transcribe Audio using Groq Whisper API
  */
-export async function transcribeAudio(audioPath: string): Promise<string> {
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
-
+export async function transcribeAudio(audioPath: string, videoID: string): Promise<string> {
     try {
+        console.log(`[YouTube Lib] Transcribing audio with Whisper: ${audioPath}`);
+
+        // 1. Upload to Supabase as a relay for stability (optional but useful for tracking)
+        // Note: For now we'll upload, but still send the local file stream to Groq 
+        // because Whisper API expects a direct file stream or Buffer.
+        try {
+            await uploadAudioToSupabase(audioPath, videoID);
+        } catch (uploadErr) {
+            console.warn('[YouTube Lib] Supabase upload failed, proceeding with local file for Groq:', uploadErr);
+        }
+
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+
         console.log(`[YouTube Lib] Transcribing audio with Whisper API...`);
         const form = new FormData();
         form.append('file', fs.createReadStream(audioPath));

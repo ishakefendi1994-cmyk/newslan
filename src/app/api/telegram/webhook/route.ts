@@ -57,7 +57,7 @@ async function handleMessage(message: any) {
         if (!transcript) {
             try {
                 const audioPath = await downloadYouTubeAudio(videoId);
-                transcript = await transcribeAudio(audioPath);
+                transcript = await transcribeAudio(audioPath, videoId);
             } catch (whisperError) {
                 console.error('[Telegram Bot] Whisper failed:', whisperError);
             }
@@ -73,8 +73,8 @@ async function handleMessage(message: any) {
         // 3. Rewrite
         const news = await rewriteYouTubeTranscript(transcript, title, 'id', 'Professional', 'Straight News');
 
-        // 4. Save Draft to Temp File
-        const draftId = saveDraft(chatId, {
+        // 4. Save Draft to Supabase Table
+        const draftId = await saveDraft(chatId, {
             title: news.title,
             content: news.content,
             excerpt: news.excerpt,
@@ -113,9 +113,9 @@ async function handleCallbackQuery(callback: any) {
 
         await answerCallbackQuery(callback.id, 'Mempublikasikan artikel...');
 
-        const draft = getDraft(draftId);
+        const draft = await getDraft(draftId);
         if (!draft) {
-            await editMessageText(chatId, messageId, '❌ Draft sudah kadaluarsa atau tidak ditemukan.');
+            await editMessageText(chatId, messageId, '❌ Draft sudah kadaluarsa atau tidak ditemukan di database.');
             return NextResponse.json({ ok: true });
         }
 
@@ -146,7 +146,7 @@ async function handleCallbackQuery(callback: any) {
 
             await editMessageText(chatId, messageId, `✅ <b>Berhasil Dipublikasikan!</b>\n\nJudul: ${draft.title}\nKategori: Terpilih\n\nLihat di website: ${process.env.NEXT_PUBLIC_SITE_URL}/news/${slug}`);
 
-            deleteDraft(draftId);
+            await deleteDraft(draftId);
         } catch (err: any) {
             await sendMessage(chatId, `❌ Gagal menyimpan ke database: ${err.message}`);
         }
