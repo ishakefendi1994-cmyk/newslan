@@ -10,7 +10,7 @@
 header('Content-Type: application/json');
 
 // --- CONFIGURATION ---
-$SECRET_KEY = "Ganti_Dengan_Key_Rahasia_Anda"; // Must match NEXT_PUBLIC_TRANSCRIPTION_KEY
+$SECRET_KEY = "5oKF[T|mZb]QM%2["; // Must match NEXT_PUBLIC_TRANSCRIPTION_KEY
 $YTDLP_PATH = "yt-dlp"; // Change if absolute path needed, e.g., /usr/local/bin/yt-dlp
 $FFMPEG_PATH = "ffmpeg"; 
 $TEMP_DIR = __DIR__ . "/tmp_audio";
