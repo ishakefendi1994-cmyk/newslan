@@ -1,6 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -50,7 +51,7 @@ interface ArticleDraft {
     videoId: string;
 }
 
-const DRAFT_DIR = path.join(process.cwd(), 'tmp', 'telegram_drafts');
+const DRAFT_DIR = path.join(os.tmpdir(), 'telegram_drafts');
 
 export function saveDraft(chatId: number, draft: ArticleDraft): string {
     if (!fs.existsSync(DRAFT_DIR)) {

@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import FormData from 'form-data';
+import os from 'os';
 
 const execPromise = promisify(exec);
 
@@ -34,10 +35,8 @@ export async function getYouTubeMetadata(videoID: string) {
  * Download Audio from YouTube using yt-dlp
  */
 export async function downloadYouTubeAudio(videoID: string): Promise<string> {
-    const tempDir = path.join(process.cwd(), 'tmp');
-    if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-    }
+    const tempDir = os.tmpdir();
+    // No need to mkdirSync for os.tmpdir() as it always exists
 
     const outputPath = path.join(tempDir, `audio_${videoID}.mp3`);
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoID}`;
