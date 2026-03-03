@@ -75,6 +75,34 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
     const outputPath = path.join(tempDir, `audio_${videoID}.mp3`);
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoID}`;
 
+    // -------------------------------------------------------------------------
+    // 1. External Gateway Support (Recommended for Vercel)
+    // -------------------------------------------------------------------------
+    const gatewayUrl = process.env.EXTERNAL_TRANSCRIPTION_API;
+    const gatewayKey = process.env.EXTERNAL_TRANSCRIPTION_KEY;
+
+    if (gatewayUrl && gatewayKey) {
+        try {
+            console.log(`[YouTube Lib] Using External Gateway for audio: ${gatewayUrl}`);
+            const response = await axios.post(gatewayUrl, {
+                url: youtubeUrl,
+                key: gatewayKey
+            });
+
+            if (response.data?.success && response.data?.audio_base64) {
+                const buffer = Buffer.from(response.data.audio_base64, 'base64');
+                fs.writeFileSync(outputPath, buffer);
+                console.log(`[YouTube Lib] Audio received from Gateway and saved to ${outputPath}`);
+                return outputPath;
+            }
+        } catch (gatewayErr: any) {
+            console.warn('[YouTube Lib] External Gateway failed, falling back to local:', gatewayErr.message);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. Local yt-dlp Support (Legacy/Fallback)
+    // -------------------------------------------------------------------------
     const localBinPath = path.join(process.cwd(), 'bin', 'yt-dlp');
     let ytDlpCommand = 'yt-dlp';
 
