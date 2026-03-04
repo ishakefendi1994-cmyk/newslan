@@ -48,7 +48,8 @@ async function handleMessage(message: any) {
         let transcript = '';
         try {
             console.log(`[Telegram Bot] Attempting native scraping for ${videoId}`);
-            transcript = await getYouTubeTranscript(videoId);
+            const result = await getYouTubeTranscript(videoId);
+            if (result) transcript = result;
         } catch (scrapeError) {
             console.warn('[Telegram Bot] Native scraping failed, will try Whisper.', scrapeError);
         }
