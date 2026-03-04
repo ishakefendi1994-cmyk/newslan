@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeViaGateway } from '@/lib/youtube';
+import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeViaGateway, getTranscriptFromRapidAPI } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,7 +27,17 @@ export async function POST(request: NextRequest) {
             console.warn('[YouTube API] Native scraping failed, will try Whisper.', scrapeError);
         }
 
-        // 3. Fallback: Try PHP Gateway (transcript API or yt-dlp + Whisper)
+        // 2. Try RapidAPI (Managed - 100% Stable)
+        if (!transcript) {
+            try {
+                const rapidResult = await getTranscriptFromRapidAPI(videoID);
+                if (rapidResult) transcript = rapidResult;
+            } catch (err) {
+                console.error('[YouTube API] RapidAPI failed, trying gateway next.');
+            }
+        }
+
+        // 3. Fallback: Try PHP Gateway (yt-dlp + Whisper)
         let gatewayError = null;
         if (!transcript) {
             try {

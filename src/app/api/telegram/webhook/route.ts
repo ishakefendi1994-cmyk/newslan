@@ -54,6 +54,19 @@ async function handleMessage(message: any) {
             console.warn('[Telegram Bot] Native scraping failed, will try Whisper.', scrapeError);
         }
 
+        // 2b. Try RapidAPI (Managed)
+        if (!transcript) {
+            try {
+                if (statusMessageId) {
+                    await editMessageText(chatId, statusMessageId, 'Mencoba pengambilan cerdas via RapidAPI...');
+                }
+                const rapidResult = await getTranscriptFromRapidAPI(videoId);
+                if (rapidResult) transcript = rapidResult;
+            } catch (err) {
+                console.warn('[Telegram Bot] RapidAPI failed');
+            }
+        }
+
         // Fallback: PHP Gateway (transcript API or yt-dlp + Whisper)
         if (!transcript) {
             try {
