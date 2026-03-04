@@ -28,12 +28,23 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. Try RapidAPI (Managed - 100% Stable)
+        let rapidApiError = null;
         if (!transcript) {
-            try {
-                const rapidResult = await getTranscriptFromRapidAPI(videoID);
-                if (rapidResult) transcript = rapidResult;
-            } catch (err) {
-                console.error('[YouTube API] RapidAPI failed, trying gateway next.');
+            if (!process.env.RAPIDAPI_KEY) {
+                console.warn('[YouTube API] RAPIDAPI_KEY is missing on Vercel');
+                rapidApiError = 'API Key RapidAPI belum dipasang di Vercel.';
+            } else {
+                try {
+                    const rapidResult = await getTranscriptFromRapidAPI(videoID);
+                    if (rapidResult) {
+                        transcript = rapidResult;
+                    } else {
+                        rapidApiError = 'RapidAPI tidak menemukan transkrip untuk video ini.';
+                    }
+                } catch (err: any) {
+                    console.error('[YouTube API] RapidAPI failed:', err.message);
+                    rapidApiError = `RapidAPI Error: ${err.message}`;
+                }
             }
         }
 
@@ -56,10 +67,13 @@ export async function POST(request: NextRequest) {
 
         if (!transcript) {
             let finalError = 'Gagal mendapatkan transkrip.';
+            if (rapidApiError && !gatewayError) {
+                finalError = `RapidAPI gagal (${rapidApiError}). Mencoba gateway...`;
+            }
+
             if (gatewayError) {
-                finalError = `${gatewayError} (Opsi: Coba video lain yang memiliki subtitle 'CC')`;
-            } else {
-                finalError = 'Video ini tidak memiliki subtitle dan semua metode fallback gagal.';
+                const cookieStatus = process.env.EXTERNAL_TRANSCRIPTION_KEY ? 'Gateway aktif' : 'Gateway key missing';
+                finalError = `Semua metode gagal.\n1. ${rapidApiError || 'RapidAPI gagal'}\n2. ${gatewayError}\n\nTips: Pastikan RAPIDAPI_KEY sudah diisi di Vercel Dashboard dan video memiliki "CC".`;
             }
 
             return NextResponse.json({
