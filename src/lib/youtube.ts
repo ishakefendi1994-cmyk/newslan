@@ -68,7 +68,7 @@ export async function getYouTubeMetadata(videoID: string) {
 }
 
 /**
- * Fetch transcript from managed RapidAPI (Supadata) - 100% stable
+ * Fetch transcript from managed RapidAPI (youtube-transcript3) - 100% stable
  */
 export async function getTranscriptFromRapidAPI(videoID: string): Promise<string | null> {
     const apiKey = process.env.RAPIDAPI_KEY;
@@ -78,26 +78,27 @@ export async function getTranscriptFromRapidAPI(videoID: string): Promise<string
     }
 
     try {
-        console.log(`[YouTube Lib] Fetching transcript from RapidAPI for ${videoID}...`);
-        const response = await axios.get(`https://youtube-transcripts.p.rapidapi.com/v1/youtube/transcript`, {
-            params: { video_id: videoID },
+        console.log(`[YouTube Lib] Fetching transcript from RapidAPI (v3) for ${videoID}...`);
+        const response = await axios.get(`https://youtube-transcript3.p.rapidapi.com/api/transcript`, {
+            params: { videoId: videoID },
             headers: {
                 'x-rapidapi-key': apiKey,
-                'x-rapidapi-host': 'youtube-transcripts.p.rapidapi.com'
+                'x-rapidapi-host': 'youtube-transcript3.p.rapidapi.com'
             },
             timeout: 30000
         });
 
-        if (response.data?.content) {
-            console.log(`[YouTube Lib] RapidAPI transcript success! Length: ${response.data.content.length}`);
-            return response.data.content;
+        // The new API returns { transcript: [{ text: "...", ... }, ...] }
+        if (response.data?.transcript && Array.isArray(response.data.transcript)) {
+            const transcriptText = response.data.transcript
+                .map((item: any) => item.text)
+                .join(' ');
+
+            console.log(`[YouTube Lib] RapidAPI transcript success! Length: ${transcriptText.length}`);
+            return transcriptText;
         }
 
-        // Handle nested structure if any (Supadata usually returns { content: "..." })
-        const transcript = response.data?.transcript || response.data?.text || '';
-        if (transcript) return transcript;
-
-        console.warn('[YouTube Lib] RapidAPI returned no content');
+        console.warn('[YouTube Lib] RapidAPI returned no transcript array:', response.data);
         return null;
     } catch (err: any) {
         console.error('[YouTube Lib] RapidAPI failed:', err.response?.data || err.message);
