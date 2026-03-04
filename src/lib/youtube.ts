@@ -96,7 +96,13 @@ export async function downloadYouTubeAudio(videoID: string): Promise<string> {
                 return outputPath;
             }
         } catch (gatewayErr: any) {
-            console.warn('[YouTube Lib] External Gateway failed, falling back to local:', gatewayErr.message);
+            console.warn('[YouTube Lib] External Gateway failed:', gatewayErr.message);
+            if (gatewayErr.response?.data?.error) {
+                const details = gatewayErr.response.data.details || '';
+                throw new Error(`Gateway Error: ${gatewayErr.response.data.error}. ${details}`);
+            }
+            // If it's a connection error and no custom error from gateway, maybe fallback or throw
+            throw new Error(`Gagal terhubung ke Transcription Gateway: ${gatewayErr.message}`);
         }
     }
 
