@@ -19,13 +19,14 @@ $FFMPEG_PATH = "ffmpeg";
 
 // --- AUTO INSTALLER ---
 if (isset($_GET['install']) && $_GET['install'] == '1') {
-    echo "Attempting to download yt-dlp to: $YTDLP_BIN <br>";
-    $url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";
+    echo "Attempting to download STANDALONE yt-dlp to: $YTDLP_BIN <br>";
+    // Use the standalone linux version which contains its own python
+    $url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
     $content = file_get_contents($url);
     if ($content) {
         file_put_contents($YTDLP_BIN, $content);
         chmod($YTDLP_BIN, 0755);
-        echo "SUCCESS: yt-dlp downloaded and set to executable.";
+        echo "SUCCESS: Standalone yt-dlp downloaded and set to executable.";
     } else {
         echo "FAILED: Could not download yt-dlp. Check your server's allow_url_fopen or firewall.";
     }
