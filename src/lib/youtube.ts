@@ -191,6 +191,63 @@ export async function transcribeFromYouTubeURL(videoID: string): Promise<string>
 }
 
 /**
+ * Full transcription via External PHP Gateway.
+ * Handles both direct transcript (via youtube-transcript-api) and audio (via yt-dlp + Whisper).
+ */
+export async function transcribeViaGateway(videoID: string): Promise<string | null> {
+    const gatewayUrl = process.env.EXTERNAL_TRANSCRIPTION_API;
+    const gatewayKey = process.env.EXTERNAL_TRANSCRIPTION_KEY;
+    if (!gatewayUrl || !gatewayKey) return null;
+
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoID}`;
+    console.log(`[YouTube Lib] Calling PHP Gateway for ${videoID}...`);
+
+    const response = await axios.post(gatewayUrl, { url: youtubeUrl, key: gatewayKey }, { timeout: 120000 });
+
+    if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Gateway returned failure');
+    }
+
+    // Case 1: Gateway returned transcript directly (from youtube-transcript-api)
+    if (response.data.transcript) {
+        console.log(`[YouTube Lib] Gateway returned transcript (${response.data.method}). Length: ${response.data.transcript.length}`);
+        return response.data.transcript;
+    }
+
+    // Case 2: Gateway returned audio (from yt-dlp) → send to Whisper
+    if (response.data.audio_base64) {
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) throw new Error('GROQ_API_KEY not configured');
+
+        console.log('[YouTube Lib] Gateway returned audio, sending to Whisper...');
+        const audioBuffer = Buffer.from(response.data.audio_base64, 'base64');
+
+        const form = new FormData();
+        form.append('file', audioBuffer, {
+            filename: `audio_${videoID}.mp3`,
+            contentType: 'audio/mpeg',
+        });
+        form.append('model', 'whisper-large-v3-turbo');
+        form.append('language', 'id');
+        form.append('response_format', 'text');
+
+        const whisperResponse = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
+            headers: { ...form.getHeaders(), 'Authorization': `Bearer ${apiKey}` },
+            timeout: 120000,
+        });
+
+        const transcript = typeof whisperResponse.data === 'string'
+            ? whisperResponse.data
+            : whisperResponse.data?.text || '';
+
+        console.log(`[YouTube Lib] Gateway + Whisper success! Length: ${transcript.length}`);
+        return transcript;
+    }
+
+    return null;
+}
+
+/**
  * Download Audio from YouTube using yt-dlp
  */
 export async function downloadYouTubeAudio(videoID: string): Promise<string> {

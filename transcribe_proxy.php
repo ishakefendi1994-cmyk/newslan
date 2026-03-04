@@ -78,7 +78,48 @@ preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]
 $videoId = $match[1] ?? 'video';
 $outputPath = $TEMP_DIR . "/audio_" . $videoId . "_" . time() . ".mp3";
 
-// 3. Download Audio via yt-dlp
+// 3. Try Transcript First (Fastest, No Bot Detection)
+$python = 'python3';
+$transcriptScript = __DIR__ . "/get_transcript.py";
+
+// Create the Python transcript script if it doesn't exist
+if (!file_exists($transcriptScript)) {
+    $pyCode = <<<'PYTHON'
+import sys
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+    vid = sys.argv[1]
+    try:
+        data = YouTubeTranscriptApi.get_transcript(vid, languages=['id', 'en'])
+    except:
+        data = YouTubeTranscriptApi.get_transcript(vid)
+    text = ' '.join([x['text'] for x in data])
+    print(text)
+except Exception as e:
+    print("ERROR:" + str(e), file=sys.stderr)
+    sys.exit(1)
+PYTHON;
+    file_put_contents($transcriptScript, $pyCode);
+}
+
+$transcriptOutput = [];
+$transcriptReturn = 0;
+exec("$python " . escapeshellarg($transcriptScript) . " " . escapeshellarg($videoId) . " 2>&1", $transcriptOutput, $transcriptReturn);
+
+if ($transcriptReturn === 0 && !empty($transcriptOutput)) {
+    $transcriptText = implode(' ', $transcriptOutput);
+    if (strlen($transcriptText) > 50) {
+        echo json_encode([
+            'success' => true,
+            'transcript' => $transcriptText,
+            'method' => 'transcript_api',
+            'audio_base64' => null
+        ]);
+        exit;
+    }
+}
+
+// 4. Fallback: Download Audio via yt-dlp (for videos with no subtitles)
 $env = "export HOME=" . escapeshellarg($TEMP_DIR) . " && export TMPDIR=" . escapeshellarg($TEMP_DIR) . " && ";
 $command = "{$env} {$YTDLP_PATH} -x --audio-format mp3 --output " . escapeshellarg($outputPath) . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
 exec($command, $output, $returnVar);
@@ -105,14 +146,14 @@ if (!file_exists($outputPath)) {
     exit;
 }
 
-// 4. Return Audio Data (Base64) or Success
-// To avoid big memory usage, we just return the confirmation and Vercel can fetch the file
-// Or for simplicity, we send back Base64 if small.
+// 5. Return Audio as Base64 (let Vercel call Whisper)
 $audioData = base64_encode(file_get_contents($outputPath));
 unlink($outputPath); // Clean up
 
 echo json_encode([
     'success' => true,
     'audio_base64' => $audioData,
+    'transcript' => null,
+    'method' => 'ytdlp_audio',
     'format' => 'mp3'
 ]);

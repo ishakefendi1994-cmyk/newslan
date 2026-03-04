@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeFromYouTubeURL } from '@/lib/youtube';
+import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeViaGateway, transcribeFromYouTubeURL } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,13 +27,24 @@ export async function POST(request: NextRequest) {
             console.warn('[YouTube API] Native scraping failed, will try Whisper.', scrapeError);
         }
 
-        // 3. Fallback to Whisper via in-memory streaming (no yt-dlp needed!)
+        // 3. Fallback: Try PHP Gateway (transcript API or yt-dlp + Whisper)
         if (!transcript) {
             try {
-                console.log(`[YouTube API] Transcript empty. Starting in-memory Whisper for ${videoID}`);
+                console.log(`[YouTube API] Trying PHP Gateway for ${videoID}`);
+                const result = await transcribeViaGateway(videoID);
+                if (result) transcript = result;
+            } catch (gatewayErr: any) {
+                console.warn('[YouTube API] Gateway failed, trying in-memory:', gatewayErr.message);
+            }
+        }
+
+        // 4. Final fallback: In-memory ytdl streaming
+        if (!transcript) {
+            try {
+                console.log(`[YouTube API] Trying in-memory Whisper for ${videoID}`);
                 transcript = await transcribeFromYouTubeURL(videoID);
             } catch (transcribeError: any) {
-                console.error('[YouTube API] Whisper in-memory failed:', transcribeError);
+                console.error('[YouTube API] All methods failed:', transcribeError);
                 return NextResponse.json({
                     success: false,
                     error: 'Gagal melakukan transkripsi AI. ' + (transcribeError.message || '')

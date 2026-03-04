@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, transcribeFromYouTubeURL, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
+import { getYouTubeID, transcribeViaGateway, transcribeFromYouTubeURL, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
 import { rewriteYouTubeTranscript } from '@/lib/ai/rewriter';
 import { sendMessage, editMessageText, answerCallbackQuery, saveDraft, getDraft, deleteDraft } from '@/lib/telegram';
 import { createClient } from '@/lib/supabase/server';
@@ -54,12 +54,22 @@ async function handleMessage(message: any) {
             console.warn('[Telegram Bot] Native scraping failed, will try Whisper.', scrapeError);
         }
 
-        // Fallback to Whisper in-memory (no yt-dlp, no file writes!)
+        // Fallback 1: PHP Gateway (transcript API or yt-dlp + Whisper)
+        if (!transcript) {
+            try {
+                const result = await transcribeViaGateway(videoId);
+                if (result) transcript = result;
+            } catch (gwErr) {
+                console.warn('[Telegram Bot] Gateway failed, trying in-memory:', gwErr);
+            }
+        }
+
+        // Fallback 2: In-memory ytdl streaming to Whisper
         if (!transcript) {
             try {
                 transcript = await transcribeFromYouTubeURL(videoId);
             } catch (whisperError) {
-                console.error('[Telegram Bot] Whisper in-memory failed:', whisperError);
+                console.error('[Telegram Bot] All methods failed:', whisperError);
             }
         }
 
