@@ -79,7 +79,8 @@ $videoId = $match[1] ?? 'video';
 $outputPath = $TEMP_DIR . "/audio_" . $videoId . "_" . time() . ".mp3";
 
 // 3. Download Audio via yt-dlp
-$command = "{$YTDLP_PATH} -x --audio-format mp3 --output " . escapeshellarg($outputPath) . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
+$env = "export HOME=" . escapeshellarg($TEMP_DIR) . " && export TMPDIR=" . escapeshellarg($TEMP_DIR) . " && ";
+$command = "{$env} {$YTDLP_PATH} -x --audio-format mp3 --output " . escapeshellarg($outputPath) . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
 exec($command, $output, $returnVar);
 
 if ($returnVar !== 0) {
