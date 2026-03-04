@@ -15,6 +15,7 @@ $TEMP_DIR = __DIR__ . "/tmp_audio";
 $YTDLP_BIN = __DIR__ . "/yt-dlp"; // Check for binary in local folder first
 $YTDLP_PATH = file_exists($YTDLP_BIN) ? $YTDLP_BIN : "yt-dlp"; 
 $FFMPEG_PATH = "ffmpeg"; 
+$COOKIE_FILE = __DIR__ . "/youtube_cookies.txt"; // User will upload this
 // ---------------------
 
 // --- AUTO INSTALLER ---
@@ -124,7 +125,13 @@ if ($transcriptReturn === 0 && !empty($transcriptOutput)) {
 // We just download the best audio-only file available (usually .m4a or .webm).
 $env = "export HOME=" . escapeshellarg($TEMP_DIR) . " && export TMPDIR=" . escapeshellarg($TEMP_DIR) . " && ";
 $outputPathBase = $TEMP_DIR . "/audio_" . $videoId . "_" . time();
-$command = "{$env} {$YTDLP_PATH} -f bestaudio --output " . escapeshellarg($outputPathBase . ".%(ext)s") . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
+
+$cookiePadding = "";
+if (file_exists($COOKIE_FILE)) {
+    $cookiePadding = " --cookies " . escapeshellarg($COOKIE_FILE);
+}
+
+$command = "{$env} {$YTDLP_PATH}{$cookiePadding} -f bestaudio --output " . escapeshellarg($outputPathBase . ".%(ext)s") . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
 exec($command, $output, $returnVar);
 
 if ($returnVar !== 0) {
