@@ -19,10 +19,34 @@ $FFMPEG_PATH = "ffmpeg";
 
 // --- AUTO INSTALLER ---
 if (isset($_GET['install']) && $_GET['install'] == '1') {
+    echo "<h3>Diagnostics:</h3>";
+    echo "Current User: " . get_current_user() . "<br>";
+    echo "PHP Version: " . PHP_VERSION . "<br>";
+    
+    echo "<h4>Checking Python:</h4>";
+    $pythons = ['python', 'python3', 'python3.7', 'python3.8', 'python3.9', 'python3.10', 'python3.11'];
+    foreach ($pythons as $py) {
+        $out = [];
+        exec("$py --version 2>&1", $out, $ret);
+        if ($ret === 0) echo "Found $py: " . implode(" ", $out) . "<br>";
+    }
+
+    echo "<h4>Checking Partition Execution:</h4>";
+    $testFile = __DIR__ . "/test_exec.sh";
+    file_put_contents($testFile, "#!/bin/sh\necho 'EXEC_OK'");
+    chmod($testFile, 0755);
+    exec("$testFile 2>&1", $out2, $ret2);
+    if ($ret2 === 0 && implode("", $out2) === 'EXEC_OK') {
+        echo "Partition allows execution: YES<br>";
+    } else {
+        echo "Partition allows execution: NO (Error: " . implode(" ", $out2) . ")<br>";
+    }
+    unlink($testFile);
+
+    echo "<h4>Attempting Download:</h4>";
     echo "Attempting to download STANDALONE yt-dlp to: $YTDLP_BIN <br>";
-    // Use the standalone linux version which contains its own python
     $url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux";
-    $content = file_get_contents($url);
+    $content = @file_get_contents($url);
     if ($content) {
         file_put_contents($YTDLP_BIN, $content);
         chmod($YTDLP_BIN, 0755);
