@@ -68,6 +68,44 @@ export async function getYouTubeMetadata(videoID: string) {
 }
 
 /**
+ * Fetch transcript from managed RapidAPI (Supadata) - 100% stable
+ */
+export async function getTranscriptFromRapidAPI(videoID: string): Promise<string | null> {
+    const apiKey = process.env.RAPIDAPI_KEY;
+    if (!apiKey) {
+        console.warn('[YouTube Lib] RAPIDAPI_KEY not found in environment');
+        return null;
+    }
+
+    try {
+        console.log(`[YouTube Lib] Fetching transcript from RapidAPI for ${videoID}...`);
+        const response = await axios.get(`https://youtube-transcripts.p.rapidapi.com/v1/youtube/transcript`, {
+            params: { video_id: videoID },
+            headers: {
+                'x-rapidapi-key': apiKey,
+                'x-rapidapi-host': 'youtube-transcripts.p.rapidapi.com'
+            },
+            timeout: 30000
+        });
+
+        if (response.data?.content) {
+            console.log(`[YouTube Lib] RapidAPI transcript success! Length: ${response.data.content.length}`);
+            return response.data.content;
+        }
+
+        // Handle nested structure if any (Supadata usually returns { content: "..." })
+        const transcript = response.data?.transcript || response.data?.text || '';
+        if (transcript) return transcript;
+
+        console.warn('[YouTube Lib] RapidAPI returned no content');
+        return null;
+    } catch (err: any) {
+        console.error('[YouTube Lib] RapidAPI failed:', err.response?.data || err.message);
+        return null;
+    }
+}
+
+/**
  * Get YouTube Transcript directly (no audio download needed!)
  * Works for videos that have subtitles (auto-generated or manual).
  * Tries Indonesian first, then English as fallback.

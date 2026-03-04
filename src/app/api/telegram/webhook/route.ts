@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, transcribeViaGateway, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
+import { getYouTubeID, transcribeViaGateway, getYouTubeMetadata, getYouTubeTranscript, getTranscriptFromRapidAPI } from '@/lib/youtube';
 import { rewriteYouTubeTranscript } from '@/lib/ai/rewriter';
 import { sendMessage, editMessageText, answerCallbackQuery, saveDraft, getDraft, deleteDraft } from '@/lib/telegram';
 import { createClient } from '@/lib/supabase/server';
