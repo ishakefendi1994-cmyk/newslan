@@ -221,11 +221,13 @@ export async function transcribeViaGateway(videoID: string): Promise<string | nu
 
         console.log('[YouTube Lib] Gateway returned audio, sending to Whisper...');
         const audioBuffer = Buffer.from(response.data.audio_base64, 'base64');
+        const format = response.data.format || 'mp3';
+        const contentType = format === 'm4a' ? 'audio/mp4' : (format === 'webm' ? 'audio/webm' : 'audio/mpeg');
 
         const form = new FormData();
         form.append('file', audioBuffer, {
-            filename: `audio_${videoID}.mp3`,
-            contentType: 'audio/mpeg',
+            filename: `audio_${videoID}.${format}`,
+            contentType: contentType,
         });
         form.append('model', 'whisper-large-v3-turbo');
         form.append('language', 'id');
