@@ -6,6 +6,7 @@ import { promisify } from 'util';
 import FormData from 'form-data';
 import os from 'os';
 import { YoutubeTranscript } from 'youtube-transcript';
+import ytdl from '@distube/ytdl-core';
 
 import { createClient } from './supabase/server';
 
@@ -107,6 +108,85 @@ export async function getYouTubeTranscript(videoID: string): Promise<string | nu
     } catch (err: any) {
         console.warn('[YouTube Lib] YoutubeTranscript failed:', err.message);
         return null;
+    }
+}
+
+/**
+ * Stream YouTube audio in-memory and send directly to Groq Whisper.
+ * No yt-dlp, no ffmpeg, no file writes needed — pure Node.js buffer streaming.
+ */
+export async function transcribeFromYouTubeURL(videoID: string): Promise<string> {
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoID}`;
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
+
+    console.log(`[YouTube Lib] Streaming audio in-memory for ${videoID}...`);
+
+    try {
+        // Check if video is accessible
+        if (!ytdl.validateID(videoID)) {
+            throw new Error('Invalid YouTube Video ID');
+        }
+
+        const info = await ytdl.getInfo(youtubeUrl);
+
+        // Get audio-only format
+        const audioFormat = ytdl.chooseFormat(info.formats, {
+            quality: 'lowestaudio',
+            filter: 'audioonly'
+        });
+
+        if (!audioFormat) {
+            throw new Error('No audio format found for this video');
+        }
+
+        // Collect audio chunks in memory as Buffer
+        const audioBuffer: Buffer = await new Promise((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            const stream = ytdl.downloadFromInfo(info, { format: audioFormat });
+
+            stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+            stream.on('error', (err) => reject(err));
+
+            // Limit to 15MB to avoid memory issues on serverless
+            let totalBytes = 0;
+            stream.on('data', (chunk: Buffer) => {
+                totalBytes += chunk.length;
+                if (totalBytes > 15 * 1024 * 1024) {
+                    stream.destroy();
+                    resolve(Buffer.concat(chunks));
+                }
+            });
+        });
+
+        console.log(`[YouTube Lib] Audio buffered: ${(audioBuffer.length / 1024 / 1024).toFixed(2)}MB`);
+
+        // Send to Groq Whisper
+        const form = new FormData();
+        form.append('file', audioBuffer, {
+            filename: `audio_${videoID}.webm`,
+            contentType: audioFormat.mimeType || 'audio/webm',
+        });
+        form.append('model', 'whisper-large-v3-turbo');
+        form.append('language', 'id');
+        form.append('response_format', 'text');
+
+        const whisperResponse = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
+            headers: { ...form.getHeaders(), 'Authorization': `Bearer ${apiKey}` },
+            timeout: 120000,
+        });
+
+        const transcript = typeof whisperResponse.data === 'string'
+            ? whisperResponse.data
+            : whisperResponse.data?.text || '';
+
+        console.log(`[YouTube Lib] In-memory transcription success! Length: ${transcript.length}`);
+        return transcript;
+
+    } catch (err: any) {
+        console.error('[YouTube Lib] In-memory transcription failed:', err.message);
+        throw err;
     }
 }
 

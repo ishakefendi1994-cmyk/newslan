@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, downloadYouTubeAudio, transcribeAudio, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
+import { getYouTubeID, transcribeFromYouTubeURL, getYouTubeMetadata, getYouTubeTranscript } from '@/lib/youtube';
 import { rewriteYouTubeTranscript } from '@/lib/ai/rewriter';
 import { sendMessage, editMessageText, answerCallbackQuery, saveDraft, getDraft, deleteDraft } from '@/lib/telegram';
 import { createClient } from '@/lib/supabase/server';
@@ -54,13 +54,12 @@ async function handleMessage(message: any) {
             console.warn('[Telegram Bot] Native scraping failed, will try Whisper.', scrapeError);
         }
 
-        // Fallback to Whisper
+        // Fallback to Whisper in-memory (no yt-dlp, no file writes!)
         if (!transcript) {
             try {
-                const audioPath = await downloadYouTubeAudio(videoId);
-                transcript = await transcribeAudio(audioPath, videoId);
+                transcript = await transcribeFromYouTubeURL(videoId);
             } catch (whisperError) {
-                console.error('[Telegram Bot] Whisper failed:', whisperError);
+                console.error('[Telegram Bot] Whisper in-memory failed:', whisperError);
             }
         }
 

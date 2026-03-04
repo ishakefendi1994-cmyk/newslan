@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, downloadYouTubeAudio, transcribeAudio } from '@/lib/youtube';
+import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeFromYouTubeURL } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,25 +27,16 @@ export async function POST(request: NextRequest) {
             console.warn('[YouTube API] Native scraping failed, will try Whisper.', scrapeError);
         }
 
-        // 3. Fallback to Whisper if scraping failed or returned empty
+        // 3. Fallback to Whisper via in-memory streaming (no yt-dlp needed!)
         if (!transcript) {
             try {
-                console.log(`[YouTube API] Scraping failed or empty. Starting Whisper fallback for ${videoID}`);
-                const audioPath = await downloadYouTubeAudio(videoID);
-                transcript = await transcribeAudio(audioPath, videoID);
+                console.log(`[YouTube API] Transcript empty. Starting in-memory Whisper for ${videoID}`);
+                transcript = await transcribeFromYouTubeURL(videoID);
             } catch (transcribeError: any) {
-                console.error('[YouTube API] Whisper failed:', transcribeError);
-
-                let errorMessage = 'Gagal melakukan transkripsi AI.';
-                if (transcribeError.message?.includes('command not found')) {
-                    errorMessage = 'Akses Whisper (Download) tidak tersedia di server ini (yt-dlp tidak terinstall). Hubungi admin atau gunakan platform VPS/Local.';
-                } else {
-                    errorMessage += ' ' + (transcribeError.message || '');
-                }
-
+                console.error('[YouTube API] Whisper in-memory failed:', transcribeError);
                 return NextResponse.json({
                     success: false,
-                    error: errorMessage
+                    error: 'Gagal melakukan transkripsi AI. ' + (transcribeError.message || '')
                 }, { status: 500 });
             }
         }
