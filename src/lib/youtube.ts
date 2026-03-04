@@ -217,11 +217,13 @@ export async function transcribeViaGateway(videoID: string): Promise<string | nu
     // Case 2: Gateway returned audio (from yt-dlp) → send to Whisper
     if (response.data.audio_base64) {
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) throw new Error('GROQ_API_KEY not configured');
+        if (!apiKey) throw new Error('GROQ_API_KEY not configured on Vercel');
 
-        console.log('[YouTube Lib] Gateway returned audio, sending to Whisper...');
-        const audioBuffer = Buffer.from(response.data.audio_base64, 'base64');
         const format = response.data.format || 'mp3';
+        const size = response.data.size_bytes || 0;
+        console.log(`[YouTube Lib] Gateway returned audio (${format}, ${size} bytes). Sending to Whisper...`);
+
+        const audioBuffer = Buffer.from(response.data.audio_base64, 'base64');
         const contentType = format === 'm4a' ? 'audio/mp4' : (format === 'webm' ? 'audio/webm' : 'audio/mpeg');
 
         const form = new FormData();
@@ -233,19 +235,30 @@ export async function transcribeViaGateway(videoID: string): Promise<string | nu
         form.append('language', 'id');
         form.append('response_format', 'text');
 
-        const whisperResponse = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
-            headers: { ...form.getHeaders(), 'Authorization': `Bearer ${apiKey}` },
-            timeout: 120000,
-        });
+        try {
+            const whisperResponse = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', form, {
+                headers: { ...form.getHeaders(), 'Authorization': `Bearer ${apiKey}` },
+                timeout: 120000,
+            });
 
-        const transcript = typeof whisperResponse.data === 'string'
-            ? whisperResponse.data
-            : whisperResponse.data?.text || '';
+            const transcript = typeof whisperResponse.data === 'string'
+                ? whisperResponse.data
+                : whisperResponse.data?.text || '';
 
-        console.log(`[YouTube Lib] Gateway + Whisper success! Length: ${transcript.length}`);
-        return transcript;
+            if (!transcript) {
+                console.warn('[YouTube Lib] Whisper returned empty transcript');
+                return null;
+            }
+
+            console.log(`[YouTube Lib] Gateway + Whisper success! Length: ${transcript.length}`);
+            return transcript;
+        } catch (whisperErr: any) {
+            console.error('[YouTube Lib] Whisper API failed:', whisperErr.response?.data || whisperErr.message);
+            throw new Error(`Whisper Error: ${whisperErr.response?.data?.error?.message || whisperErr.message}`);
+        }
     }
 
+    console.warn('[YouTube Lib] Gateway returned success but no data:', JSON.stringify(response.data).slice(0, 200));
     return null;
 }
 

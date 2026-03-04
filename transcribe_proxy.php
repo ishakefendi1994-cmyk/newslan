@@ -139,16 +139,24 @@ if ($returnVar !== 0) {
     exit;
 }
 
-// Find the downloaded file (since we don't know the extension for sure)
+// Find the downloaded file
 $files = glob($outputPathBase . ".*");
-$actualFile = $files[0] ?? null;
+$actualFile = null;
+$maxSize = 0;
+foreach ($files as $f) {
+    if (file_exists($f) && filesize($f) > $maxSize) {
+        $actualFile = $f;
+        $maxSize = filesize($f);
+    }
+}
 
-if (!$actualFile || !file_exists($actualFile)) {
+if (!$actualFile || $maxSize < 100) {
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'error' => 'Audio file not generated',
-        'details' => 'Command seemed to succeed but output file is missing. Tried to find: ' . $outputPathBase . ".*"
+        'error' => 'Audio file too small or missing',
+        'details' => 'Files found: ' . count($files) . '. Max size: ' . $maxSize,
+        'command_output' => implode("\n", $output)
     ]);
     exit;
 }
@@ -156,6 +164,7 @@ if (!$actualFile || !file_exists($actualFile)) {
 // 5. Return Audio as Base64 (let Vercel call Whisper)
 $audioData = base64_encode(file_get_contents($actualFile));
 $ext = pathinfo($actualFile, PATHINFO_EXTENSION);
+$size = filesize($actualFile);
 unlink($actualFile); // Clean up
 
 echo json_encode([
@@ -163,5 +172,7 @@ echo json_encode([
     'audio_base64' => $audioData,
     'transcript' => null,
     'method' => 'ytdlp_audio',
-    'format' => $ext
+    'format' => $ext,
+    'size_bytes' => $size,
+    'video_id' => $videoId
 ]);
