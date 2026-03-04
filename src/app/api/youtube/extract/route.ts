@@ -28,24 +28,33 @@ export async function POST(request: NextRequest) {
         }
 
         // 3. Fallback: Try PHP Gateway (transcript API or yt-dlp + Whisper)
+        let gatewayError = null;
         if (!transcript) {
             try {
                 console.log(`[YouTube API] Trying PHP Gateway for ${videoID}`);
                 const result = await transcribeViaGateway(videoID);
-                if (result) transcript = result;
-            } catch (gatewayErr: any) {
-                console.error('[YouTube API] Gateway failed:', gatewayErr.message);
-                return NextResponse.json({
-                    success: false,
-                    error: 'Gagal mendapatkan transkrip. ' + gatewayErr.message
-                }, { status: 500 });
+                if (result) {
+                    transcript = result;
+                } else {
+                    gatewayError = 'Gateway berhasil terhubung tapi tidak mengembalikan teks transkrip (Whisper mungkin mengembalikan hasil kosong).';
+                }
+            } catch (err: any) {
+                console.error('[YouTube API] Gateway failed:', err.message);
+                gatewayError = `Gateway Error: ${err.message}`;
             }
         }
 
         if (!transcript) {
+            let finalError = 'Gagal mendapatkan transkrip.';
+            if (gatewayError) {
+                finalError = `${gatewayError} (Opsi: Coba video lain yang memiliki subtitle 'CC')`;
+            } else {
+                finalError = 'Video ini tidak memiliki subtitle dan semua metode fallback gagal.';
+            }
+
             return NextResponse.json({
                 success: false,
-                error: 'Video ini tidak memiliki subtitle dan gateway tidak mengembalikan transkrip.'
+                error: finalError
             }, { status: 422 });
         }
 

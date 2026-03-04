@@ -6,16 +6,18 @@ import os from 'os';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
-export async function sendMessage(chatId: number, text: string, extra: any = {}) {
+export async function sendMessage(chatId: number, text: string, extra: any = {}): Promise<number | null> {
     try {
-        await axios.post(`${TELEGRAM_API}/sendMessage`, {
+        const response = await axios.post(`${TELEGRAM_API}/sendMessage`, {
             chat_id: chatId,
             text,
             parse_mode: 'HTML',
             ...extra
         });
+        return response.data?.result?.message_id || null;
     } catch (error: any) {
         console.error('[Telegram Lib] Error sending message:', error.response?.data || error.message);
+        return null;
     }
 }
 

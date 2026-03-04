@@ -37,7 +37,7 @@ async function handleMessage(message: any) {
         return NextResponse.json({ ok: true });
     }
 
-    await sendMessage(chatId, '🛠 <b>Sistem Mendeteksi Link YouTube.</b>\nSedang mengambil transkrip...');
+    const statusMessageId = await sendMessage(chatId, '🛠 <b>Sistem Mendeteksi Link YouTube.</b>\nSedang mengambil transkrip...');
 
     try {
         // 1. Metadata
@@ -57,10 +57,18 @@ async function handleMessage(message: any) {
         // Fallback: PHP Gateway (transcript API or yt-dlp + Whisper)
         if (!transcript) {
             try {
+                if (statusMessageId) {
+                    await editMessageText(chatId, statusMessageId, 'Melewati subtitle otomatis... Mencoba transkripsi AI via Gateway (1-2 menit)...');
+                }
                 const result = await transcribeViaGateway(videoId);
-                if (result) transcript = result;
+                if (result) {
+                    transcript = result;
+                } else {
+                    console.warn('[Telegram Bot] Gateway returned null (Whisper empty?)');
+                }
             } catch (gwErr: any) {
-                console.error('[Telegram Bot] Gateway failed:', gwErr);
+                console.error('[Telegram Bot] Gateway failed:', gwErr.message);
+                // Don't send error to user yet, just log it. We'll handle empty transcript at the end.
             }
         }
 
