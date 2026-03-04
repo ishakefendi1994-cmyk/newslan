@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeViaGateway, transcribeFromYouTubeURL } from '@/lib/youtube';
+import { getYouTubeID, getYouTubeMetadata, getYouTubeTranscript, transcribeViaGateway } from '@/lib/youtube';
 
 export async function POST(request: NextRequest) {
     try {
@@ -34,22 +34,19 @@ export async function POST(request: NextRequest) {
                 const result = await transcribeViaGateway(videoID);
                 if (result) transcript = result;
             } catch (gatewayErr: any) {
-                console.warn('[YouTube API] Gateway failed, trying in-memory:', gatewayErr.message);
+                console.error('[YouTube API] Gateway failed:', gatewayErr.message);
+                return NextResponse.json({
+                    success: false,
+                    error: 'Gagal mendapatkan transkrip. ' + gatewayErr.message
+                }, { status: 500 });
             }
         }
 
-        // 4. Final fallback: In-memory ytdl streaming
         if (!transcript) {
-            try {
-                console.log(`[YouTube API] Trying in-memory Whisper for ${videoID}`);
-                transcript = await transcribeFromYouTubeURL(videoID);
-            } catch (transcribeError: any) {
-                console.error('[YouTube API] All methods failed:', transcribeError);
-                return NextResponse.json({
-                    success: false,
-                    error: 'Gagal melakukan transkripsi AI. ' + (transcribeError.message || '')
-                }, { status: 500 });
-            }
+            return NextResponse.json({
+                success: false,
+                error: 'Video ini tidak memiliki subtitle dan gateway tidak mengembalikan transkrip.'
+            }, { status: 422 });
         }
 
         return NextResponse.json({
