@@ -39,7 +39,8 @@ export default function YouTubeToNewsPage() {
         categoryId: '',
         style: 'Professional',
         model: 'Straight News',
-        language: 'id'
+        language: 'id',
+        shouldEmbed: true
     })
 
     // Result State
@@ -139,12 +140,35 @@ export default function YouTubeToNewsPage() {
 
         setIsSaving(true)
         try {
+            let finalContent = generatedArticle.content;
+
+            // Append YouTube Embed if requested
+            if (formData.shouldEmbed && videoData?.videoID) {
+                const embedHtml = `
+                    <div class="mt-12 pt-8 border-t border-gray-100">
+                        <h4 class="text-xl font-bold mb-4">Video Sumber:</h4>
+                        <div class="aspect-video rounded-2xl overflow-hidden shadow-lg">
+                            <iframe 
+                                width="100%" 
+                                height="100%" 
+                                src="https://www.youtube.com/embed/${videoData.videoID}" 
+                                title="YouTube video player" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                    </div>
+                `;
+                finalContent += embedHtml;
+            }
+
             const res = await fetch('/api/rss/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: generatedArticle.title,
-                    content: generatedArticle.content,
+                    content: finalContent,
                     excerpt: generatedArticle.excerpt,
                     image: videoData?.thumbnail,
                     categoryId: formData.categoryId,
@@ -341,6 +365,17 @@ export default function YouTubeToNewsPage() {
                                             >
                                                 {NEWS_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
                                             </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+                                        onClick={() => setFormData({ ...formData, shouldEmbed: !formData.shouldEmbed })}>
+                                        <div className={`w-6 h-6 rounded-md flex items-center justify-center border-2 transition-all ${formData.shouldEmbed ? 'bg-red-600 border-red-600' : 'bg-white border-gray-300'}`}>
+                                            {formData.shouldEmbed && <CheckCircle className="w-4 h-4 text-white" />}
+                                        </div>
+                                        <div>
+                                            <span className="text-sm font-bold block text-gray-700">Sertakan Video (Embed)</span>
+                                            <p className="text-[10px] text-gray-500 font-medium">Video asli akan muncul di akhir artikel.</p>
                                         </div>
                                     </div>
                                 </div>
