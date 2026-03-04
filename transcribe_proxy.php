@@ -28,8 +28,21 @@ if (isset($_GET['install']) && $_GET['install'] == '1') {
     $pythons = ['python', 'python3', 'python3.7', 'python3.8', 'python3.9', 'python3.10', 'python3.11'];
     foreach ($pythons as $py) {
         $out = [];
-        exec("$py --version 2>&1", $out, $ret);
+        @exec("$py --version 2>&1", $out, $ret);
         if ($ret === 0) echo "Found $py: " . implode(" ", $out) . "<br>";
+    }
+
+    echo "<h4>Checking Cookies:</h4>";
+    if (file_exists($COOKIE_FILE)) {
+        echo "SUCCESS: youtube_cookies.txt found! (" . filesize($COOKIE_FILE) . " bytes)<br>";
+        $content = file_get_contents($COOKIE_FILE);
+        if (strpos($content, "Netscape") !== false) {
+            echo "Format check: OK (Netscape format detected)<br>";
+        } else {
+            echo "WARNING: Format might be wrong. Should start with # Netscape HTTP Cookie File<br>";
+        }
+    } else {
+        echo "FAILED: youtube_cookies.txt NOT FOUND at: $COOKIE_FILE <br>";
     }
 
     echo "<h4>Checking Partition Execution:</h4>";
