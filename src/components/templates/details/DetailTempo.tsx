@@ -14,6 +14,7 @@ import SkeletonCard from '@/components/ui/SkeletonCard'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
 import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
 import BannerSlider from '@/components/ui/BannerSlider'
+import FBComments from '@/components/news/FBComments'
 
 interface DetailTempoProps {
     article: any
@@ -186,6 +187,8 @@ export default function DetailTempo({
                                 siteName={siteSettings.site_name}
                             />
                         </div>
+
+                        <FBComments url={currentUrl} />
                     </div>
 
                     <div className="lg:col-span-5 min-w-0 lg:border-l lg:border-gray-100 lg:pl-8">
@@ -233,6 +236,6 @@ export default function DetailTempo({
                     <TrendingProductsContainer siteName={siteSettings.site_name} />
                 </Suspense>
             </div>
-        </div>
+        </div >
     )
 }

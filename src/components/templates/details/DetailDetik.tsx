@@ -13,6 +13,7 @@ import SkeletonSidebar from '@/components/ui/SkeletonSidebar'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
 import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
+import FBComments from '@/components/news/FBComments'
 
 interface DetailDetikProps {
     article: any
@@ -224,6 +225,8 @@ export default function DetailDetik({
                                 siteName={siteSettings.site_name}
                             />
                         </div>
+
+                        <FBComments url={currentUrl} />
                     </div>
 
                     {/* Sidebar Container (4 Cols) */}

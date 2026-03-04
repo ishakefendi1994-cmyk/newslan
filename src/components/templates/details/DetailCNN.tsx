@@ -13,6 +13,7 @@ import SkeletonSidebar from '@/components/ui/SkeletonSidebar'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
 import PrefetchNextArticle from '@/components/news/PrefetchNextArticle'
+import FBComments from '@/components/news/FBComments'
 
 interface DetailCNNProps {
     article: any
@@ -243,6 +244,8 @@ export default function DetailCNN({
                                 siteName={siteSettings.site_name}
                             />
                         </div>
+
+                        <FBComments url={currentUrl} />
 
                         {/* Related Articles Section */}
                         <section className="mt-16">
