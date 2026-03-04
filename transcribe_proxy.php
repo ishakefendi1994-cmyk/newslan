@@ -88,6 +88,8 @@ if ($returnVar !== 0) {
     echo json_encode([
         'success' => false, 
         'error' => 'yt-dlp failed', 
+        'binary_used' => $YTDLP_PATH,
+        'return_code' => $returnVar,
         'details' => implode("\n", $output)
     ]);
     exit;
@@ -95,7 +97,11 @@ if ($returnVar !== 0) {
 
 if (!file_exists($outputPath)) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Audio file not generated']);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Audio file not generated',
+        'details' => 'Command seemed to succeed but output file is missing at: ' . $outputPath
+    ]);
     exit;
 }
 
