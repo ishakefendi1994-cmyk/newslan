@@ -120,8 +120,11 @@ if ($transcriptReturn === 0 && !empty($transcriptOutput)) {
 }
 
 // 4. Fallback: Download Audio via yt-dlp (for videos with no subtitles)
+// We remove -x and --audio-format mp3 to avoid FFmpeg dependency.
+// We just download the best audio-only file available (usually .m4a or .webm).
 $env = "export HOME=" . escapeshellarg($TEMP_DIR) . " && export TMPDIR=" . escapeshellarg($TEMP_DIR) . " && ";
-$command = "{$env} {$YTDLP_PATH} -x --audio-format mp3 --output " . escapeshellarg($outputPath) . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
+$outputPathBase = $TEMP_DIR . "/audio_" . $videoId . "_" . time();
+$command = "{$env} {$YTDLP_PATH} -f bestaudio --output " . escapeshellarg($outputPathBase . ".%(ext)s") . " --max-filesize 20M " . escapeshellarg($url) . " 2>&1";
 exec($command, $output, $returnVar);
 
 if ($returnVar !== 0) {
@@ -136,24 +139,29 @@ if ($returnVar !== 0) {
     exit;
 }
 
-if (!file_exists($outputPath)) {
+// Find the downloaded file (since we don't know the extension for sure)
+$files = glob($outputPathBase . ".*");
+$actualFile = $files[0] ?? null;
+
+if (!$actualFile || !file_exists($actualFile)) {
     http_response_code(500);
     echo json_encode([
         'success' => false, 
         'error' => 'Audio file not generated',
-        'details' => 'Command seemed to succeed but output file is missing at: ' . $outputPath
+        'details' => 'Command seemed to succeed but output file is missing. Tried to find: ' . $outputPathBase . ".*"
     ]);
     exit;
 }
 
 // 5. Return Audio as Base64 (let Vercel call Whisper)
-$audioData = base64_encode(file_get_contents($outputPath));
-unlink($outputPath); // Clean up
+$audioData = base64_encode(file_get_contents($actualFile));
+$ext = pathinfo($actualFile, PATHINFO_EXTENSION);
+unlink($actualFile); // Clean up
 
 echo json_encode([
     'success' => true,
     'audio_base64' => $audioData,
     'transcript' => null,
     'method' => 'ytdlp_audio',
-    'format' => 'mp3'
+    'format' => $ext
 ]);
