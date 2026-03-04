@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
         let transcript = '';
         try {
             console.log(`[YouTube API] Attempting native scraping for ${videoID}`);
-            transcript = await getYouTubeTranscript(videoID);
+            const result = await getYouTubeTranscript(videoID);
+            if (result) transcript = result;
         } catch (scrapeError) {
             console.warn('[YouTube API] Native scraping failed, will try Whisper.', scrapeError);
         }
