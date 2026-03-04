@@ -37,7 +37,7 @@ async function handleMessage(message: any) {
         return NextResponse.json({ ok: true });
     }
 
-    await sendMessage(chatId, '🛠 <b>Sistem Mendeteksi Link YouTube.</b>\nSedang mengunduh audio & memproses transkripsi (Whisper AI)...');
+    await sendMessage(chatId, '🛠 <b>Sistem Mendeteksi Link YouTube.</b>\nSedang mengambil transkrip...');
 
     try {
         // 1. Metadata

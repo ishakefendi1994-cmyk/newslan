@@ -5,6 +5,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 import FormData from 'form-data';
 import os from 'os';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 import { createClient } from './supabase/server';
 
@@ -61,6 +62,50 @@ export async function getYouTubeMetadata(videoID: string) {
         return response.data;
     } catch (error) {
         console.error('[YouTube Lib] Error fetching metadata:', error);
+        return null;
+    }
+}
+
+/**
+ * Get YouTube Transcript directly (no audio download needed!)
+ * Works for videos that have subtitles (auto-generated or manual).
+ * Tries Indonesian first, then English as fallback.
+ */
+export async function getYouTubeTranscript(videoID: string): Promise<string | null> {
+    try {
+        console.log(`[YouTube Lib] Fetching transcript for ${videoID}...`);
+
+        // Try Indonesian first, then English
+        let transcriptItems = null;
+        const langs = ['id', 'en'];
+
+        for (const lang of langs) {
+            try {
+                transcriptItems = await YoutubeTranscript.fetchTranscript(videoID, { lang });
+                if (transcriptItems && transcriptItems.length > 0) {
+                    console.log(`[YouTube Lib] Transcript found in lang: ${lang}`);
+                    break;
+                }
+            } catch (e) {
+                // Try next language
+            }
+        }
+
+        // If specific langs failed, try without lang preference
+        if (!transcriptItems || transcriptItems.length === 0) {
+            transcriptItems = await YoutubeTranscript.fetchTranscript(videoID);
+        }
+
+        if (!transcriptItems || transcriptItems.length === 0) {
+            return null;
+        }
+
+        const text = transcriptItems.map((t: any) => t.text).join(' ');
+        console.log(`[YouTube Lib] Transcript fetched successfully. Length: ${text.length} chars`);
+        return text;
+
+    } catch (err: any) {
+        console.warn('[YouTube Lib] YoutubeTranscript failed:', err.message);
         return null;
     }
 }
@@ -226,68 +271,4 @@ export async function transcribeAudio(audioPath: string, videoID: string): Promi
     }
 }
 
-/**
- * Fetch Transcript (Robust Native Scraper)
- * Works by fetching the YouTube page and extracting the caption tracks from player response.
- */
-export async function getYouTubeTranscript(videoID: string): Promise<string> {
-    try {
-        console.log(`[YouTube Lib] Native fetching transcript for ${videoID}`);
-        const url = `https://www.youtube.com/watch?v=${videoID}`;
 
-        // Fetch the page HTML
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-            }
-        });
-
-        const html = response.data;
-        const regex = /ytInitialPlayerResponse\s*=\s*({.+?});/;
-        const match = html.match(regex);
-
-        if (!match) {
-            console.warn('[YouTube Lib] No player response found.');
-            return '';
-        }
-
-        const json = JSON.parse(match[1]);
-        const tracks = json.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-
-        if (!tracks || tracks.length === 0) {
-            console.warn('[YouTube Lib] No caption tracks found.');
-            return '';
-        }
-
-        // Prefer English or Indonesian if available. Otherwise take first.
-        const track = tracks.find((t: any) => t.languageCode === 'id') ||
-            tracks.find((t: any) => t.languageCode === 'en') ||
-            tracks[0];
-
-        const captionUrl = track.baseUrl + '&fmt=json3';
-        console.log(`[YouTube Lib] Fetching captions from: ${track.languageCode}`);
-
-        const captionResponse = await axios.get(captionUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Origin': 'https://www.youtube.com',
-                'Referer': 'https://www.youtube.com/'
-            }
-        });
-
-        if (captionResponse.data && captionResponse.data.events) {
-            const transcript = captionResponse.data.events
-                .filter((e: any) => e.segs)
-                .map((e: any) => e.segs.map((s: any) => s.utf8).join(''))
-                .join(' ');
-
-            return transcript.trim();
-        }
-    } catch (err: any) {
-        console.warn(`[YouTube Lib] Native transcript extraction failed: ${err.message}`);
-    }
-
-    return '';
-}
