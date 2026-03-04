@@ -11,11 +11,27 @@ header('Content-Type: application/json');
 
 // --- CONFIGURATION ---
 $SECRET_KEY = "5oKF[T|mZb]QM%2["; // Must match NEXT_PUBLIC_TRANSCRIPTION_KEY
-$YTDLP_PATH = "yt-dlp"; // Change if absolute path needed, e.g., /usr/local/bin/yt-dlp
-$FFMPEG_PATH = "ffmpeg"; 
 $TEMP_DIR = __DIR__ . "/tmp_audio";
-$GROQ_API_KEY = "YOUR_GROQ_API_KEY"; // Or let Vercel handle transcription
+$YTDLP_BIN = __DIR__ . "/yt-dlp"; // Check for binary in local folder first
+$YTDLP_PATH = file_exists($YTDLP_BIN) ? $YTDLP_BIN : "yt-dlp"; 
+$FFMPEG_PATH = "ffmpeg"; 
 // ---------------------
+
+// --- AUTO INSTALLER ---
+if (isset($_GET['install']) && $_GET['install'] == '1') {
+    echo "Attempting to download yt-dlp to: $YTDLP_BIN <br>";
+    $url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp";
+    $content = file_get_contents($url);
+    if ($content) {
+        file_put_contents($YTDLP_BIN, $content);
+        chmod($YTDLP_BIN, 0755);
+        echo "SUCCESS: yt-dlp downloaded and set to executable.";
+    } else {
+        echo "FAILED: Could not download yt-dlp. Check your server's allow_url_fopen or firewall.";
+    }
+    exit;
+}
+// ----------------------
 
 if (!file_exists($TEMP_DIR)) {
     mkdir($TEMP_DIR, 0777, true);
