@@ -23,6 +23,7 @@ interface LayoutWrapperProps {
     site_url?: string
     siteDescription?: string
     activeTemplate?: string
+    footerCopyright?: string
 }
 
 export default function LayoutWrapper({
@@ -38,7 +39,8 @@ export default function LayoutWrapper({
     contactEmail = 'redaksi@newslan.id',
     site_url = '',
     siteDescription = 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat untuk mencerdaskan kehidupan bangsa.',
-    activeTemplate = 'tempo'
+    activeTemplate = 'tempo',
+    footerCopyright
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
@@ -133,8 +135,14 @@ export default function LayoutWrapper({
                     </div>
 
                     <div className="pt-10 border-t border-white/5 text-center">
-                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                            &copy; {new Date().getFullYear()} {siteName.toUpperCase()} - {siteDescription.split('.')[0]}. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
+                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                            {footerCopyright ? (
+                                footerCopyright.replace('{year}', new Date().getFullYear().toString())
+                            ) : (
+                                <>
+                                    &copy; {new Date().getFullYear()} {siteName.toUpperCase()} - {siteDescription.split('.')[0]}. Diterbitkan oleh PT. LINTAS AKTUAL NUSANTARA.
+                                </>
+                            )}
                         </p>
                     </div>
                 </div>

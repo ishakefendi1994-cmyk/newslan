@@ -27,7 +27,8 @@ export default function SettingsPage() {
         site_favicon_url: '',
         site_url: '',
         header_scripts: '',
-        active_template: 'tempo'
+        active_template: 'tempo',
+        footer_copyright: ''
     })
     const [categories, setCategories] = useState<any[]>([])
 
@@ -65,6 +66,7 @@ export default function SettingsPage() {
                 if (item.setting_key === 'site_url') s.site_url = item.setting_value
                 if (item.setting_key === 'header_scripts') s.header_scripts = item.setting_value
                 if (item.setting_key === 'active_template') s.active_template = item.setting_value
+                if (item.setting_key === 'footer_copyright') s.footer_copyright = item.setting_value
             })
             setSettings(s)
         } catch (error) {
@@ -95,7 +97,8 @@ export default function SettingsPage() {
                 { setting_key: 'site_favicon_url', setting_value: settings.site_favicon_url },
                 { setting_key: 'site_url', setting_value: settings.site_url },
                 { setting_key: 'header_scripts', setting_value: settings.header_scripts },
-                { setting_key: 'active_template', setting_value: settings.active_template }
+                { setting_key: 'active_template', setting_value: settings.active_template },
+                { setting_key: 'footer_copyright', setting_value: settings.footer_copyright }
             ]
 
             for (const update of finalUpdates) {
@@ -550,6 +553,20 @@ export default function SettingsPage() {
                                     placeholder="redaksi@..."
                                 />
                                 <p className="text-[10px] text-slate-400 italic">Muncul di bagian footer website.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-slate-100">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teks Hak Cipta (Footer Copyright)</label>
+                                <input
+                                    type="text"
+                                    value={settings.footer_copyright || ''}
+                                    onChange={(e) => setSettings({ ...settings, footer_copyright: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm"
+                                    placeholder="&copy; {year} NamaWebsite..."
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1 italic">Gunakan literal <code>{`{year}`}</code> untuk menampilkan otomatis tahun aktif (misal: 2026). Kosongkan untuk menggunakan standar default.</p>
                             </div>
                         </div>
                     </div>

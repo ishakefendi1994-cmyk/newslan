@@ -226,7 +226,7 @@ export default function DetailDetik({
                             />
                         </div>
 
-                        <FBComments url={currentUrl} />
+                        {/* <FBComments url={currentUrl} /> */}
                     </div>
 
                     {/* Sidebar Container (4 Cols) */}

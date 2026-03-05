@@ -188,7 +188,7 @@ export default function DetailTempo({
                             />
                         </div>
 
-                        <FBComments url={currentUrl} />
+                        {/* <FBComments url={currentUrl} /> */}
                     </div>
 
                     <div className="lg:col-span-5 min-w-0 lg:border-l lg:border-gray-100 lg:pl-8">

@@ -245,7 +245,7 @@ export default function DetailCNN({
                             />
                         </div>
 
-                        <FBComments url={currentUrl} />
+                        {/* <FBComments url={currentUrl} /> */}
 
                         {/* Related Articles Section */}
                         <section className="mt-16">

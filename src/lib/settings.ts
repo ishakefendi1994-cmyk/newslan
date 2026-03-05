@@ -16,6 +16,7 @@ export interface SiteSettings {
     site_url: string
     header_scripts: string
     active_template: 'tempo' | 'grid' | 'magazine' | 'detik' | 'cnn'
+    footer_copyright?: string
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -65,6 +66,7 @@ export async function getSiteSettings(supabaseClient?: any): Promise<SiteSetting
             if (item.setting_key === 'site_url') settings.site_url = item.setting_value
             if (item.setting_key === 'header_scripts') settings.header_scripts = item.setting_value
             if (item.setting_key === 'active_template') settings.active_template = item.setting_value as any
+            if (item.setting_key === 'footer_copyright') settings.footer_copyright = item.setting_value
         })
 
         return settings
