@@ -18,6 +18,7 @@ interface NewsCardProps {
     variant?: 'default' | 'large' | 'compact' | 'techcrunch-hero' | 'techcrunch-list' | 'in-brief' | 'grid-standard' | 'horizontal-medium' | 'recent-list' | 'spotlight' | 'feature-block' | 'overlay-grid' | 'tempo-hero' | 'tempo-sub' | 'tempo-sidebar' | 'tempo-horizontal'
     author?: string
     date?: React.ReactNode
+    priority?: boolean
 }
 
 const DEFAULT_NEWS_IMAGE = 'https://images.unsplash.com/photo-1585829365234-78d2b94a6d50?q=80&w=800&auto=format&fit=crop'
@@ -33,7 +34,8 @@ export function NewsCard({
     isDark,
     variant = 'default',
     author = 'Team',
-    date = 'Just now'
+    date = 'Just now',
+    priority = false
 }: NewsCardProps) {
     const textColor = isDark ? 'text-white' : 'text-black'
     const secondaryTextColor = isDark ? 'text-gray-300' : 'text-gray-500' // Use hard gray for consistency
@@ -110,6 +112,7 @@ export function NewsCard({
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 128px, 192px"
+                        priority={priority}
                     />
                 </div>
             </div>
@@ -154,6 +157,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, 60vw"
+                        priority={priority}
                     />
                     {isPremium && (
                         <div className="absolute top-0 left-0 bg-yellow-400 text-black text-xs font-black px-3 py-1 uppercase tracking-widest">
@@ -238,6 +242,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
+                        priority={priority}
                     />
                     <div className="absolute bottom-4 left-4">
                         <span className="bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary border-l-4 border-primary">
@@ -270,6 +275,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                         sizes="(max-width: 768px) 128px, 192px"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex-1 space-y-2">
@@ -323,6 +329,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 100vw, 50vw"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-between" style={{ backgroundColor: blockBgColor }}>
@@ -355,6 +362,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                         sizes="(max-width: 768px) 50vw, 25vw"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
@@ -382,6 +390,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         sizes="(max-width: 768px) 50vw, 25vw"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex flex-col space-y-2">
@@ -493,6 +502,7 @@ export function NewsCard({
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                         sizes="(max-width: 768px) 100vw, 33vw"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex-1 flex flex-col justify-center space-y-3">
@@ -522,6 +532,7 @@ export function NewsCard({
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
+                    priority={priority}
                 />
             </div>
             <div className="flex flex-col space-y-2">

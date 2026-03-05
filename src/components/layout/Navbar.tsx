@@ -156,7 +156,7 @@ export default function Navbar({
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={handleKeyDown}
                                         />
-                                        <button onClick={handleSearch} className="hover:text-primary transition-colors">
+                                        <button onClick={handleSearch} className="hover:text-primary transition-colors" aria-label="Cari Berita">
                                             <Search className={`w-4 h-4 ${activeTemplate === 'cnn' ? 'text-gray-400' : 'text-gray-400'}`} />
                                         </button>
                                     </div>
@@ -177,11 +177,12 @@ export default function Navbar({
                                         <button
                                             onClick={() => router.push('/search')}
                                             className="hover:text-white transition-colors"
+                                            aria-label="Cari Berita"
                                         >
                                             <Search className="w-5 h-5" />
                                         </button>
                                     )}
-                                    <Link href="/auth/login" className="hover:text-white transition-colors">
+                                    <Link href="/auth/login" className="hover:text-white transition-colors" aria-label="Masuk Akun">
                                         <User className="w-5 h-5" />
                                     </Link>
                                 </div>
@@ -190,6 +191,7 @@ export default function Navbar({
                                 <button
                                     onClick={() => setIsOpen(!isOpen)}
                                     className={`lg:hidden p-1 focus:outline-none ml-2 rounded transition-colors ${activeTemplate === 'cnn' ? 'text-white hover:bg-white/10' : 'text-black hover:bg-gray-100'}`}
+                                    aria-label={isOpen ? "Tutup Menu" : "Buka Menu"}
                                 >
                                     {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                                 </button>
@@ -250,7 +252,10 @@ export default function Navbar({
                                         </Link>
                                     )
                                 ))}
-                                <button className={`ml-auto shrink-0 transition-colors ${activeTemplate === 'cnn' ? 'text-white/50 hover:text-white' : activeTemplate === 'detik' ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-black'}`}>
+                                <button
+                                    className={`ml-auto shrink-0 transition-colors ${activeTemplate === 'cnn' ? 'text-white/50 hover:text-white' : activeTemplate === 'detik' ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-black'}`}
+                                    aria-label="Menu Kategori Lainnya"
+                                >
                                     <Menu className="w-4 h-4" />
                                 </button>
                             </div>
