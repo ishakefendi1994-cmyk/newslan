@@ -91,7 +91,7 @@ export default function TemplateTempo({
 
                                     {/* Tempo Sub-grid (3 Columns) */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-gray-100">
-                                        {latestArticles?.slice(1, 4).map((article) => (
+                                        {latestArticles?.slice(1, 4).map((article, index) => (
                                             <NewsCard
                                                 key={article.id}
                                                 variant="tempo-sub"
@@ -99,6 +99,7 @@ export default function TemplateTempo({
                                                 slug={article.slug}
                                                 image={article.featured_image}
                                                 category={article.categories?.name || 'News'}
+                                                priority={index < 2} // prioritize the top ones for mobile LCP
                                             />
                                         ))}
                                     </div>
