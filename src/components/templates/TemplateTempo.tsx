@@ -250,6 +250,7 @@ export default function TemplateTempo({
                                                             fill
                                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                             sizes="(max-width: 1200px) 100vw, 60vw"
+                                                            priority={idx === 0}
                                                         />
                                                         <div className="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black/60 to-transparent">
                                                             <span className="bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white inline-block mb-3">

@@ -117,6 +117,7 @@ export default function TemplateCNN({
                                                             alt=""
                                                             fill
                                                             className="object-cover"
+                                                            priority={true}
                                                         />
                                                     </div>
                                                 )}
@@ -151,6 +152,7 @@ export default function TemplateCNN({
                                                         alt={art.title}
                                                         fill
                                                         className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                        priority={true}
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200" />
