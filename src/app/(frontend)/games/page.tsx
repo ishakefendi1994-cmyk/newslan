@@ -42,10 +42,10 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
     const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE)
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-[#4a00e0] via-[#8e2de2] to-[#2b0057] text-white pb-16">
             {/* Hero */}
-            <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+            <div className="text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-indigo-500/30 flex items-center justify-center">
                             <Gamepad2 className="w-7 h-7 text-indigo-300" />
@@ -101,7 +101,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
 
                 {/* Game Count */}
                 <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm font-medium text-purple-100/70">
                         {search
                             ? `${count} game ditemukan untuk "${search}"`
                             : category !== 'All'
@@ -119,10 +119,10 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                        <Gamepad2 className="w-12 h-12 text-gray-300 mb-4" />
-                        <h3 className="text-xl font-black text-gray-400 uppercase tracking-tighter">Belum Ada Game</h3>
-                        <p className="text-gray-400 text-sm mt-1">Sync game dari panel admin untuk mulai.</p>
+                    <div className="flex flex-col items-center justify-center py-24 bg-white/5 backdrop-blur-md rounded-3xl border-2 border-dashed border-white/20">
+                        <Gamepad2 className="w-12 h-12 text-white/30 mb-4" />
+                        <h3 className="text-xl font-black text-white/50 uppercase tracking-tighter">Belum Ada Game</h3>
+                        <p className="text-white/40 text-sm mt-1">Sync game dari panel admin untuk mulai.</p>
                     </div>
                 )}
 

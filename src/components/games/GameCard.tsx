@@ -13,7 +13,7 @@ export default function GameCard({ game }: GameCardProps) {
     return (
         <Link
             href={`/games/${game.slug}`}
-            className="group relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+            className="group relative flex flex-col rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 border border-white/10"
         >
             {/* Thumbnail */}
             <div className="relative aspect-[4/3] bg-gray-900 overflow-hidden">
@@ -49,11 +49,11 @@ export default function GameCard({ game }: GameCardProps) {
 
             {/* Info */}
             <div className="p-3 flex-1 flex flex-col gap-1">
-                <h3 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-fuchsia-300 transition-colors">
                     {game.title}
                 </h3>
                 {game.play_count > 0 && (
-                    <p className="text-xs text-gray-400 mt-auto">
+                    <p className="text-xs text-purple-200/60 mt-auto">
                         {game.play_count.toLocaleString('id-ID')}× dimainkan
                     </p>
                 )}

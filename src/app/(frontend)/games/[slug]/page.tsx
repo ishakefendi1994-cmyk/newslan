@@ -43,12 +43,13 @@ export default async function GameDetailPage({ params }: GamePageProps) {
     const relatedGames = await getRelatedGames(game.category, slug, 6)
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-[#4a00e0] via-[#8e2de2] to-[#2b0057] text-white pb-16">
             {/* Breadcrumb */}
-            <div className="bg-white border-b border-gray-100 py-3">
+            <div className="bg-white/5 border-b border-white/10 py-3 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <Breadcrumbs
                         siteUrl={settings.site_url}
+                        theme="dark"
                         items={[
                             { label: '🎮 Game Portal', href: '/games' },
                             { label: game.category, href: `/games?category=${game.category}` },
@@ -58,13 +59,13 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left — Game Player (2/3) */}
-                    <div className="lg:col-span-2 space-y-5">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                    {/* Left — Game Player (3/4 on large screens) */}
+                    <div className="xl:col-span-3 space-y-5">
                         {/* Title */}
                         <div>
-                            <h1 className="text-2xl font-black text-gray-900 leading-tight">{game.title}</h1>
+                            <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">{game.title}</h1>
                             <div className="flex items-center gap-3 mt-2 flex-wrap">
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">
                                     <Tag className="w-3 h-3" />
@@ -88,17 +89,17 @@ export default async function GameDetailPage({ params }: GamePageProps) {
 
                         {/* Description */}
                         {game.description && (
-                            <div className="bg-white rounded-2xl p-5 border border-gray-100">
-                                <h2 className="text-sm font-black uppercase tracking-wider text-gray-500 mb-3">Tentang Game</h2>
-                                <p className="text-gray-700 text-sm leading-relaxed">{game.description}</p>
+                            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                                <h2 className="text-sm font-black uppercase tracking-wider text-purple-200 mb-3">Tentang Game</h2>
+                                <p className="text-purple-50 text-sm leading-relaxed">{game.description}</p>
                             </div>
                         )}
 
                         {/* Instructions */}
                         {game.instructions && (
-                            <div className="bg-white rounded-2xl p-5 border border-gray-100">
-                                <h2 className="text-sm font-black uppercase tracking-wider text-gray-500 mb-3">Cara Main</h2>
-                                <p className="text-gray-700 text-sm leading-relaxed">{game.instructions}</p>
+                            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/10">
+                                <h2 className="text-sm font-black uppercase tracking-wider text-purple-200 mb-3">Cara Main</h2>
+                                <p className="text-purple-50 text-sm leading-relaxed">{game.instructions}</p>
                             </div>
                         )}
 
@@ -106,7 +107,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                         {game.tags && game.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {game.tags.map((tag) => (
-                                    <span key={tag} className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                                    <span key={tag} className="px-3 py-1 rounded-full bg-white/10 text-purple-200 text-xs font-medium border border-white/5">
                                         #{tag}
                                     </span>
                                 ))}
@@ -114,31 +115,31 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                         )}
                     </div>
 
-                    {/* Right — Related Games (1/3) */}
+                    {/* Right — Related Games (1/4) */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-black uppercase tracking-wider text-gray-500 flex items-center gap-2">
+                            <h2 className="text-sm font-black uppercase tracking-wider text-purple-200 flex items-center gap-2">
                                 <Gamepad2 className="w-4 h-4" />
                                 Game Serupa
                             </h2>
                             <Link
                                 href={`/games?category=${game.category}`}
-                                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                                className="text-xs font-bold text-fuchsia-300 hover:text-fuchsia-200 flex items-center gap-1"
                             >
                                 Lihat semua <ChevronRight className="w-3 h-3" />
                             </Link>
                         </div>
 
                         {relatedGames.length > 0 ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                            <div className="grid grid-cols-2 xl:grid-cols-1 gap-4">
                                 {relatedGames.map(g => (
                                     <GameCard key={g.id} game={g} />
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-white rounded-2xl p-6 text-center border border-gray-100">
-                                <p className="text-gray-400 text-sm">Tidak ada game serupa</p>
-                                <Link href="/games" className="text-indigo-600 text-sm font-bold mt-2 block">
+                            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 text-center border border-white/10">
+                                <p className="text-purple-200/60 text-sm">Tidak ada game serupa</p>
+                                <Link href="/games" className="text-fuchsia-300 text-sm font-bold mt-2 block">
                                     Lihat semua game →
                                 </Link>
                             </div>

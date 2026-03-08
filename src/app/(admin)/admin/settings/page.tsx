@@ -621,6 +621,7 @@ export default function SettingsPage() {
                                             <option value="/">Beranda Standar</option>
                                             <option value="/news">Berita Terbaru</option>
                                             <option value="/shorts">Video Shorts</option>
+                                            <option value="/games">Game Portal</option>
                                         </optgroup>
                                         <optgroup label="Kategori Berita">
                                             {categories.map((cat) => (

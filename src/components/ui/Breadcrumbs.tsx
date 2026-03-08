@@ -9,9 +9,10 @@ interface BreadcrumbItem {
 interface BreadcrumbsProps {
     items: BreadcrumbItem[]
     siteUrl?: string
+    theme?: 'light' | 'dark'
 }
 
-export default function Breadcrumbs({ items, siteUrl = '' }: BreadcrumbsProps) {
+export default function Breadcrumbs({ items, siteUrl = '', theme = 'light' }: BreadcrumbsProps) {
 
     // JSON-LD for Breadcrumbs
     const jsonLd = {
@@ -26,26 +27,26 @@ export default function Breadcrumbs({ items, siteUrl = '' }: BreadcrumbsProps) {
     }
 
     return (
-        <nav className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6 flex-wrap gap-y-2">
+        <nav className={`flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-white/60' : 'text-gray-400'} mb-6 flex-wrap gap-y-2`}>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
 
-            <Link href="/" className="flex items-center hover:text-black transition-colors shrink-0">
+            <Link href="/" className={`flex items-center transition-colors shrink-0 ${theme === 'dark' ? 'hover:text-white' : 'hover:text-black'}`}>
                 <Home className="w-3 h-3 mr-1" />
                 <span>Home</span>
             </Link>
 
             {items.map((item, index) => (
                 <div key={index} className="flex items-center space-x-2 min-w-0">
-                    <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />
+                    <ChevronRight className={`w-3 h-3 shrink-0 ${theme === 'dark' ? 'text-white/30' : 'text-gray-300'}`} />
                     {item.href ? (
-                        <Link href={item.href} className="hover:text-black transition-colors truncate max-w-[150px] sm:max-w-[300px]">
+                        <Link href={item.href} className={`transition-colors truncate max-w-[150px] sm:max-w-[300px] ${theme === 'dark' ? 'hover:text-white' : 'hover:text-black'}`}>
                             {item.label}
                         </Link>
                     ) : (
-                        <span className="text-black truncate max-w-[200px] sm:max-w-md">
+                        <span className={`truncate max-w-[200px] sm:max-w-md ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                             {item.label}
                         </span>
                     )}

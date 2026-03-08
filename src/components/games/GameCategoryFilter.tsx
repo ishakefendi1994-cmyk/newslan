@@ -31,8 +31,8 @@ export default function GameCategoryFilter({ activeCategory }: GameCategoryFilte
                         key={cat}
                         onClick={() => handleCategoryChange(cat)}
                         className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${isActive
-                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-fuchsia-600 text-white shadow-lg shadow-fuchsia-900/50'
+                            : 'bg-white/10 text-purple-200 hover:bg-white/20 hover:text-white'
                             }`}
                     >
                         {cat}
