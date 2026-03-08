@@ -20,9 +20,9 @@ export interface SiteSettings {
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
-    site_name: 'cryptotechnews.net',
-    theme_color: '#990000',
-    description: 'Portal berita terpercaya dengan fokus pada edukasi, investigasi, dan pemberitaan akurat.',
+    site_name: 'Newslan',
+    theme_color: '#0047ba',
+    description: 'Portal berita terpercaya.',
     default_homepage: '/',
     logo_type: 'text',
     site_logo_url: '',
@@ -30,9 +30,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     groq_api_key: '',
     replicate_api_token: '',
     contact_whatsapp: '',
-    contact_email: 'admin@cryptotechnews.net',
+    contact_email: '',
     site_favicon_url: '/favicon.ico',
-    site_url: 'https://cryptotechnews.net',
+    site_url: '',
     header_scripts: '',
     active_template: 'tempo'
 }

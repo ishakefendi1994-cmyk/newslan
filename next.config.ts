@@ -74,7 +74,16 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.antaranews.com',
-      }
+      },
+      // Game Portal Image Domains
+      {
+        protocol: 'https',
+        hostname: 'img.gamemonetize.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.gamedistribution.com',
+      },
     ],
   },
 }

@@ -229,6 +229,12 @@ export default function Navbar({
                                 >
                                     Home
                                 </Link>
+                                <Link
+                                    href="/games"
+                                    className={`text-[11px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap flex items-center gap-1 ${activeTemplate === 'cnn' ? 'text-white hover:text-red-500' : activeTemplate === 'detik' ? 'text-[#ffbe00] hover:text-white' : 'text-primary hover:text-black'}`}
+                                >
+                                    🎮 Games
+                                </Link>
                                 {categories.slice(0, 10).map((cat) => (
                                     activeTemplate === 'cnn' ? (
                                         <button
@@ -366,6 +372,13 @@ export default function Navbar({
                                         {cat.name}
                                     </Link>
                                 ))}
+                                <Link
+                                    href="/games"
+                                    className={`block py-3 text-lg font-bold border-b pl-1 transition-colors ${activeTemplate === 'cnn' ? 'text-white/80 hover:text-white border-white/5' : 'text-gray-800 hover:text-black border-gray-100'}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    🎮 Game Portal
+                                </Link>
                             </div>
 
                             <div className="space-y-4 pt-4">

@@ -27,7 +27,8 @@ import {
     Newspaper,
     Sparkles,
     Key,
-    Youtube
+    Youtube,
+    Gamepad2
 } from 'lucide-react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -73,6 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Products', href: '/admin/products', icon: ShoppingBag },
         { name: 'Kategori Produk', href: '/admin/product-categories', icon: LayoutGrid },
         { name: 'Shorts', href: '/admin/shorts', icon: Video },
+        { name: 'Game Portal', href: '/admin/games', icon: Gamepad2 },
         { name: 'Import WP', href: '/admin/import-wp', icon: Download },
         { name: 'RSS Auto-Grab', href: '/admin/rss-manager', icon: Newspaper },
         { name: 'RSS Auto-Jobs', href: '/admin/rss-jobs', icon: Newspaper },
