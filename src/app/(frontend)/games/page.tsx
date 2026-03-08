@@ -7,6 +7,8 @@ import GameCategoryFilter from '@/components/games/GameCategoryFilter'
 import { Pagination } from '@/components/ui/Pagination'
 import { getSiteSettings } from '@/lib/settings'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
     const s = await getSiteSettings()
     return {
