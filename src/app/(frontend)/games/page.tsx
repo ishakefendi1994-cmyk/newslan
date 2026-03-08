@@ -78,31 +78,29 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
             {/* Hero */}
             <div className="text-white">
                 <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/30 flex items-center justify-center">
-                            <Gamepad2 className="w-7 h-7 text-indigo-300" />
+                    <div className="flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 rounded-3xl bg-indigo-500/30 flex items-center justify-center mb-4">
+                            <Gamepad2 className="w-8 h-8 text-indigo-300" />
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-black tracking-tight">Game Portal</h1>
-                            <p className="text-indigo-200 text-sm">Ratusan game HTML5 gratis — langsung main di browser!</p>
-                        </div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">Game Portal</h1>
+                        <p className="text-indigo-200 text-sm md:text-base max-w-lg">Ratusan game HTML5 gratis — langsung main di browser!</p>
                     </div>
 
                     {/* Stats */}
-                    <div className="flex gap-6 mt-6">
+                    <div className="flex justify-center items-center gap-8 md:gap-12 mt-8">
                         <div className="text-center">
-                            <p className="text-2xl font-black text-white">{count?.toLocaleString('id-ID') || '0'}</p>
-                            <p className="text-xs text-indigo-300 uppercase tracking-widest">Total Game</p>
+                            <p className="text-3xl font-black text-white">{count?.toLocaleString('id-ID') || '0'}</p>
+                            <p className="text-xs text-indigo-300 uppercase tracking-widest mt-1">Total Game</p>
                         </div>
-                        <div className="w-px bg-indigo-700" />
+                        <div className="h-10 w-px bg-indigo-500/30" />
                         <div className="text-center">
-                            <p className="text-2xl font-black text-white">{GAME_CATEGORIES.length - 1}</p>
-                            <p className="text-xs text-indigo-300 uppercase tracking-widest">Kategori</p>
+                            <p className="text-3xl font-black text-white">{GAME_CATEGORIES.length - 1}</p>
+                            <p className="text-xs text-indigo-300 uppercase tracking-widest mt-1">Kategori</p>
                         </div>
-                        <div className="w-px bg-indigo-700" />
+                        <div className="h-10 w-px bg-indigo-500/30" />
                         <div className="text-center">
-                            <p className="text-2xl font-black text-white">100%</p>
-                            <p className="text-xs text-indigo-300 uppercase tracking-widest">Gratis</p>
+                            <p className="text-3xl font-black text-white">100%</p>
+                            <p className="text-xs text-indigo-300 uppercase tracking-widest mt-1">Gratis</p>
                         </div>
                     </div>
                 </div>
