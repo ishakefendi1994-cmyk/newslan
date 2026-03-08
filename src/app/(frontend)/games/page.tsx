@@ -144,7 +144,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                 {/* Layout with Sidebars */}
                 <div className="flex flex-col xl:flex-row gap-6 items-start">
                     {/* Left Sidebar */}
-                    <div className="hidden xl:flex w-[300px] shrink-0 flex-col gap-8 sticky top-24">
+                    <div className="w-full xl:w-[300px] shrink-0 flex flex-col gap-8 xl:sticky xl:top-24">
                         {leftAds && leftAds.length > 0 ? (
                             leftAds.map((ad) => (
                                 <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
@@ -210,7 +210,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="hidden xl:flex w-[300px] shrink-0 flex-col gap-8 sticky top-24">
+                    <div className="w-full xl:w-[300px] shrink-0 flex flex-col gap-8 xl:sticky xl:top-24">
                         {rightAds && rightAds.length > 0 ? (
                             rightAds.map((ad) => (
                                 <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">

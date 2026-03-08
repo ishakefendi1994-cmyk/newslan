@@ -70,7 +70,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex flex-col xl:flex-row gap-6 items-start">
                     {/* Left Sidebar (Ads) */}
-                    <div className="hidden xl:flex w-[250px] shrink-0 flex-col gap-8 sticky top-24">
+                    <div className="w-full xl:w-[250px] shrink-0 flex flex-col gap-8 xl:sticky xl:top-24">
                         {leftAds && leftAds.length > 0 ? (
                             leftAds.map((ad) => (
                                 <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
@@ -146,7 +146,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                     </div>
 
                     {/* Right Sidebar — Related Games */}
-                    <div className="w-full xl:w-[250px] shrink-0 space-y-4">
+                    <div className="w-full xl:w-[250px] shrink-0 space-y-4 xl:sticky xl:top-24">
                         <div className="flex items-center justify-between">
                             <h2 className="text-sm font-black uppercase tracking-wider text-purple-200 flex items-center gap-2">
                                 <Gamepad2 className="w-4 h-4" />
