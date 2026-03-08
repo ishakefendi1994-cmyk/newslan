@@ -46,7 +46,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         <div className="min-h-screen bg-gradient-to-br from-[#4a00e0] via-[#8e2de2] to-[#2b0057] text-white pb-16">
             {/* Breadcrumb */}
             <div className="bg-white/5 border-b border-white/10 py-3 backdrop-blur-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <Breadcrumbs
                         siteUrl={settings.site_url}
                         theme="dark"
@@ -59,7 +59,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                 </div>
             </div>
 
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
                     {/* Left — Game Player (3/4 on large screens) */}
                     <div className="xl:col-span-3 space-y-5">

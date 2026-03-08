@@ -44,6 +44,7 @@ export default function LayoutWrapper({
 }: LayoutWrapperProps) {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/auth')
+    const isGamePortal = pathname.startsWith('/games')
 
     if (isAdmin) return <>{children}</>
 
@@ -62,7 +63,7 @@ export default function LayoutWrapper({
                 activeTemplate={activeTemplate}
                 hideCategories={pathname.startsWith('/products')}
             />
-            <div className="boxed-container transition-all duration-300">
+            <div className={isGamePortal ? "w-full bg-transparent min-h-screen transition-all duration-300" : "boxed-container transition-all duration-300"}>
                 <main className="min-h-screen pb-20 lg:pb-0">
                     {children}
                 </main>

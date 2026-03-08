@@ -45,7 +45,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
         <div className="min-h-screen bg-gradient-to-br from-[#4a00e0] via-[#8e2de2] to-[#2b0057] text-white pb-16">
             {/* Hero */}
             <div className="text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+                <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-indigo-500/30 flex items-center justify-center">
                             <Gamepad2 className="w-7 h-7 text-indigo-300" />
@@ -76,7 +76,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Featured Games (only on page 1, no filter) */}
                 {featuredGames.length > 0 && page === 1 && category === 'All' && !search && (
                     <section className="mb-10">
