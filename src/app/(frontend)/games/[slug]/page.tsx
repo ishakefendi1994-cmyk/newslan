@@ -39,10 +39,11 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
 export default async function GameDetailPage({ params }: GamePageProps) {
     const { slug } = await params
     const supabase = await createClient()
-    const [game, settings, { data: bottomAd }] = await Promise.all([
+    const [game, settings, { data: bottomAd }, { data: leftAds }] = await Promise.all([
         getGameBySlug(slug),
         getSiteSettings(),
-        supabase.from('advertisements').select('*').eq('placement', 'game_bottom').eq('is_active', true).limit(1).maybeSingle()
+        supabase.from('advertisements').select('*').eq('placement', 'game_bottom').eq('is_active', true).limit(1).maybeSingle(),
+        supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_left').eq('is_active', true)
     ])
 
     if (!game) notFound()
@@ -67,9 +68,24 @@ export default async function GameDetailPage({ params }: GamePageProps) {
             </div>
 
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-                    {/* Left — Game Player (3/4 on large screens) */}
-                    <div className="xl:col-span-3 space-y-5">
+                <div className="flex flex-col xl:flex-row gap-6 items-start">
+                    {/* Left Sidebar (Ads) */}
+                    <div className="hidden xl:flex w-[250px] shrink-0 flex-col gap-8 sticky top-24">
+                        {leftAds && leftAds.length > 0 ? (
+                            leftAds.map((ad) => (
+                                <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
+                                    <AdRenderer ad={ad} className="w-full" isSidebar={true} />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="w-full h-[600px] bg-white/5 rounded-2xl border border-white/10 border-dashed flex items-center justify-center text-white/30 text-xs font-black tracking-widest uppercase">
+                                Ad Space
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Center — Game Player */}
+                    <div className="flex-1 min-w-0 space-y-5">
                         {/* Title */}
                         <div>
                             <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">{game.title}</h1>
@@ -129,8 +145,8 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                         )}
                     </div>
 
-                    {/* Right — Related Games (1/4) */}
-                    <div className="space-y-4">
+                    {/* Right Sidebar — Related Games */}
+                    <div className="w-full xl:w-[250px] shrink-0 space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-sm font-black uppercase tracking-wider text-purple-200 flex items-center gap-2">
                                 <Gamepad2 className="w-4 h-4" />
