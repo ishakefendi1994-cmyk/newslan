@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { Gamepad2, Zap } from 'lucide-react'
+import { Gamepad2, Zap, Tag, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { getGames as fetchGames, getFeaturedGames as fetchFeatured, GAME_CATEGORIES } from '@/lib/games'
 import GameCard from '@/components/games/GameCard'
 import GameCategoryFilter from '@/components/games/GameCategoryFilter'
@@ -38,12 +39,37 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
 
     const supabase = await createClient()
 
-    const [{ data: games, count }, featuredGames, { data: leftAds }, { data: rightAds }] = await Promise.all([
+    const isMainLanding = category === 'All' && !search && page === 1;
+
+    const categoryPromises = isMainLanding
+        ? GAME_CATEGORIES.filter(c => c !== 'All').map(async (cat) => {
+            const { data } = await supabase
+                .from('games')
+                .select('*')
+                .eq('is_active', true)
+                .ilike('category', `%${cat}%`)
+                .order('is_featured', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(10);
+            return { category: cat, items: data || [] };
+        })
+        : [];
+
+    const [
+        { data: games, count },
+        featuredGames,
+        { data: leftAds },
+        { data: rightAds },
+        ...categorySectionsRaw
+    ] = await Promise.all([
         fetchGames({ category, page, limit: ITEMS_PER_PAGE, search }),
         fetchFeatured(4),
         supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_left').eq('is_active', true),
-        supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_right').eq('is_active', true)
+        supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_right').eq('is_active', true),
+        ...categoryPromises
     ])
+
+    const categorySections = categorySectionsRaw as { category: string, items: any[] }[];
 
     const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE)
 
@@ -90,7 +116,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                             <Zap className="w-5 h-5 text-yellow-500" />
                             <h2 className="text-lg font-black uppercase tracking-tight">Game Unggulan</h2>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                             {featuredGames.map(game => (
                                 <GameCard key={game.id} game={game} />
                             ))}
@@ -136,9 +162,31 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Games Grid */}
-                        {games.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {isMainLanding ? (
+                            <div className="space-y-10">
+                                {categorySections.filter(section => section.items.length > 0).map(section => (
+                                    <div key={section.category} className="space-y-4">
+                                        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                                                    <Tag className="w-4 h-4 text-purple-300" />
+                                                </div>
+                                                <h2 className="text-xl font-black uppercase tracking-tight">{section.category}</h2>
+                                            </div>
+                                            <Link href={`/games?category=${section.category}`} className="text-xs font-bold text-fuchsia-300 hover:text-white transition-colors flex items-center gap-1">
+                                                LIHAT SEMUA <ChevronRight className="w-3 h-3" />
+                                            </Link>
+                                        </div>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
+                                            {section.items.map(game => (
+                                                <GameCard key={game.id} game={game} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : games.length > 0 ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                                 {games.map(game => (
                                     <GameCard key={game.id} game={game} />
                                 ))}
@@ -152,7 +200,7 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                         )}
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
+                        {!isMainLanding && totalPages > 1 && (
                             <div className="mt-10">
                                 <Pagination
                                     currentPage={page}
