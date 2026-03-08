@@ -20,12 +20,23 @@ export default function GamePlayer({ embedUrl, title, width, height, gameSlug }:
     const aspectRatio = height && width ? (height / width) * 100 : 56.25
 
     const handleFullscreen = () => {
-        const el = containerRef.current
+        const el = containerRef.current as any
+        const doc = document as any
+
         if (!el) return
-        if (document.fullscreenElement) {
-            document.exitFullscreen()
+
+        const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement
+
+        if (isFullscreen) {
+            if (doc.exitFullscreen) doc.exitFullscreen()
+            else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen()
+            else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen()
+            else if (doc.msExitFullscreen) doc.msExitFullscreen()
         } else {
-            el.requestFullscreen?.()
+            if (el.requestFullscreen) el.requestFullscreen()
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen()
+            else if (el.mozRequestFullScreen) el.mozRequestFullScreen()
+            else if (el.msRequestFullscreen) el.msRequestFullscreen()
         }
     }
 
@@ -66,8 +77,8 @@ export default function GamePlayer({ embedUrl, title, width, height, gameSlug }:
                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock allow-top-navigation"
                 />
 
-                {/* Control buttons (appear on hover) */}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                {/* Control buttons */}
+                <div className="absolute top-3 right-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-20">
                     <button
                         onClick={handleReload}
                         title="Reload game"
