@@ -17,7 +17,10 @@ const placements = [
     { id: 'feed_between', label: 'Between Feed Items' },
     { id: 'sidebar_right', label: 'Sidebar Right (Detik Style)' },
     { id: 'skin_left', label: 'Left Skin (Desktop)' },
-    { id: 'skin_right', label: 'Right Skin (Desktop)' }
+    { id: 'skin_right', label: 'Right Skin (Desktop)' },
+    { id: 'game_bottom', label: 'Game Player Bottom (Games)' },
+    { id: 'game_sidebar_left', label: 'Game Portal Left Sidebar' },
+    { id: 'game_sidebar_right', label: 'Game Portal Right Sidebar' }
 ]
 
 export default function NewAdPage() {

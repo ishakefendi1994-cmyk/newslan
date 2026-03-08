@@ -7,6 +7,8 @@ import { getSiteSettings } from '@/lib/settings'
 import GamePlayer from '@/components/games/GamePlayer'
 import GameCard from '@/components/games/GameCard'
 import Breadcrumbs from '@/components/ui/Breadcrumbs'
+import { createClient } from '@/lib/supabase/server'
+import AdRenderer from '@/components/news/AdRenderer'
 
 interface GamePageProps {
     params: Promise<{ slug: string }>
@@ -36,7 +38,12 @@ export async function generateMetadata({ params }: GamePageProps): Promise<Metad
 
 export default async function GameDetailPage({ params }: GamePageProps) {
     const { slug } = await params
-    const [game, settings] = await Promise.all([getGameBySlug(slug), getSiteSettings()])
+    const supabase = await createClient()
+    const [game, settings, { data: bottomAd }] = await Promise.all([
+        getGameBySlug(slug),
+        getSiteSettings(),
+        supabase.from('advertisements').select('*').eq('placement', 'game_bottom').eq('is_active', true).limit(1).maybeSingle()
+    ])
 
     if (!game) notFound()
 
@@ -86,6 +93,13 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                             height={game.height}
                             gameSlug={game.slug}
                         />
+
+                        {/* Bottom Ad */}
+                        {bottomAd && (
+                            <div className="w-full bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
+                                <AdRenderer ad={bottomAd} className="max-w-full" />
+                            </div>
+                        )}
 
                         {/* Description */}
                         {game.description && (

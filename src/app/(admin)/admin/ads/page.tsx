@@ -15,7 +15,10 @@ const placements = {
     section_sidebar: 'Category Section Sidebar',
     feed_between: 'Between Feed Items',
     skin_left: 'Left Skin (Desktop)',
-    skin_right: 'Right Skin (Desktop)'
+    skin_right: 'Right Skin (Desktop)',
+    game_bottom: 'Game Player Bottom (Games)',
+    game_sidebar_left: 'Game Portal Left Sidebar',
+    game_sidebar_right: 'Game Portal Right Sidebar'
 }
 
 export default function AdminAdsPage() {

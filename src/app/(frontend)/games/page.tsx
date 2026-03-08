@@ -6,6 +6,8 @@ import GameCard from '@/components/games/GameCard'
 import GameCategoryFilter from '@/components/games/GameCategoryFilter'
 import { Pagination } from '@/components/ui/Pagination'
 import { getSiteSettings } from '@/lib/settings'
+import { createClient } from '@/lib/supabase/server'
+import AdRenderer from '@/components/news/AdRenderer'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,9 +36,13 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
     const page = parseInt(params.page || '1')
     const search = params.search || ''
 
-    const [{ data: games, count }, featuredGames] = await Promise.all([
+    const supabase = await createClient()
+
+    const [{ data: games, count }, featuredGames, { data: leftAds }, { data: rightAds }] = await Promise.all([
         fetchGames({ category, page, limit: ITEMS_PER_PAGE, search }),
         fetchFeatured(4),
+        supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_left').eq('is_active', true),
+        supabase.from('advertisements').select('*').eq('placement', 'game_sidebar_right').eq('is_active', true)
     ])
 
     const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE)
@@ -111,31 +117,67 @@ export default async function GamesPage({ searchParams }: GamesPageProps) {
                     </p>
                 </div>
 
-                {/* Games Grid */}
-                {games.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                        {games.map(game => (
-                            <GameCard key={game.id} game={game} />
-                        ))}
+                {/* Layout with Sidebars */}
+                <div className="flex flex-col xl:flex-row gap-6 items-start">
+                    {/* Left Sidebar */}
+                    <div className="hidden xl:flex w-[300px] shrink-0 flex-col gap-8 sticky top-24">
+                        {leftAds && leftAds.length > 0 ? (
+                            leftAds.map((ad) => (
+                                <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
+                                    <AdRenderer ad={ad} isSidebar={true} className="w-full" />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="w-full h-[600px] bg-white/5 rounded-2xl border border-white/10 border-dashed flex items-center justify-center text-white/30 text-xs font-black tracking-widest uppercase">
+                                Ad Space
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-24 bg-white/5 backdrop-blur-md rounded-3xl border-2 border-dashed border-white/20">
-                        <Gamepad2 className="w-12 h-12 text-white/30 mb-4" />
-                        <h3 className="text-xl font-black text-white/50 uppercase tracking-tighter">Belum Ada Game</h3>
-                        <p className="text-white/40 text-sm mt-1">Sync game dari panel admin untuk mulai.</p>
-                    </div>
-                )}
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="mt-10">
-                        <Pagination
-                            currentPage={page}
-                            totalPages={totalPages}
-                            baseUrl={`/games${category !== 'All' ? `?category=${category}` : ''}`}
-                        />
+                    {/* Main Content */}
+                    <div className="flex-1 min-w-0">
+                        {/* Games Grid */}
+                        {games.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {games.map(game => (
+                                    <GameCard key={game.id} game={game} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-24 bg-white/5 backdrop-blur-md rounded-3xl border-2 border-dashed border-white/20">
+                                <Gamepad2 className="w-12 h-12 text-white/30 mb-4" />
+                                <h3 className="text-xl font-black text-white/50 uppercase tracking-tighter">Belum Ada Game</h3>
+                                <p className="text-white/40 text-sm mt-1">Sync game dari panel admin untuk mulai.</p>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-10">
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    baseUrl={`/games${category !== 'All' ? `?category=${category}` : ''}`}
+                                />
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    {/* Right Sidebar */}
+                    <div className="hidden xl:flex w-[300px] shrink-0 flex-col gap-8 sticky top-24">
+                        {rightAds && rightAds.length > 0 ? (
+                            rightAds.map((ad) => (
+                                <div key={ad.id} className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex justify-center overflow-hidden">
+                                    <AdRenderer ad={ad} isSidebar={true} className="w-full" />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="w-full h-[600px] bg-white/5 rounded-2xl border border-white/10 border-dashed flex items-center justify-center text-white/30 text-xs font-black tracking-widest uppercase">
+                                Ad Space
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )
