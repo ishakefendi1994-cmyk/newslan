@@ -165,7 +165,7 @@ export default async function RedaksiPage() {
                             "Korwil Pekanbaru: SUTONO",
                             "Korwil Sumatera: SUKARNO",
                             "Korwil Jateng/DIY: MUJIBURAHMAN",
-                            "Korwil Bungo Tebo: Sahru",
+                            "Korwil Bungo Tebo: SAHRU",
                             "Kaperwil Jambi: MUSYARIF",
                             "Kaperwil Sumsel: YATIYO"
                         ]} />
