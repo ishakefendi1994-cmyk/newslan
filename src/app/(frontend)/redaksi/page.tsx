@@ -165,6 +165,7 @@ export default async function RedaksiPage() {
                             "Korwil Pekanbaru: SUTONO",
                             "Korwil Sumatera: SUKARNO",
                             "Korwil Jateng/DIY: MUJIBURAHMAN",
+                            "Korwil Bungo Tebo: Sahru",
                             "Kaperwil Jambi: MUSYARIF",
                             "Kaperwil Sumsel: YATIYO"
                         ]} />
@@ -197,11 +198,13 @@ export default async function RedaksiPage() {
                             "Kabiro Solok: RUBIYANTO"
                         ]} />
                         <RegionGroup title="Tim Hukum" list={[
-                            "M. ALEX ALNEMERI, S.H, MH",
-                            "ESSERA GULO, SH",
-                            "RAMIYEM SH",
-                            "AHMAD JONI SH",
-                            "DEDE RISKADINATA, S.H"
+                            "1. M. ALEX ALNEMERI, S.H, MH",
+                            "2. ESSERA GULO, SH",
+                            "3. TONI IRWAN JAYA SH",
+                            "4. RAMIYEM SH",
+                            "5. AHMAD JONI SH",
+                            "6. ZAINAL ABIDIN SH",
+                            "7. DEDE RISKADINATA, S.H"
                         ]} />
                     </div>
                 </section>
